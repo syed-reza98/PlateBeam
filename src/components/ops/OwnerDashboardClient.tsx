@@ -445,7 +445,7 @@ export function OwnerDashboardClient() {
     <div className="space-y-6">
       {/* Live KPI Cards */}
       <section aria-label="Live Outlet KPIs" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
+        <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
             Occupied Tables
           </p>
@@ -457,7 +457,7 @@ export function OwnerDashboardClient() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
+        <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
             Net Sales Today
           </p>
@@ -470,7 +470,7 @@ export function OwnerDashboardClient() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
+        <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
             KDS Prep SLA
           </p>
@@ -482,7 +482,7 @@ export function OwnerDashboardClient() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
+        <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
             Payment Mix
           </p>
@@ -590,10 +590,10 @@ export function OwnerDashboardClient() {
           ).map((quadrant) => {
             const QuadIcon = quadrant.icon;
             return (
-              <div key={quadrant.title} className={`rounded-2xl border p-4.5 transition-all ${quadrant.tone}`}>
+              <div key={quadrant.title} className={`rounded-sm border p-4.5 transition-all ${quadrant.tone}`}>
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <h2 className="font-serif text-lg font-bold text-[var(--pb-ink)]">{quadrant.title}</h2>
+                    <h2 className="font-display text-lg font-bold text-[var(--pb-ink)]">{quadrant.title}</h2>
                     <p className="text-[11px] font-medium text-[var(--pb-muted)]">{quadrant.subtitle}</p>
                   </div>
                   <QuadIcon className={`size-5 ${quadrant.iconClass}`} aria-hidden="true" />
@@ -771,10 +771,10 @@ export function OwnerDashboardClient() {
       {/* Tab 4: 3-Layer RBAC Matrix & Audit Logs */}
       {tab === 'RBAC_AUDIT' && (
         <div className="space-y-6">
-          <section className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
+          <section className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="font-serif text-xl">3-Layer RBAC Overrides</h2>
+                <h2 className="font-display text-xl">3-Layer RBAC Overrides</h2>
                 <p className="text-xs text-[var(--pb-muted)]">
                   Effective = (Role Defaults + Explicit GRANT) − Explicit DENY (DENY always wins)
                 </p>
@@ -876,8 +876,8 @@ export function OwnerDashboardClient() {
       {/* Tab 5: QR Security / Geofence, Tax Slabs & Upsell Rules */}
       {tab === 'SECURITY_TAX' && (
         <div className="space-y-6">
-          <section className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-5">
-            <h2 className="font-serif text-xl">QR Security & Geofence Policy</h2>
+          <section className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-5">
+            <h2 className="font-display text-xl">QR Security & Geofence Policy</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <label className="flex items-center justify-between gap-3 rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] p-3 text-xs font-semibold">
                 <span>Require GPS Geofence</span>

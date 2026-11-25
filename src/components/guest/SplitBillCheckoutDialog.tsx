@@ -227,7 +227,7 @@ export function SplitBillCheckoutDialog({
                 role="tab"
                 aria-selected={active}
                 onClick={() => setMode(tab.id)}
-                className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-xs font-semibold transition-colors ${
+                className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-sm border px-2 text-xs font-semibold transition-colors ${
                   active
                     ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)] text-[var(--pb-accent-ink)]'
                     : 'border-[var(--pb-border)] bg-[var(--pb-canvas)] text-[var(--pb-ink)]'
@@ -242,7 +242,7 @@ export function SplitBillCheckoutDialog({
 
         {/* Mode Controls */}
         {mode === 'EQUAL' && (
-          <div className="space-y-3 rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] p-3.5">
+          <div className="space-y-3 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] p-3.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
                 Number of Diners
@@ -297,7 +297,7 @@ export function SplitBillCheckoutDialog({
         )}
 
         {mode === 'BY_ITEM' && (
-          <div className="max-h-48 space-y-1.5 overflow-y-auto rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] p-3">
+          <div className="max-h-48 space-y-1.5 overflow-y-auto rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] p-3">
             <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
               Select Dishes to Pay For
             </p>
@@ -345,7 +345,7 @@ export function SplitBillCheckoutDialog({
               value={customAmountInput}
               onChange={(e) => setCustomAmountInput(e.target.value)}
               placeholder={(session.remainingMinor / 100).toFixed(2)}
-              className="min-h-[44px] w-full rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3.5 font-mono text-sm"
+              className="min-h-[44px] w-full rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3.5 font-mono text-sm"
             />
           </div>
         )}
@@ -367,7 +367,7 @@ export function SplitBillCheckoutDialog({
                 type="button"
                 aria-pressed={tipPct === pct}
                 onClick={() => setTipPct(pct)}
-                className={`min-h-[44px] rounded-xl border font-mono text-xs font-semibold ${
+                className={`min-h-[44px] rounded-sm border font-mono text-xs font-semibold ${
                   tipPct === pct
                     ? 'border-[var(--pb-olive)] bg-[var(--pb-olive)] text-white'
                     : 'border-[var(--pb-border)] bg-[var(--pb-canvas)]'
@@ -393,7 +393,7 @@ export function SplitBillCheckoutDialog({
                   type="button"
                   aria-pressed={active}
                   onClick={() => setPaymentOptionId(opt.id)}
-                  className={`flex min-h-[44px] w-full items-center justify-between rounded-xl border px-3.5 text-left text-xs font-medium ${
+                  className={`flex min-h-[44px] w-full items-center justify-between rounded-sm border px-3.5 text-left text-xs font-medium ${
                     active
                       ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)]/10 font-semibold'
                       : 'border-[var(--pb-border)] bg-[var(--pb-canvas)]'
@@ -417,7 +417,7 @@ export function SplitBillCheckoutDialog({
           type="button"
           disabled={paying || calculating}
           onClick={handlePay}
-          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[var(--pb-accent)] px-5 py-3 text-sm font-semibold text-[var(--pb-accent-ink)] disabled:opacity-60"
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-sm bg-[var(--pb-accent)] px-5 py-3 text-sm font-semibold text-[var(--pb-accent-ink)] disabled:opacity-60"
         >
           <CreditCard className="size-4" aria-hidden="true" />
           {paying

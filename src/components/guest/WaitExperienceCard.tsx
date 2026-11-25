@@ -79,7 +79,7 @@ export function WaitExperienceCard({
     <section aria-label="Wait experience and table perks" className="grid gap-3 sm:grid-cols-2">
       {/* Live Cook Countdown (FR-017) */}
       {activeCookingItems.length > 0 && (
-        <div className="rounded-2xl border border-[var(--pb-accent)]/40 bg-[var(--pb-surface)] p-4 sm:col-span-2">
+        <div className="rounded-sm border border-[var(--pb-accent)]/40 bg-[var(--pb-surface)] p-4 sm:col-span-2">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--pb-accent)]">
@@ -103,7 +103,7 @@ export function WaitExperienceCard({
 
       {/* One-Tap Guest Wi-Fi Card (FR-018) */}
       {outlet.wifiSsid && (
-        <div className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
+        <div className="flex items-center justify-between gap-3 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
           <div className="min-w-0">
             <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
               <Wifi className="size-3.5 text-[var(--pb-olive)]" aria-hidden="true" />
@@ -120,7 +120,7 @@ export function WaitExperienceCard({
             <button
               type="button"
               onClick={handleCopyWifi}
-              className="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3 text-xs font-semibold hover:border-[var(--pb-accent)]"
+              className="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3 text-xs font-semibold hover:border-[var(--pb-accent)]"
             >
               {copiedWifi ? (
                 <>
@@ -139,7 +139,7 @@ export function WaitExperienceCard({
       )}
 
       {/* Spice Quiz Mini-Game (FR-020) */}
-      <div className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
+      <div className="flex items-center justify-between gap-3 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--pb-turmeric)]">
             <Gamepad2 className="size-3.5" aria-hidden="true" />
@@ -153,7 +153,7 @@ export function WaitExperienceCard({
         <button
           type="button"
           onClick={onOpenSpiceQuiz}
-          className="min-h-[44px] shrink-0 rounded-xl bg-[var(--pb-ink)] px-3.5 text-xs font-semibold text-[var(--pb-canvas)]"
+          className="min-h-[44px] shrink-0 rounded-sm bg-[var(--pb-ink)] px-3.5 text-xs font-semibold text-[var(--pb-canvas)]"
         >
           Play
         </button>
@@ -161,9 +161,9 @@ export function WaitExperienceCard({
 
       {/* Loyalty Wallet (FR-019) */}
       {loyalty && (
-        <div className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4 sm:col-span-2">
+        <div className="flex items-center justify-between gap-3 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4 sm:col-span-2">
           <div className="flex items-center gap-3">
-            <span className="inline-flex size-10 items-center justify-center rounded-xl bg-[var(--pb-turmeric)]/15 text-[var(--pb-turmeric)]">
+            <span className="inline-flex size-10 items-center justify-center rounded-sm bg-[var(--pb-turmeric)]/15 text-[var(--pb-turmeric)]">
               <Award className="size-5" aria-hidden="true" />
             </span>
             <div>

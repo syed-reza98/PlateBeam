@@ -324,7 +324,7 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
   if (loading) {
     return (
       <div className="min-h-dvh bg-[var(--pb-canvas)] px-4 py-12 text-center">
-        <p className="font-serif text-2xl">Setting your table...</p>
+        <p className="font-display text-2xl">Syncing table channel…</p>
         <p className="mt-2 text-sm text-[var(--pb-muted)]">
           Loading live menu and table session
         </p>
@@ -335,19 +335,19 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
   if (error || !data) {
     return (
       <main className="min-h-dvh bg-[var(--pb-canvas)] px-4 py-14">
-        <div className="mx-auto max-w-md rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-6 text-center">
+        <div className="mx-auto max-w-md rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-6 text-center">
           <AlertCircle
             className="mx-auto size-10 text-[var(--pb-chili)]"
             aria-hidden="true"
           />
-          <h1 className="mt-3 font-serif text-2xl">QR Code Unavailable</h1>
+          <h1 className="mt-3 font-display text-2xl">QR Code Unavailable</h1>
           <p className="mt-2 text-sm text-[var(--pb-muted)]">
             {error ?? 'This table QR code could not be verified. Please ask your server for assistance.'}
           </p>
           <button
             type="button"
             onClick={() => void fetchBootstrap()}
-            className="mt-5 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[var(--pb-accent)] px-5 text-sm font-semibold text-[var(--pb-accent-ink)]"
+            className="mt-5 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-sm bg-[var(--pb-accent)] px-5 text-sm font-semibold text-[var(--pb-accent-ink)]"
           >
             <RefreshCw className="size-4" aria-hidden="true" />
             Try Again
@@ -364,11 +364,11 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3.5">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-[var(--pb-accent)] font-serif text-lg text-[var(--pb-accent-ink)]">
+              <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-sm bg-[var(--pb-accent)] font-display text-lg text-[var(--pb-accent-ink)]">
                 {data.outlet.name.charAt(0)}
               </span>
               <div className="min-w-0">
-                <h1 className="truncate font-serif text-xl leading-none tracking-tight">
+                <h1 className="truncate font-display text-xl leading-none tracking-tight">
                   {data.outlet.name}
                 </h1>
                 <p className="mt-0.5 truncate text-xs text-[var(--pb-muted)]">
@@ -394,7 +394,7 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
           <button
             type="button"
             onClick={() => setActiveTab('MENU')}
-            className={`inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border text-xs font-semibold transition-colors ${
+            className={`inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-sm border text-xs font-semibold transition-colors ${
               activeTab === 'MENU'
                 ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)] text-[var(--pb-accent-ink)]'
                 : 'border-[var(--pb-border)] bg-[var(--pb-canvas)] text-[var(--pb-ink)]'
@@ -406,7 +406,7 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
           <button
             type="button"
             onClick={() => setActiveTab('TAB')}
-            className={`inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border text-xs font-semibold transition-colors ${
+            className={`inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-sm border text-xs font-semibold transition-colors ${
               activeTab === 'TAB'
                 ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)] text-[var(--pb-accent-ink)]'
                 : 'border-[var(--pb-border)] bg-[var(--pb-canvas)] text-[var(--pb-ink)]'
@@ -458,7 +458,7 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
           <button
             type="button"
             onClick={() => setWaiterOpen(true)}
-            className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3.5 text-xs font-semibold text-[var(--pb-ink)] hover:border-[var(--pb-accent)]"
+            className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3.5 text-xs font-semibold text-[var(--pb-ink)] hover:border-[var(--pb-accent)]"
           >
             <BellRing className="size-4 text-[var(--pb-accent)]" aria-hidden="true" />
             Call Waiter
@@ -468,7 +468,7 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
             <button
               type="button"
               onClick={() => setCartOpen(true)}
-              className="inline-flex min-h-[44px] flex-1 items-center justify-between rounded-xl bg-[var(--pb-accent)] px-4 text-sm font-semibold text-[var(--pb-accent-ink)]"
+              className="inline-flex min-h-[44px] flex-1 items-center justify-between rounded-sm bg-[var(--pb-accent)] px-4 text-sm font-semibold text-[var(--pb-accent-ink)]"
             >
               <span className="inline-flex items-center gap-2">
                 <ShoppingBag className="size-4" aria-hidden="true" />
@@ -486,7 +486,7 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
                   ? setCheckoutOpen(true)
                   : setCartOpen(true)
               }
-              className="inline-flex min-h-[44px] flex-1 items-center justify-between rounded-xl bg-[var(--pb-ink)] px-4 text-sm font-semibold text-[var(--pb-canvas)]"
+              className="inline-flex min-h-[44px] flex-1 items-center justify-between rounded-sm bg-[var(--pb-ink)] px-4 text-sm font-semibold text-[var(--pb-canvas)]"
             >
               <span>
                 {data.orders.length > 0 && data.session.remainingMinor > 0

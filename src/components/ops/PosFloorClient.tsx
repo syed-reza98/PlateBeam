@@ -355,9 +355,15 @@ export function PosFloorClient({ outletSlug }: { outletSlug: string }) {
     const timer = setTimeout(() => {
       if (active) void loadBootstrap();
     }, 0);
+    const poll = setInterval(() => {
+      if (active && typeof navigator !== 'undefined' && navigator.onLine) {
+        void loadBootstrap();
+      }
+    }, 8000);
     return () => {
       active = false;
       clearTimeout(timer);
+      clearInterval(poll);
     };
   }, [loadBootstrap]);
 
@@ -762,7 +768,7 @@ export function PosFloorClient({ outletSlug }: { outletSlug: string }) {
       />
 
       {/* Top Operations Bar */}
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             type="button"
@@ -860,12 +866,12 @@ export function PosFloorClient({ outletSlug }: { outletSlug: string }) {
             if (layoutEditMode) e.preventDefault();
           }}
           onDrop={(e) => void handleTableDrop(e)}
-          className={`rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4 ${
+          className={`rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4 ${
             layoutEditMode ? 'ring-2 ring-[var(--pb-accent)]/40' : ''
           }`}
         >
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-serif text-xl tracking-tight">
+            <h2 className="font-display text-xl tracking-tight">
               {layoutEditMode ? 'Drag tables to reposition coordinates' : 'Live Floor Map'}
             </h2>
             <div className="flex flex-wrap gap-2 text-[11px] text-[var(--pb-muted)]">
@@ -894,7 +900,7 @@ export function PosFloorClient({ outletSlug }: { outletSlug: string }) {
                   onDragStart={(e) => {
                     e.dataTransfer.setData('text/plain', table.id);
                   }}
-                  className={`relative flex flex-col justify-between rounded-2xl border-2 p-4 transition-all duration-200 ${meta.border} ${meta.bg} ${meta.glow} ${
+                  className={`relative flex flex-col justify-between rounded-sm border-2 p-4 transition-all duration-200 ${meta.border} ${meta.bg} ${meta.glow} ${
                     meta.pulse ? 'animate-pulse' : ''
                   } ${layoutEditMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
                 >
@@ -952,10 +958,10 @@ export function PosFloorClient({ outletSlug }: { outletSlug: string }) {
           {/* Call Waiter Queue */}
           <section
             aria-label="Call Waiter Requests"
-            className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4"
+            className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4"
           >
             <div className="flex items-center justify-between">
-              <h2 className="font-serif text-lg">Call Waiter Queue</h2>
+              <h2 className="font-display text-lg">Call Waiter Queue</h2>
               <span className="rounded-full bg-[var(--pb-chili)]/15 px-2.5 py-0.5 font-mono text-xs font-semibold text-[var(--pb-chili)]">
                 {openRequests.length}
               </span>
@@ -1016,10 +1022,10 @@ export function PosFloorClient({ outletSlug }: { outletSlug: string }) {
           {/* Captain Approval Queue */}
           <section
             aria-label="Captain Approval Queue"
-            className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4"
+            className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4"
           >
             <div className="flex items-center justify-between">
-              <h2 className="font-serif text-lg">Captain Approval</h2>
+              <h2 className="font-display text-lg">Captain Approval</h2>
               <span className="rounded-full bg-[var(--pb-turmeric)]/20 px-2.5 py-0.5 font-mono text-xs font-semibold text-[var(--pb-turmeric)]">
                 {data.pendingApprovals.length}
               </span>

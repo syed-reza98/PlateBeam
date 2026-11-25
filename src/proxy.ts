@@ -39,6 +39,26 @@ function hasSessionCookie(request: NextRequest): boolean {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Convenient Route Aliases & Redirections
+  if (pathname.startsWith('/qr/')) {
+    const targetUrl = new URL(pathname.replace('/qr/', '/t/'), request.url);
+    targetUrl.search = request.nextUrl.search;
+    return NextResponse.redirect(targetUrl);
+  }
+  if (pathname === '/ops/pos' || pathname === '/pos') {
+    return NextResponse.redirect(new URL('/pos/zaika-bistro', request.url));
+  }
+  if (pathname === '/ops/kds' || pathname === '/kds') {
+    return NextResponse.redirect(new URL('/kds/zaika-bistro', request.url));
+  }
+  if (pathname === '/ops/dashboard') {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+  if (pathname === '/ops/admin') {
+    return NextResponse.redirect(new URL('/admin', request.url));
+  }
+
   const traceId = request.headers.get('x-trace-id') ?? crypto.randomUUID();
   const tenantSlug = extractTenantSlug(request.headers.get('host'));
 

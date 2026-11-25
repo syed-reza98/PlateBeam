@@ -132,16 +132,16 @@ export function SpiceQuizDialog({
     <Dialog open={open} onClose={onClose} title="Table Multiplayer: Spice Quiz">
       <div className="space-y-5 py-2">
         {/* Table Contest Header */}
-        <div className="flex items-center justify-between rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface-raised)] p-3.5">
+        <div className="flex items-center justify-between rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface-raised)] p-3.5">
           <div className="flex items-center gap-2.5">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-[var(--pb-accent)] text-[var(--pb-accent-ink)] font-bold shadow-sm">
+            <span className="flex size-9 items-center justify-center rounded-sm bg-[var(--pb-accent)] text-[var(--pb-accent-ink)] font-bold shadow-sm">
               <Flame className="size-5" aria-hidden="true" />
             </span>
             <div>
               <p className="text-xs font-semibold text-[var(--pb-muted)]">
                 {tableNumber ? `Table ${tableNumber} Challenge` : 'Live Table Trivia'}
               </p>
-              <p className="font-serif text-sm font-bold text-[var(--pb-ink)]">
+              <p className="font-display text-sm font-bold text-[var(--pb-ink)]">
                 Player: <span className="text-[var(--pb-accent)]">{playerNickname || 'Guest'}</span>
               </p>
             </div>
@@ -171,8 +171,8 @@ export function SpiceQuizDialog({
             </div>
 
             {/* Question Card */}
-            <div className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-5 shadow-sm">
-              <h3 className="font-serif text-lg font-bold leading-snug text-[var(--pb-ink)]">
+            <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-5 shadow-sm">
+              <h3 className="font-display text-lg font-bold leading-snug text-[var(--pb-ink)]">
                 {currentQ.q}
               </h3>
             </div>
@@ -198,7 +198,7 @@ export function SpiceQuizDialog({
                     type="button"
                     disabled={selectedIdx !== null}
                     onClick={() => handleSelectOption(idx)}
-                    className={`flex items-center justify-between rounded-xl border p-3.5 text-left text-sm font-medium transition-all active:scale-98 ${stateClasses}`}
+                    className={`flex items-center justify-between rounded-sm border p-3.5 text-left text-sm font-medium transition-all active:scale-98 ${stateClasses}`}
                   >
                     <span>{option}</span>
                     {selectedIdx !== null && isCorrect && (
@@ -210,19 +210,19 @@ export function SpiceQuizDialog({
             </div>
 
             {selectedIdx !== null && (
-              <p className="rounded-xl bg-[var(--pb-surface-raised)] p-3 text-xs text-[var(--pb-muted)] italic animate-fadeIn">
+              <p className="rounded-sm bg-[var(--pb-surface-raised)] p-3 text-xs text-[var(--pb-muted)] italic animate-fadeIn">
                 💡 <span className="font-semibold text-[var(--pb-ink)]">Chef Fact:</span> {currentQ.fact}
               </p>
             )}
           </div>
         ) : (
           <div className="space-y-4 text-center">
-            <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-[var(--pb-gold)]/15 text-[var(--pb-gold)]">
+            <div className="mx-auto flex size-16 items-center justify-center rounded-sm bg-[var(--pb-gold)]/15 text-[var(--pb-gold)]">
               <Trophy className="size-8" aria-hidden="true" />
             </div>
 
             <div>
-              <h3 className="font-serif text-2xl font-bold text-[var(--pb-ink)]">
+              <h3 className="font-display text-2xl font-bold text-[var(--pb-ink)]">
                 Quiz Completed!
               </h3>
               <p className="text-sm text-[var(--pb-muted)]">
@@ -231,7 +231,7 @@ export function SpiceQuizDialog({
             </div>
 
             {couponCode && (
-              <div className="rounded-2xl border-2 border-dashed border-[var(--pb-accent)] bg-[var(--pb-accent)]/10 p-4">
+              <div className="rounded-sm border-2 border-dashed border-[var(--pb-accent)] bg-[var(--pb-accent)]/10 p-4">
                 <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-accent)]">
                   Table High-Score Reward Unlocked!
                 </p>
@@ -245,7 +245,7 @@ export function SpiceQuizDialog({
             )}
 
             {/* Table Leaderboard */}
-            <div className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface-raised)] p-4 text-left">
+            <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface-raised)] p-4 text-left">
               <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)] mb-3">
                 <Users className="size-3.5" aria-hidden="true" />
                 Live Table & Venue Leaderboard
@@ -268,7 +268,7 @@ export function SpiceQuizDialog({
               <button
                 type="button"
                 onClick={handleRestart}
-                className="flex-1 rounded-xl border border-[var(--pb-border)] py-3 text-xs font-semibold hover:border-[var(--pb-accent)] transition-all"
+                className="flex-1 rounded-sm border border-[var(--pb-border)] py-3 text-xs font-semibold hover:border-[var(--pb-accent)] transition-all"
               >
                 Play Again
               </button>
@@ -276,7 +276,7 @@ export function SpiceQuizDialog({
                 type="button"
                 onClick={onClose}
                 disabled={submitting}
-                className="flex-1 rounded-xl bg-[var(--pb-accent)] py-3 text-xs font-bold text-[var(--pb-accent-ink)] hover:opacity-95 shadow-md transition-all disabled:opacity-50"
+                className="flex-1 rounded-sm bg-[var(--pb-accent)] py-3 text-xs font-bold text-[var(--pb-accent-ink)] hover:opacity-95 shadow-md transition-all disabled:opacity-50"
               >
                 {submitting ? 'Submitting Score…' : 'Back to Table'}
               </button>

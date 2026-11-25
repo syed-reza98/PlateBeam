@@ -4,8 +4,8 @@
   "description": "Multi-tenant Restaurant Management, POS, KDS & QR Ordering Platform",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FBF9F5",
-  "theme_color": "#E05A2B",
+  "background_color": "#0B1220",
+  "theme_color": "#3DE0C5",
   "orientation": "any",
   "icons": [
     {

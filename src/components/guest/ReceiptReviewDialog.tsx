@@ -107,11 +107,11 @@ export function ReceiptReviewDialog({
         {/* Statutory Receipt (FR-030) */}
         <section aria-label="Tax invoice receipt" className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="font-serif text-lg">Tax Receipt</h2>
+            <h2 className="font-display text-lg">Tax Receipt</h2>
             <button
               type="button"
               onClick={() => window.print()}
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-[var(--pb-border)] px-3 text-xs font-semibold hover:border-[var(--pb-accent)]"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-sm border border-[var(--pb-border)] px-3 text-xs font-semibold hover:border-[var(--pb-accent)]"
             >
               <Printer className="size-4" aria-hidden="true" />
               Print / Save PDF
@@ -119,9 +119,9 @@ export function ReceiptReviewDialog({
           </div>
 
           {loadingReceipt ? (
-            <div className="h-28 animate-pulse rounded-xl bg-[var(--pb-canvas)]" />
+            <div className="h-28 animate-pulse rounded-sm bg-[var(--pb-canvas)]" />
           ) : receipt ? (
-            <div className="rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] p-4 text-xs">
+            <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] p-4 text-xs">
               <div className="flex justify-between border-b border-[var(--pb-border)] pb-2">
                 <div>
                   <p className="font-semibold">{receipt.outletName}</p>
@@ -185,7 +185,7 @@ export function ReceiptReviewDialog({
               </dl>
             </div>
           ) : (
-            <p className="rounded-xl border border-dashed border-[var(--pb-border)] p-4 text-xs text-[var(--pb-muted)]">
+            <p className="rounded-sm border border-dashed border-[var(--pb-border)] p-4 text-xs text-[var(--pb-muted)]">
               Your statutory receipt will appear here as soon as payment settles.
             </p>
           )}
@@ -197,8 +197,8 @@ export function ReceiptReviewDialog({
           className="border-t border-[var(--pb-border)] pt-5"
         >
           {submittedReview ? (
-            <div className="space-y-3 rounded-xl border border-[var(--pb-olive)]/40 bg-[var(--pb-olive)]/10 p-4 text-center">
-              <p className="font-serif text-xl">Thank you for dining with us!</p>
+            <div className="space-y-3 rounded-sm border border-[var(--pb-olive)]/40 bg-[var(--pb-olive)]/10 p-4 text-center">
+              <p className="font-display text-xl">Thank you for dining with us!</p>
               {rating >= 4 ? (
                 <a
                   href={
@@ -207,7 +207,7 @@ export function ReceiptReviewDialog({
                   }
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[var(--pb-accent)] px-5 py-2.5 text-xs font-bold text-[var(--pb-accent-ink)] shadow-md glow-accent active:scale-98 transition-all"
+                  className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-sm bg-[var(--pb-accent)] px-5 py-2.5 text-xs font-bold text-[var(--pb-accent-ink)] shadow-md glow-accent active:scale-98 transition-all"
                 >
                   Post 5-Star on Google Reviews
                   <ExternalLink className="size-3.5" aria-hidden="true" />
@@ -221,7 +221,7 @@ export function ReceiptReviewDialog({
           ) : (
             <form onSubmit={handleSubmitReview} className="space-y-4">
               <div>
-                <h2 className="font-serif text-lg">How was your meal?</h2>
+                <h2 className="font-display text-lg">How was your meal?</h2>
                 <p className="text-xs text-[var(--pb-muted)]">
                   Tap a star rating to help our kitchen and service team.
                 </p>
@@ -236,7 +236,7 @@ export function ReceiptReviewDialog({
                     aria-checked={rating === star}
                     aria-label={`${star} ${star === 1 ? 'star' : 'stars'}`}
                     onClick={() => setRating(star)}
-                    className={`flex min-h-[44px] flex-1 items-center justify-center rounded-xl border transition-colors ${
+                    className={`flex min-h-[44px] flex-1 items-center justify-center rounded-sm border transition-colors ${
                       rating >= star
                         ? 'border-[var(--pb-turmeric)] bg-[var(--pb-turmeric)]/15 text-[var(--pb-turmeric)]'
                         : 'border-[var(--pb-border)] bg-[var(--pb-canvas)] text-[var(--pb-muted)]'
@@ -282,13 +282,13 @@ export function ReceiptReviewDialog({
                     : 'Optional note for the chef or team...'
                 }
                 aria-label="Review comment"
-                className="w-full rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3.5 py-2.5 text-sm"
+                className="w-full rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3.5 py-2.5 text-sm"
               />
 
               <button
                 type="submit"
                 disabled={submitting || rating === 0}
-                className="min-h-[44px] w-full rounded-xl bg-[var(--pb-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--pb-accent-ink)] disabled:opacity-50"
+                className="min-h-[44px] w-full rounded-sm bg-[var(--pb-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--pb-accent-ink)] disabled:opacity-50"
               >
                 {submitting ? 'Submitting...' : 'Submit Review'}
               </button>

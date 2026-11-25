@@ -1,28 +1,27 @@
 import type { Metadata } from 'next';
-import { Instrument_Serif, JetBrains_Mono, Plus_Jakarta_Sans } from 'next/font/google';
+import { Karla, Share_Tech_Mono, Teko } from 'next/font/google';
 import type { ReactNode } from 'react';
 import { ToastRegion } from '@/components/ui/ToastRegion';
 import './globals.css';
 
-const instrumentSerif = Instrument_Serif({
+const teko = Teko({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-teko',
+  display: 'swap',
+});
+
+const karla = Karla({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-karla',
+  display: 'swap',
+});
+
+const shareTechMono = Share_Tech_Mono({
   subsets: ['latin'],
   weight: '400',
-  style: ['normal', 'italic'],
-  variable: '--font-instrument-serif',
-  display: 'swap',
-});
-
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-plus-jakarta',
-  display: 'swap',
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-jetbrains-mono',
+  variable: '--font-share-tech-mono',
   display: 'swap',
 });
 
@@ -45,7 +44,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
-      className={`${instrumentSerif.variable} ${plusJakarta.variable} ${jetbrainsMono.variable}`}
+      className={`${teko.variable} ${karla.variable} ${shareTechMono.variable}`}
       suppressHydrationWarning
     >
       <head>
@@ -60,7 +59,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           }}
         />
       </head>
-      <body className="min-h-dvh bg-[var(--pb-canvas)] text-[var(--pb-ink)] antialiased">
+      <body className="min-h-dvh bg-[var(--pb-canvas)] font-sans text-[var(--pb-ink)] antialiased">
         {children}
         <ToastRegion />
       </body>

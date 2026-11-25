@@ -10,21 +10,22 @@ export const metadata = {
 
 export default function SuperAdminPage() {
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--pb-canvas)] text-[var(--pb-ink)]">
-      <header className="border-b border-[var(--pb-border)] bg-[var(--pb-surface)]/90 backdrop-blur-sm">
+    <div className="tower-field flex min-h-dvh flex-col text-[var(--pb-ink)]">
+      <div className="led-rail" aria-hidden="true" />
+      <header className="border-b border-[var(--pb-border)] bg-[color-mix(in_srgb,var(--pb-surface)_92%,transparent)] backdrop-blur-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <Link
               href="/"
               aria-label="Back to PlateBeam home"
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] hover:border-[var(--pb-accent)]"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] hover:border-[var(--pb-accent)]"
             >
               <ArrowLeft className="size-4" aria-hidden="true" />
             </Link>
             <div>
-              <p className="font-serif text-xl leading-none">Platform Super-Admin</p>
-              <p className="mt-0.5 text-xs text-[var(--pb-muted)]">
-                Multi-Tenant Provisioning, Subscriptions & SaaS Governance
+              <p className="font-display text-2xl leading-none tracking-wide">Platform Admin</p>
+              <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--pb-muted)]">
+                Tenants · Subscriptions · Governance
               </p>
             </div>
           </div>
@@ -32,7 +33,7 @@ export default function SuperAdminPage() {
           <nav aria-label="Super-admin navigation" className="flex items-center gap-2">
             <Link
               href="/dashboard"
-              className="inline-flex min-h-11 items-center rounded-xl border border-[var(--pb-border)] px-3 py-2 text-xs font-semibold hover:border-[var(--pb-accent)]"
+              className="inline-flex min-h-11 items-center rounded-sm border border-[var(--pb-border)] px-3 py-2 text-xs font-semibold hover:border-[var(--pb-accent)]"
             >
               Owner Dashboard
             </Link>
@@ -41,10 +42,10 @@ export default function SuperAdminPage() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 pb-safe-bottom-bar">
+      <main className="pb-safe-bottom-bar mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6">
         <Suspense
           fallback={
-            <div className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-8 text-sm text-[var(--pb-muted)]">
+            <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-8 text-sm text-[var(--pb-muted)]">
               Loading multi-tenant registry…
             </div>
           }

@@ -1,218 +1,166 @@
 import Link from 'next/link';
 import {
+  ArrowUpRight,
   ChefHat,
   LayoutDashboard,
   QrCode,
   ShieldCheck,
   UtensilsCrossed,
-  ArrowUpRight,
-  Sparkles,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
-const SURFACES = [
+const GUEST_QR =
+  'eyJ0IjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwibyI6IjIyMjIyMjIyLTIyMjItNDIyMi04MjIyLTIyMjIyMjIyMjIyMiIsInRibCI6IjY2NjY2NjY2LTY2NjYtNDY2Ni04NjY2LTY2NjY2NjY2NjYwMSIsIm4iOiJ6YWlrYTAxIiwiaWF0IjoxNzk1NjMyMDAwfQ.9_no91QOTl60pCNPzfmloMFIzjebyk0Wz8mItpBqPYI';
+
+const CHANNELS = [
   {
-    href: '/t/demo',
+    href: `/t/${GUEST_QR}`,
+    code: 'CH-01',
     title: 'Guest QR Portal',
-    subtitle: 'Zero-App Mobile Dining',
-    description:
-      'HMAC-secured QR table entry, live kitchen cook countdown, multiplayer table trivia, and zero-drift 2-tap split bills.',
-    badge: 'Guest PWA',
+    subtitle: 'Zero-app table channel',
+    description: 'Signed QR entry, shared cart, cook countdown, split checkout.',
     icon: QrCode,
-    color: 'from-orange-500/20 to-amber-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30',
-    highlight: 'Step 01, 02, 05, 08',
   },
   {
     href: '/pos/zaika-bistro',
+    code: 'CH-02',
     title: 'FOH Floor & POS',
-    subtitle: 'Tableside Orchestration',
-    description:
-      'Real-time color-coded table occupancy, captain order approval, waiter request chimes, and driverless ESC/POS printing.',
-    badge: 'Staff Tablet',
+    subtitle: 'Floor dispatch',
+    description: 'Live table status, captain approval, waiter alerts, shifts.',
     icon: UtensilsCrossed,
-    color: 'from-blue-500/20 to-cyan-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30',
-    highlight: 'Step 04 & 07',
   },
   {
     href: '/kds/zaika-bistro',
-    title: 'Obsidian Kitchen (KDS)',
-    subtitle: 'Multi-Station Expo Console',
-    description:
-      'Station ticket splitting (Tandoor, Curry, Bar), SLA elapsed timer escalation, bump bar keyboard shortcuts, and 1-tap recall.',
-    badge: 'Kitchen Display',
+    code: 'CH-03',
+    title: 'Kitchen Display',
+    subtitle: 'Station expo',
+    description: 'Station tickets, SLA timers, bump-bar shortcuts, recall.',
     icon: ChefHat,
-    color: 'from-emerald-500/20 to-teal-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
-    highlight: 'Step 04 (Kitchen)',
   },
   {
     href: '/dashboard',
-    title: 'Owner Command Center',
-    subtitle: 'Executive Business Intelligence',
-    description:
-      'Live occupancy telemetry, BCG menu engineering matrix (Stars, Plowhorses, Puzzles, Dogs), BOM recipes, and instant 86 switch.',
-    badge: 'Owner BI',
+    code: 'CH-04',
+    title: 'Owner Command',
+    subtitle: 'Ops telemetry',
+    description: 'Occupancy, sales, menu engineering, 86, inventory, RBAC.',
     icon: LayoutDashboard,
-    color: 'from-purple-500/20 to-indigo-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30',
-    highlight: 'Step 10 (Overview)',
   },
   {
     href: '/admin',
-    title: 'Platform Super-Admin',
-    subtitle: 'Multi-Tenant Governance',
-    description:
-      'Multi-tenant database isolation (Postgres RLS), subscription lifecycle, statutory tax slabs, and global restaurant provisioning.',
-    badge: 'SaaS Platform',
+    code: 'CH-05',
+    title: 'Platform Admin',
+    subtitle: 'Tenant tower',
+    description: 'Multi-tenant provisioning, status, and subscription control.',
     icon: ShieldCheck,
-    color: 'from-rose-500/20 to-pink-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30',
-    highlight: 'Multi-Tenant',
   },
 ] as const;
 
 export default function HomePage() {
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--pb-canvas)] text-[var(--pb-ink)] selection:bg-[var(--pb-accent)] selection:text-white">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-40 border-b border-[var(--pb-border)] bg-[var(--pb-surface)]/85 backdrop-blur-md transition-all">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
+    <div className="tower-field relative min-h-dvh text-[var(--pb-ink)]">
+      <div className="led-rail" aria-hidden="true" />
+
+      <header className="pb-safe-top sticky top-0 z-40 border-b border-[var(--pb-border)] bg-[color-mix(in_srgb,var(--pb-canvas)_88%,transparent)] backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-2xl bg-[var(--pb-accent)] text-[var(--pb-accent-ink)] font-serif text-2xl font-bold shadow-md shadow-orange-500/20">
-              P
+            <span className="led-pulse inline-flex size-10 items-center justify-center rounded-sm border border-[var(--pb-accent)] bg-[var(--pb-surface)] font-display text-2xl font-semibold tracking-wide text-[var(--pb-accent)]">
+              PB
             </span>
             <div>
-              <p className="font-serif text-2xl leading-none tracking-tight font-bold">
+              <p className="font-display text-3xl leading-none tracking-[0.04em]">
                 PlateBeam
               </p>
-              <p className="text-[11px] font-medium tracking-wide text-[var(--pb-muted)]">
-                Multi-Surface Restaurant Operating System
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pb-muted)]">
+                Venue Dispatch OS
               </p>
             </div>
           </div>
-
-          <nav aria-label="Quick Actions" className="flex items-center gap-3">
+          <nav aria-label="Quick actions" className="flex items-center gap-2">
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 rounded-xl border border-[var(--pb-border)] bg-[var(--pb-surface)] px-4 py-2 text-xs font-semibold hover:border-[var(--pb-accent)] hover:text-[var(--pb-accent)] active:scale-98 transition-all"
+              className="inline-flex min-h-[44px] items-center rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] px-3 text-xs font-semibold uppercase tracking-wider hover:border-[var(--pb-accent)]"
             >
-              <span>Staff Sign In</span>
+              Staff Sign In
             </Link>
             <ThemeToggle />
           </nav>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-12 sm:px-6 sm:py-16">
-        <div className="relative max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--pb-accent)]/30 bg-[var(--pb-accent)]/10 px-3.5 py-1 text-xs font-bold text-[var(--pb-accent)]">
-            <Sparkles className="size-3.5" aria-hidden="true" />
-            <span>Zaika Bistro & Bar Concept Architecture</span>
-          </div>
-
-          <h1 className="font-serif text-4xl leading-[1.08] tracking-tight sm:text-6xl font-bold text-[var(--pb-ink)]">
-            Every table, station, and ledger in{' '}
-            <span className="italic text-[var(--pb-accent)] underline decoration-[var(--pb-accent)]/30 decoration-wavy">
-              synchronized rhythm.
-            </span>
-          </h1>
-
-          <p className="text-base text-[var(--pb-muted)] sm:text-xl font-normal leading-relaxed pt-2">
-            <em>&ldquo;Your waiter can&rsquo;t be at every table at once, but your website can.&rdquo;</em>{' '}
-            Experience the complete 10-step dining lifecycle across mobile guests, captain POS,
-            station-routed KDS, and owner analytics.
+      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-16">
+        <section className="tower-scan relative max-w-3xl space-y-6">
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--pb-accent)]">
+            Live · Multi-surface sync
           </p>
-        </div>
-
-        {/* Live Metrics Ticker Banner */}
-        <section aria-label="Demo Telemetry" className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
-              Table Occupancy
-            </p>
-            <p className="mt-1 font-mono text-2xl font-bold text-[var(--pb-ink)]">
-              6 / 6 <span className="text-xs font-sans text-[var(--pb-olive)] font-semibold">(100%)</span>
-            </p>
-          </div>
-          <div className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
-              Live Orders
-            </p>
-            <p className="mt-1 font-mono text-2xl font-bold text-[var(--pb-ink)]">
-              46 <span className="text-xs font-sans text-[var(--pb-accent)] font-semibold">Active</span>
-            </p>
-          </div>
-          <div className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
-              Daily Gross GMV
-            </p>
-            <p className="mt-1 font-mono text-2xl font-bold text-[var(--pb-ink)]">
-              ৳ 48,500
-            </p>
-          </div>
-          <div className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
-              Kitchen SLA Rate
-            </p>
-            <p className="mt-1 font-mono text-2xl font-bold text-[var(--pb-olive)]">
-              94.2% <span className="text-xs font-sans text-[var(--pb-muted)]">On-Time</span>
-            </p>
+          <h1 className="font-display text-5xl leading-[0.92] tracking-[0.02em] sm:text-7xl">
+            PlateBeam
+          </h1>
+          <p className="max-w-xl text-base leading-relaxed text-[var(--pb-muted)] sm:text-lg">
+            Your waiter cannot be at every table at once — the tower can. One
+            synchronized web OS for guests, floor, kitchen, and ownership.
+          </p>
+          <div className="flex flex-wrap gap-3 pt-2">
+            <Link
+              href={`/t/${GUEST_QR}`}
+              className="glow-accent inline-flex min-h-[48px] items-center gap-2 rounded-sm bg-[var(--pb-accent)] px-5 font-display text-xl tracking-wide text-[var(--pb-accent-ink)]"
+            >
+              Open Guest Channel
+              <ArrowUpRight className="size-4" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/login"
+              className="inline-flex min-h-[48px] items-center rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] px-5 text-sm font-semibold"
+            >
+              Staff Console
+            </Link>
           </div>
         </section>
 
-        {/* Surface Grid Cards */}
-        <section
-          aria-label="Application Surfaces"
-          className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
-        >
-          {SURFACES.map((surface) => {
-            const Icon = surface.icon;
-            return (
-              <Link
-                key={surface.href}
-                href={surface.href}
-                className="group relative flex flex-col justify-between rounded-3xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-7 transition-all duration-300 hover:border-[var(--pb-accent)] hover:shadow-xl hover:shadow-[var(--pb-accent)]/5 hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-[var(--pb-accent)]"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span
-                      className={`inline-flex size-12 items-center justify-center rounded-2xl border bg-gradient-to-br ${surface.color} transition-transform group-hover:scale-105`}
-                    >
-                      <Icon className="size-6" aria-hidden="true" />
-                    </span>
-                    <span className="rounded-full border border-[var(--pb-border)] bg-[var(--pb-surface-raised)] px-3 py-1 text-[11px] font-bold text-[var(--pb-muted)]">
-                      {surface.badge}
-                    </span>
-                  </div>
+        <div className="led-rail my-10 opacity-60" aria-hidden="true" />
 
-                  <div className="mt-5">
-                    <p className="text-xs font-bold uppercase tracking-wider text-[var(--pb-accent)]">
-                      {surface.subtitle}
-                    </p>
-                    <h2 className="mt-1 font-serif text-2xl font-bold tracking-tight text-[var(--pb-ink)] group-hover:text-[var(--pb-accent)] transition-colors">
-                      {surface.title}
-                    </h2>
-                    <p className="mt-2.5 text-sm leading-relaxed text-[var(--pb-muted)]">
-                      {surface.description}
-                    </p>
-                  </div>
-                </div>
+        <section aria-label="Surface channels" className="space-y-3">
+          <div className="flex items-end justify-between gap-3">
+            <h2 className="font-display text-3xl tracking-wide">Channels</h2>
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--pb-muted)]">
+              Select a surface
+            </p>
+          </div>
 
-                <div className="mt-6 flex items-center justify-between border-t border-[var(--pb-border-subtle)] pt-4">
-                  <span className="font-mono text-xs font-semibold text-[var(--pb-muted)]">
-                    {surface.highlight}
-                  </span>
-                  <span className="inline-flex items-center gap-1 font-mono text-xs font-bold text-[var(--pb-accent)] group-hover:translate-x-1 transition-transform">
-                    Launch Surface <ArrowUpRight className="size-3.5" />
-                  </span>
-                </div>
-              </Link>
-            );
-          })}
+          <ul className="space-y-2">
+            {CHANNELS.map((channel) => {
+              const Icon = channel.icon;
+              return (
+                <li key={channel.href}>
+                  <Link href={channel.href} className="channel-strip group rounded-sm">
+                    <span className="font-mono text-[11px] tracking-[0.16em] text-[var(--pb-accent)]">
+                      {channel.code}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                        <span className="font-display text-2xl tracking-wide group-hover:text-[var(--pb-accent)]">
+                          {channel.title}
+                        </span>
+                        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--pb-muted)]">
+                          {channel.subtitle}
+                        </span>
+                      </span>
+                      <span className="mt-1 block text-sm text-[var(--pb-muted)]">
+                        {channel.description}
+                      </span>
+                    </span>
+                    <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-sm border border-[var(--pb-border)] text-[var(--pb-accent)]">
+                      <Icon className="size-5" aria-hidden="true" />
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-[var(--pb-border)] bg-[var(--pb-surface)] py-6 text-center text-xs text-[var(--pb-muted)]">
-        <p>PlateBeam OS · Designed for Zaika Bistro & Bar · Next.js 16 App Router & Modern Web Standards</p>
+      <footer className="pb-safe-bottom border-t border-[var(--pb-border)] py-5 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--pb-muted)]">
+        PlateBeam Dispatch · Zaika Bistro demo · Next.js App Router
       </footer>
     </div>
   );

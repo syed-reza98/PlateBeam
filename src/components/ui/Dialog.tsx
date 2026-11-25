@@ -94,10 +94,10 @@ export function Dialog({
       ref={dialogRef}
       aria-labelledby={titleId}
       {...({ closedby } as Record<string, string>)}
-      className={`w-full shadow-2xl ${className}`}
+      className={`w-full max-w-lg shadow-2xl ${className}`}
     >
       <div className="flex items-center justify-between gap-4 border-b border-[var(--pb-border)] px-5 py-4">
-        <h1 id={titleId} className="font-serif text-xl font-normal tracking-tight">
+        <h1 id={titleId} className="font-display text-xl font-normal tracking-tight">
           {title}
         </h1>
         <button

@@ -225,12 +225,12 @@ export async function GET(
         tipMinor: p.tipMinor,
         status: p.status,
         splitGroupId: p.splitGroupId,
-        createdAt: (p.paidAt ?? new Date()).toISOString(),
+        createdAt: (p.paidAt ? new Date(p.paidAt) : new Date()).toISOString(),
       })),
       leaderboard: leaderboard.map((entry) => ({
         playerNickname: entry.playerNickname,
         score: entry.score,
-        createdAt: entry.playedAt.toISOString(),
+        createdAt: entry.playedAt ? new Date(entry.playedAt).toISOString() : new Date().toISOString(),
         rewardCouponCode: entry.rewardCouponCode,
       })),
     });

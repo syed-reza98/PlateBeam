@@ -10,35 +10,36 @@ export const metadata = {
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--pb-canvas)] text-[var(--pb-ink)]">
-      <header className="border-b border-[var(--pb-border)] bg-[var(--pb-surface)]/90 backdrop-blur-sm">
+    <div className="tower-field flex min-h-dvh flex-col text-[var(--pb-ink)]">
+      <div className="led-rail" aria-hidden="true" />
+      <header className="border-b border-[var(--pb-border)] bg-[color-mix(in_srgb,var(--pb-surface)_92%,transparent)] backdrop-blur-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <Link
               href="/"
               aria-label="Back to PlateBeam home"
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] hover:border-[var(--pb-accent)]"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] hover:border-[var(--pb-accent)]"
             >
               <ArrowLeft className="size-4" aria-hidden="true" />
             </Link>
             <div>
-              <p className="font-serif text-xl leading-none">Owner Command Center</p>
-              <p className="mt-0.5 text-xs text-[var(--pb-muted)]">
-                Live BI, Menu & 86, BOM Inventory, 3-Layer RBAC & QR Security
+              <p className="font-display text-2xl leading-none tracking-wide">Owner Command</p>
+              <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--pb-muted)]">
+                Live BI · 86 · BOM · RBAC · QR
               </p>
             </div>
           </div>
 
           <nav aria-label="Dashboard navigation" className="flex items-center gap-2">
             <Link
-              href="/pos/demo"
-              className="inline-flex min-h-11 items-center rounded-xl border border-[var(--pb-border)] px-3 py-2 text-xs font-semibold hover:border-[var(--pb-accent)]"
+              href="/pos/zaika-bistro"
+              className="inline-flex min-h-11 items-center rounded-sm border border-[var(--pb-border)] px-3 py-2 text-xs font-semibold hover:border-[var(--pb-accent)]"
             >
               FOH POS
             </Link>
             <Link
               href="/admin"
-              className="hidden sm:inline-flex min-h-11 items-center rounded-xl border border-[var(--pb-border)] px-3 py-2 text-xs font-semibold hover:border-[var(--pb-accent)]"
+              className="hidden sm:inline-flex min-h-11 items-center rounded-sm border border-[var(--pb-border)] px-3 py-2 text-xs font-semibold hover:border-[var(--pb-accent)]"
             >
               Super-Admin
             </Link>
@@ -47,11 +48,11 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 pb-safe-bottom-bar">
+      <main className="pb-safe-bottom-bar mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6">
         <Suspense
           fallback={
-            <div className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-8 text-sm text-[var(--pb-muted)]">
-              Loading Owner analytics & operational controls…
+            <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-8 text-sm text-[var(--pb-muted)]">
+              Loading owner analytics…
             </div>
           }
         >

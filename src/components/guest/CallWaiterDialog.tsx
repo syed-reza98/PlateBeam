@@ -92,7 +92,7 @@ export function CallWaiterDialog({
                 type="button"
                 aria-pressed={active}
                 onClick={() => setSelectedType(tag.type)}
-                className={`flex min-h-[56px] flex-col items-start justify-center rounded-xl border px-3.5 py-2 text-left transition-colors ${
+                className={`flex min-h-[56px] flex-col items-start justify-center rounded-sm border px-3.5 py-2 text-left transition-colors ${
                   active
                     ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)]/10 text-[var(--pb-ink)]'
                     : 'border-[var(--pb-border)] bg-[var(--pb-canvas)] text-[var(--pb-ink)]'
@@ -129,14 +129,14 @@ export function CallWaiterDialog({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="e.g., 2 extra glasses, baby high-chair..."
-            className="min-h-[44px] w-full rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3.5 text-sm text-[var(--pb-ink)] placeholder:text-[var(--pb-muted)] focus-visible:outline-2 focus-visible:outline-[var(--pb-accent)]"
+            className="min-h-[44px] w-full rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3.5 text-sm text-[var(--pb-ink)] placeholder:text-[var(--pb-muted)] focus-visible:outline-2 focus-visible:outline-[var(--pb-accent)]"
           />
         </div>
 
         <button
           type="submit"
           disabled={submitting}
-          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[var(--pb-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--pb-accent-ink)] disabled:opacity-60"
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-sm bg-[var(--pb-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--pb-accent-ink)] disabled:opacity-60"
         >
           <BellRing className="size-4" aria-hidden="true" />
           {submitting ? 'Alerting Server...' : 'Send Request'}

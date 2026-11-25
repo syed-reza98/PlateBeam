@@ -34,12 +34,12 @@ export function PairingUpsellDialog({
     <Dialog open={open} onClose={onClose} title="Chef's Recommended Pairing">
       <div className="space-y-5 py-2">
         {/* Banner */}
-        <div className="flex items-center gap-3 rounded-2xl border border-[var(--pb-accent)]/30 bg-[var(--pb-accent)]/10 p-3.5">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--pb-accent)] text-[var(--pb-accent-ink)] shadow-md">
+        <div className="flex items-center gap-3 rounded-sm border border-[var(--pb-accent)]/30 bg-[var(--pb-accent)]/10 p-3.5">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-sm bg-[var(--pb-accent)] text-[var(--pb-accent-ink)] shadow-md">
             <Sparkles className="size-5" aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <p className="font-serif text-base font-bold tracking-tight text-[var(--pb-ink)]">
+            <p className="font-display text-base font-bold tracking-tight text-[var(--pb-ink)]">
               {rule?.promoLabel ?? 'Perfect Taste Pairing'}
             </p>
             <p className="text-xs text-[var(--pb-muted)]">
@@ -49,9 +49,9 @@ export function PairingUpsellDialog({
         </div>
 
         {/* Suggested Item Card */}
-        <div className="flex items-center gap-4 rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface-raised)] p-4 transition-all">
+        <div className="flex items-center gap-4 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface-raised)] p-4 transition-all">
           {suggestedItem.imageUrl ? (
-            <div className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)]">
+            <div className="relative size-20 shrink-0 overflow-hidden rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)]">
               <Image
                 src={suggestedItem.imageUrl}
                 alt={suggestedItem.name}
@@ -61,7 +61,7 @@ export function PairingUpsellDialog({
               />
             </div>
           ) : (
-            <div className="flex size-20 shrink-0 items-center justify-center rounded-xl bg-[var(--pb-surface)] border border-[var(--pb-border)] text-3xl font-serif">
+            <div className="flex size-20 shrink-0 items-center justify-center rounded-sm bg-[var(--pb-surface)] border border-[var(--pb-border)] text-3xl font-display">
               🍛
             </div>
           )}
@@ -73,7 +73,7 @@ export function PairingUpsellDialog({
                 {suggestedItem.dietaryType}
               </p>
             </div>
-            <h4 className="mt-1 font-serif text-lg font-bold leading-tight text-[var(--pb-ink)] truncate">
+            <h4 className="mt-1 font-display text-lg font-bold leading-tight text-[var(--pb-ink)] truncate">
               {suggestedItem.name}
             </h4>
             <p className="mt-0.5 line-clamp-1 text-xs text-[var(--pb-muted)]">
@@ -103,7 +103,7 @@ export function PairingUpsellDialog({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-xl border border-[var(--pb-border)] bg-[var(--pb-surface)] py-3 text-xs font-semibold text-[var(--pb-muted)] hover:text-[var(--pb-ink)] hover:border-[var(--pb-accent)] active:scale-98 transition-all"
+            className="flex-1 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] py-3 text-xs font-semibold text-[var(--pb-muted)] hover:text-[var(--pb-ink)] hover:border-[var(--pb-accent)] active:scale-98 transition-all"
           >
             No thanks, just {triggerItem.name}
           </button>
@@ -113,7 +113,7 @@ export function PairingUpsellDialog({
               onAcceptUpsell(suggestedItem, promoPrice);
               onClose();
             }}
-            className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--pb-accent)] py-3 text-xs font-bold text-[var(--pb-accent-ink)] hover:opacity-95 active:scale-98 shadow-md glow-accent transition-all"
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-sm bg-[var(--pb-accent)] py-3 text-xs font-bold text-[var(--pb-accent-ink)] hover:opacity-95 active:scale-98 shadow-md glow-accent transition-all"
           >
             <Plus className="size-4" aria-hidden="true" />
             Add Pairing ({formatMoney(promoPrice, currency)})

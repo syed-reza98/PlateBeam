@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
+  ArrowRight,
   ChefHat,
   Crown,
   KeyRound,
@@ -12,7 +13,6 @@ import {
   ShieldCheck,
   Store,
   UtensilsCrossed,
-  ArrowRight,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
@@ -27,7 +27,6 @@ interface DemoStaff {
   pin: string;
   target: string;
   icon: typeof Crown;
-  color: string;
 }
 
 const DEMO_STAFF_MEMBERS: DemoStaff[] = [
@@ -38,7 +37,6 @@ const DEMO_STAFF_MEMBERS: DemoStaff[] = [
     pin: '1234',
     target: '/dashboard',
     icon: Crown,
-    color: 'border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400',
   },
   {
     name: 'Nadia Karim',
@@ -47,7 +45,6 @@ const DEMO_STAFF_MEMBERS: DemoStaff[] = [
     pin: '2222',
     target: '/pos/zaika-bistro',
     icon: UtensilsCrossed,
-    color: 'border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-400',
   },
   {
     name: 'Tariq Hasan',
@@ -56,7 +53,6 @@ const DEMO_STAFF_MEMBERS: DemoStaff[] = [
     pin: '3333',
     target: '/pos/zaika-bistro',
     icon: Store,
-    color: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
   },
   {
     name: 'Chef Kabir',
@@ -65,9 +61,11 @@ const DEMO_STAFF_MEMBERS: DemoStaff[] = [
     pin: '4444',
     target: '/kds/zaika-bistro',
     icon: ChefHat,
-    color: 'border-rose-500/40 bg-rose-500/10 text-rose-600 dark:text-rose-400',
   },
 ];
+
+const GUEST_QR =
+  'eyJ0IjoiMTExMTExMTEtMTExMS00MTExLTgxMTEtMTExMTExMTExMTExIiwibyI6IjIyMjIyMjIyLTIyMjItNDIyMi04MjIyLTIyMjIyMjIyMjIyMiIsInRibCI6IjY2NjY2NjY2LTY2NjYtNDY2Ni04NjY2LTY2NjY2NjY2NjYwMSIsIm4iOiJ6YWlrYTAxIiwiaWF0IjoxNzk1NjMyMDAwfQ.9_no91QOTl60pCNPzfmloMFIzjebyk0Wz8mItpBqPYI';
 
 export function LoginClient({ from }: LoginClientProps) {
   const router = useRouter();
@@ -128,30 +126,27 @@ export function LoginClient({ from }: LoginClientProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, tenantSlug: 'zaika-bistro' }),
       });
-
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Invalid email or password');
+        throw new Error(data.error || 'Sign-in failed');
       }
-
       const destination = from && from !== '/login' ? from : '/dashboard';
       router.push(destination);
       router.refresh();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Login failed';
-      setError(message);
+      setError(err instanceof Error ? err.message : 'Sign-in failed');
     } finally {
       setLoading(false);
     }
   }
 
   function handleKeypadPress(digit: string) {
-    if (pin.length < 4) {
-      const nextPin = pin + digit;
-      setPin(nextPin);
-      if (nextPin.length === 4) {
-        handlePinLogin(nextPin);
-      }
+    if (pin.length >= 4) return;
+    const next = pin + digit;
+    setPin(next);
+    setError(null);
+    if (next.length === 4) {
+      void handlePinLogin(next);
     }
   }
 
@@ -161,50 +156,49 @@ export function LoginClient({ from }: LoginClientProps) {
   }
 
   return (
-    <div className="min-h-dvh flex flex-col justify-between bg-canvas text-ink p-4 sm:p-8">
-      {/* Top Header */}
-      <header className="max-w-4xl w-full mx-auto flex items-center justify-between pb-6 border-b border-border">
+    <div className="tower-field flex min-h-dvh flex-col justify-between p-4 sm:p-8">
+      <div className="led-rail" aria-hidden="true" />
+
+      <header className="mx-auto flex w-full max-w-4xl items-center justify-between pb-6">
         <div>
-          <span className="font-serif text-2xl sm:text-3xl tracking-tight text-accent">
+          <Link href="/" className="font-display text-3xl tracking-[0.04em] text-[var(--pb-accent)]">
             PlateBeam
-          </span>
-          <p className="text-xs text-muted">
-            Zaika Bistro & Bar — Gulshan Flagship (Demo Cloud)
+          </Link>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--pb-muted)]">
+            Staff Clearance · Zaika Bistro Demo
           </p>
         </div>
         <ThemeToggle />
       </header>
 
-      {/* Main Login Card */}
-      <main className="max-w-md w-full mx-auto my-auto py-8">
-        <div className="bg-card border border-border rounded-2xl shadow-xl p-6 sm:p-8">
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-accent/10 text-accent mb-3">
-              <ShieldCheck className="w-6 h-6" />
+      <main className="mx-auto my-auto w-full max-w-md py-8">
+        <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-6 sm:p-8">
+          <div className="mb-6 text-center">
+            <div className="led-pulse mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-sm border border-[var(--pb-accent)] bg-[var(--pb-canvas)] text-[var(--pb-accent)]">
+              <ShieldCheck className="size-6" aria-hidden="true" />
             </div>
-            <h1 className="font-serif text-2xl font-bold">Staff Access Portal</h1>
-            <p className="text-xs text-muted mt-1">
+            <h1 className="font-display text-3xl tracking-wide">Staff Access</h1>
+            <p className="mt-1 text-xs text-[var(--pb-muted)]">
               {from && from !== '/login'
-                ? `Sign in to access: ${from}`
-                : 'Enter your 4-digit POS PIN or partner credentials'}
+                ? `Clearance required for ${from}`
+                : '4-digit POS PIN or owner credentials'}
             </p>
           </div>
 
-          {/* Mode Switcher Tabs */}
-          <div className="grid grid-cols-2 gap-1 p-1 bg-canvas border border-border rounded-xl mb-6 text-sm font-medium">
+          <div className="mb-6 grid grid-cols-2 gap-1 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] p-1 text-sm font-medium">
             <button
               type="button"
               onClick={() => {
                 setActiveTab('pin');
                 setError(null);
               }}
-              className={`py-2 rounded-lg transition-all ${
+              className={`inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-sm transition-colors ${
                 activeTab === 'pin'
-                  ? 'bg-card text-ink shadow-sm'
-                  : 'text-muted hover:text-ink'
+                  ? 'bg-[var(--pb-surface)] text-[var(--pb-ink)]'
+                  : 'text-[var(--pb-muted)] hover:text-[var(--pb-ink)]'
               }`}
             >
-              <KeyRound className="w-4 h-4 inline-block mr-1.5" />
+              <KeyRound className="size-4" aria-hidden="true" />
               Staff PIN
             </button>
             <button
@@ -213,35 +207,36 @@ export function LoginClient({ from }: LoginClientProps) {
                 setActiveTab('email');
                 setError(null);
               }}
-              className={`py-2 rounded-lg transition-all ${
+              className={`inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-sm transition-colors ${
                 activeTab === 'email'
-                  ? 'bg-card text-ink shadow-sm'
-                  : 'text-muted hover:text-ink'
+                  ? 'bg-[var(--pb-surface)] text-[var(--pb-ink)]'
+                  : 'text-[var(--pb-muted)] hover:text-[var(--pb-ink)]'
               }`}
             >
-              <Mail className="w-4 h-4 inline-block mr-1.5" />
-              Owner / Admin
+              <Mail className="size-4" aria-hidden="true" />
+              Owner
             </button>
           </div>
 
           {error && (
-            <div className="p-3 mb-5 text-xs rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-center">
+            <div
+              role="alert"
+              className="mb-5 rounded-sm border border-[var(--pb-chili)]/30 bg-[var(--pb-chili)]/10 p-3 text-center text-xs text-[var(--pb-chili)]"
+            >
               {error}
             </div>
           )}
 
-          {/* Tab 1: Staff PIN */}
           {activeTab === 'pin' && (
             <div>
-              {/* PIN Display */}
-              <div className="flex justify-center gap-3 mb-6">
+              <div className="mb-6 flex justify-center gap-3">
                 {[0, 1, 2, 3].map((idx) => (
                   <div
                     key={idx}
-                    className={`w-12 h-14 rounded-xl border-2 flex items-center justify-center font-mono text-2xl font-bold transition-all ${
+                    className={`flex size-12 items-center justify-center rounded-sm border-2 font-mono text-2xl font-bold sm:h-14 sm:w-12 ${
                       pin.length > idx
-                        ? 'border-accent bg-accent/5 text-ink'
-                        : 'border-border bg-canvas text-muted/30'
+                        ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)]/10 text-[var(--pb-ink)]'
+                        : 'border-[var(--pb-border)] bg-[var(--pb-canvas)] text-[var(--pb-muted)]/40'
                     }`}
                   >
                     {pin.length > idx ? '●' : '—'}
@@ -249,15 +244,14 @@ export function LoginClient({ from }: LoginClientProps) {
                 ))}
               </div>
 
-              {/* Number Keypad */}
-              <div className="grid grid-cols-3 gap-2.5 max-w-xs mx-auto mb-6">
+              <div className="mx-auto mb-6 grid max-w-xs grid-cols-3 gap-2.5">
                 {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
                   <button
                     key={digit}
                     type="button"
                     disabled={loading}
                     onClick={() => handleKeypadPress(digit)}
-                    className="h-12 rounded-xl border border-border bg-card hover:bg-canvas active:scale-95 text-lg font-mono font-medium transition-all shadow-sm"
+                    className="min-h-[48px] rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface-raised)] font-mono text-lg font-medium active:scale-95"
                   >
                     {digit}
                   </button>
@@ -266,7 +260,7 @@ export function LoginClient({ from }: LoginClientProps) {
                   type="button"
                   disabled={loading || pin.length === 0}
                   onClick={handleKeypadClear}
-                  className="h-12 rounded-xl border border-border bg-card/60 hover:bg-canvas text-xs font-semibold text-muted transition-all"
+                  className="min-h-[48px] rounded-sm border border-[var(--pb-border)] text-xs font-semibold text-[var(--pb-muted)]"
                 >
                   Clear
                 </button>
@@ -274,24 +268,23 @@ export function LoginClient({ from }: LoginClientProps) {
                   type="button"
                   disabled={loading}
                   onClick={() => handleKeypadPress('0')}
-                  className="h-12 rounded-xl border border-border bg-card hover:bg-canvas active:scale-95 text-lg font-mono font-medium transition-all shadow-sm"
+                  className="min-h-[48px] rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface-raised)] font-mono text-lg font-medium active:scale-95"
                 >
                   0
                 </button>
                 <button
                   type="button"
                   disabled={loading || pin.length < 4}
-                  onClick={() => handlePinLogin()}
-                  className="h-12 rounded-xl bg-accent text-white hover:opacity-90 active:scale-95 text-xs font-semibold transition-all flex items-center justify-center"
+                  onClick={() => void handlePinLogin()}
+                  className="inline-flex min-h-[48px] items-center justify-center rounded-sm bg-[var(--pb-accent)] text-[var(--pb-accent-ink)]"
                 >
-                  {loading ? '...' : <ArrowRight className="w-5 h-5" />}
+                  {loading ? '...' : <ArrowRight className="size-5" aria-hidden="true" />}
                 </button>
               </div>
 
-              {/* 1-Tap Demo Staff Switcher */}
-              <div className="pt-4 border-t border-border">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted mb-3 text-center">
-                  Quick 1-Tap Demo Staff Logins
+              <div className="border-t border-[var(--pb-border)] pt-4">
+                <p className="mb-3 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--pb-muted)]">
+                  Demo clearances
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   {DEMO_STAFF_MEMBERS.map((staff) => {
@@ -303,18 +296,20 @@ export function LoginClient({ from }: LoginClientProps) {
                         disabled={loading}
                         onClick={() => {
                           setPin(staff.pin);
-                          handlePinLogin(staff.pin, staff.target);
+                          void handlePinLogin(staff.pin, staff.target);
                         }}
-                        className={`p-2.5 rounded-xl border text-left transition-all hover:scale-[1.02] active:scale-95 flex items-start gap-2 ${staff.color}`}
+                        className="flex min-h-[44px] items-start gap-2 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] p-2.5 text-left hover:border-[var(--pb-accent)]"
                       >
-                        <Icon className="w-4 h-4 mt-0.5 shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold truncate">{staff.name}</p>
-                          <p className="text-[10px] opacity-80 truncate">{staff.role}</p>
-                          <span className="text-[10px] font-mono font-semibold underline mt-0.5 block">
-                            PIN: {staff.pin}
+                        <Icon className="mt-0.5 size-4 shrink-0 text-[var(--pb-accent)]" aria-hidden="true" />
+                        <span className="min-w-0">
+                          <span className="block truncate text-xs font-bold">{staff.name}</span>
+                          <span className="block truncate text-[10px] text-[var(--pb-muted)]">
+                            {staff.role}
                           </span>
-                        </div>
+                          <span className="mt-0.5 block font-mono text-[10px] text-[var(--pb-accent)]">
+                            PIN {staff.pin}
+                          </span>
+                        </span>
                       </button>
                     );
                   })}
@@ -323,83 +318,77 @@ export function LoginClient({ from }: LoginClientProps) {
             </div>
           )}
 
-          {/* Tab 2: Email & Password */}
           {activeTab === 'email' && (
             <form onSubmit={handleEmailLogin} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-muted mb-1">
-                  Email Address
+                <label className="mb-1 block text-xs font-medium text-[var(--pb-muted)]" htmlFor="login-email">
+                  Email
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 absolute left-3 top-3 text-muted" />
+                  <Mail className="pointer-events-none absolute left-3 top-3 size-4 text-[var(--pb-muted)]" aria-hidden="true" />
                   <input
+                    id="login-email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="owner@zaikabistro.com"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-border bg-canvas text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="min-h-[44px] w-full rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] py-2 pl-9 pr-3 text-sm focus-visible:outline-2 focus-visible:outline-[var(--pb-accent)]"
                   />
                 </div>
               </div>
-
               <div>
-                <label className="block text-xs font-medium text-muted mb-1">
+                <label className="mb-1 block text-xs font-medium text-[var(--pb-muted)]" htmlFor="login-password">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 absolute left-3 top-3 text-muted" />
+                  <Lock className="pointer-events-none absolute left-3 top-3 size-4 text-[var(--pb-muted)]" aria-hidden="true" />
                   <input
+                    id="login-password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-border bg-canvas text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="min-h-[44px] w-full rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] py-2 pl-9 pr-3 text-sm focus-visible:outline-2 focus-visible:outline-[var(--pb-accent)]"
                   />
                 </div>
               </div>
-
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 rounded-xl bg-accent text-white font-medium text-sm hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-sm bg-[var(--pb-accent)] text-sm font-semibold text-[var(--pb-accent-ink)]"
               >
-                {loading ? 'Authenticating...' : 'Sign In as Owner'}
-                <ArrowRight className="w-4 h-4" />
+                {loading ? 'Authenticating…' : 'Sign In as Owner'}
+                <ArrowRight className="size-4" aria-hidden="true" />
               </button>
-
               <button
                 type="button"
                 onClick={() => {
                   setEmail('owner@zaikabistro.com');
                   setPassword('ZaikaOwner#2026');
                 }}
-                className="w-full py-2 text-xs text-muted hover:text-accent border border-dashed border-border rounded-xl transition-all"
+                className="min-h-[44px] w-full rounded-sm border border-dashed border-[var(--pb-border)] py-2 text-xs text-[var(--pb-muted)] hover:text-[var(--pb-accent)]"
               >
-                Fill Demo Owner Credentials (owner@zaikabistro.com)
+                Fill demo owner credentials
               </button>
             </form>
           )}
         </div>
       </main>
 
-      {/* Surface Quick-Access Footer */}
-      <footer className="max-w-4xl w-full mx-auto pt-6 border-t border-border flex flex-wrap items-center justify-between gap-3 text-xs text-muted">
-        <span>PlateBeam Next.js 16 + Supabase Architecture</span>
-        <div className="flex flex-wrap items-center gap-3">
-          <Link href="/t/demo" className="hover:text-accent underline">
-            Guest QR Portal (/t/demo)
+      <footer className="mx-auto flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 border-t border-[var(--pb-border)] pt-6 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--pb-muted)]">
+        <span>PlateBeam Dispatch</span>
+        <div className="flex flex-wrap gap-3">
+          <Link href={`/t/${GUEST_QR}`} className="hover:text-[var(--pb-accent)]">
+            Guest
           </Link>
-          <span>•</span>
-          <Link href="/pos/zaika-bistro" className="hover:text-accent underline">
-            FOH Floor Map (/pos/zaika-bistro)
+          <Link href="/pos/zaika-bistro" className="hover:text-[var(--pb-accent)]">
+            POS
           </Link>
-          <span>•</span>
-          <Link href="/kds/zaika-bistro" className="hover:text-accent underline">
-            KDS Console (/kds/zaika-bistro)
+          <Link href="/kds/zaika-bistro" className="hover:text-[var(--pb-accent)]">
+            KDS
           </Link>
-          <span>•</span>
-          <Link href="/dashboard" className="hover:text-accent underline">
-            Owner Dashboard (/dashboard)
+          <Link href="/dashboard" className="hover:text-[var(--pb-accent)]">
+            Owner
           </Link>
         </div>
       </footer>

@@ -109,7 +109,7 @@ export function ItemModifierDialog({
     <Dialog open={open} onClose={onClose} title={item.name} closedby="any">
       <div className="space-y-5">
         {item.imageUrl && (
-          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-[var(--pb-border)]">
+          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-sm border border-[var(--pb-border)]">
             <Image
               src={item.imageUrl}
               alt={item.name}
@@ -125,7 +125,7 @@ export function ItemModifierDialog({
         )}
 
         {item.allergens.length > 0 && (
-          <div className="flex items-center gap-2 rounded-xl border border-[var(--pb-turmeric)]/40 bg-[var(--pb-turmeric)]/10 px-3 py-2 text-xs">
+          <div className="flex items-center gap-2 rounded-sm border border-[var(--pb-turmeric)]/40 bg-[var(--pb-turmeric)]/10 px-3 py-2 text-xs">
             <AlertTriangle className="size-4 shrink-0 text-[var(--pb-turmeric)]" aria-hidden="true" />
             <span>Allergens: {item.allergens.join(', ')}</span>
           </div>
@@ -144,7 +144,7 @@ export function ItemModifierDialog({
                 type="button"
                 aria-pressed={spiceLevel === level}
                 onClick={() => setSpiceLevel(level)}
-                className={`min-h-[44px] rounded-xl border px-3 text-xs font-semibold transition-colors ${
+                className={`min-h-[44px] rounded-sm border px-3 text-xs font-semibold transition-colors ${
                   spiceLevel === level
                     ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)] text-[var(--pb-accent-ink)]'
                     : 'border-[var(--pb-border)] bg-[var(--pb-canvas)] text-[var(--pb-ink)]'
@@ -174,7 +174,7 @@ export function ItemModifierDialog({
                   return (
                     <label
                       key={mod.id}
-                      className={`flex min-h-[44px] w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-3.5 py-2 text-sm transition-colors ${
+                      className={`flex min-h-[44px] w-full cursor-pointer items-center justify-between gap-3 rounded-sm border px-3.5 py-2 text-sm transition-colors ${
                         checked
                           ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)]/8'
                           : 'border-[var(--pb-border)] bg-[var(--pb-canvas)]'
@@ -215,13 +215,13 @@ export function ItemModifierDialog({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="e.g., No cilantro, extra crispy, dressing on the side..."
-            className="w-full rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3.5 py-2.5 text-sm text-[var(--pb-ink)] placeholder:text-[var(--pb-muted)] focus-visible:outline-2 focus-visible:outline-[var(--pb-accent)]"
+            className="w-full rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3.5 py-2.5 text-sm text-[var(--pb-ink)] placeholder:text-[var(--pb-muted)] focus-visible:outline-2 focus-visible:outline-[var(--pb-accent)]"
           />
         </div>
 
         {/* Quantity + Add CTA */}
         <div className="flex items-center justify-between gap-3 border-t border-[var(--pb-border)] pt-4">
-          <div className="inline-flex items-center rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)]">
+          <div className="inline-flex items-center rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)]">
             <button
               type="button"
               aria-label="Decrease quantity"
@@ -246,7 +246,7 @@ export function ItemModifierDialog({
           <button
             type="button"
             onClick={handleConfirm}
-            className="min-h-[44px] flex-1 rounded-xl bg-[var(--pb-accent)] px-5 py-2.5 text-sm font-semibold text-[var(--pb-accent-ink)] transition-opacity hover:opacity-95"
+            className="min-h-[44px] flex-1 rounded-sm bg-[var(--pb-accent)] px-5 py-2.5 text-sm font-semibold text-[var(--pb-accent-ink)] transition-opacity hover:opacity-95"
           >
             Add to Table Cart · {formatMoney(lineTotalMinor, currency)}
           </button>

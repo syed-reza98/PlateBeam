@@ -202,9 +202,15 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
     const timer = setTimeout(() => {
       if (active) void loadKdsTickets();
     }, 0);
+    const poll = setInterval(() => {
+      if (active && typeof navigator !== 'undefined' && navigator.onLine) {
+        void loadKdsTickets();
+      }
+    }, 5000);
     return () => {
       active = false;
       clearTimeout(timer);
+      clearInterval(poll);
     };
   }, [loadKdsTickets]);
 
@@ -431,8 +437,8 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
                 onClick={() => setActiveStation(station)}
                 className={`min-h-12 rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${
                   active
-                    ? 'border-[#F07346] bg-[#F07346] text-[#111315]'
-                    : 'border-[#2E343D] bg-[#1B1E23] text-[#F4F6F8] hover:border-[#F07346]'
+                    ? 'border-[#3DE0C5] bg-[#3DE0C5] text-[#070d18]'
+                    : 'border-[#243552] bg-[#101a2c] text-[#E8F0FF] hover:border-[#3DE0C5]'
                 }`}
               >
                 {station === 'ALL' ? `All Stations (${visibleTickets.length})` : station}
@@ -446,10 +452,10 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
             type="button"
             onClick={() => setSoundEnabled((v) => !v)}
             aria-pressed={soundEnabled}
-            className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-[#2E343D] bg-[#1B1E23] px-4 text-xs font-semibold text-[#F4F6F8]"
+            className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-[#243552] bg-[#101a2c] px-4 text-xs font-semibold text-[#E8F0FF]"
           >
             {soundEnabled ? (
-              <Volume2 className="size-4 text-[#2D8A56]" aria-hidden="true" />
+              <Volume2 className="size-4 text-[#3DCE7F]" aria-hidden="true" />
             ) : (
               <VolumeX className="size-4 text-[#9AA4B2]" aria-hidden="true" />
             )}
@@ -460,7 +466,7 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
             type="button"
             onClick={() => void handleRecallLast()}
             disabled={bumpedHistory.length === 0}
-            className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-[#2E343D] bg-[#1B1E23] px-4 text-xs font-semibold text-[#F4F6F8] disabled:opacity-40"
+            className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-[#243552] bg-[#101a2c] px-4 text-xs font-semibold text-[#E8F0FF] disabled:opacity-40"
           >
             <RotateCcw className="size-4" aria-hidden="true" />
             Recall (R)
@@ -470,9 +476,9 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
 
       {/* KDS Ticket Grid */}
       {visibleTickets.length === 0 ? (
-        <div className="rounded-2xl border border-[#2E343D] bg-[#1B1E23] p-12 text-center">
-          <ChefHat className="mx-auto size-10 text-[#2D8A56]" aria-hidden="true" />
-          <p className="mt-3 font-serif text-2xl text-[#F4F6F8]">All Clear — Kitchen Caught Up</p>
+        <div className="rounded-2xl border border-[#243552] bg-[#101a2c] p-12 text-center">
+          <ChefHat className="mx-auto size-10 text-[#3DCE7F]" aria-hidden="true" />
+          <p className="mt-3 font-display text-2xl text-[#E8F0FF]">All Clear — Kitchen Caught Up</p>
           <p className="mt-1 text-sm text-[#9AA4B2]">
             New KOT tickets from QR, Waiter, or Counter POS will chime and appear here.
           </p>
@@ -488,33 +494,33 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
 
             const borderColor =
               slaState === 'OVERDUE'
-                ? 'border-[#E04F44] kds-overdue-pulse'
+                ? 'border-[#D64545] kds-overdue-pulse'
                 : slaState === 'WARNING'
-                  ? 'border-[#E5A93C]'
-                  : 'border-[#2D8A56]';
+                  ? 'border-[#F0A202]'
+                  : 'border-[#3DCE7F]';
 
             const slaBadgeClass =
               slaState === 'OVERDUE'
-                ? 'bg-[#E04F44] text-white'
+                ? 'bg-[#D64545] text-white'
                 : slaState === 'WARNING'
-                  ? 'bg-[#E5A93C] text-[#111315]'
-                  : 'bg-[#2D8A56] text-white';
+                  ? 'bg-[#F0A202] text-[#070d18]'
+                  : 'bg-[#3DCE7F] text-white';
 
             return (
               <article
                 key={ticket.orderId}
                 aria-label={`Ticket ${ticket.orderNumber}`}
-                className={`flex flex-col justify-between rounded-2xl border-2 bg-[#1B1E23] p-4 ${borderColor}`}
+                className={`flex flex-col justify-between rounded-2xl border-2 bg-[#101a2c] p-4 ${borderColor}`}
               >
                 <div>
                   {/* Ticket Header */}
-                  <div className="flex items-start justify-between gap-3 border-b border-[#2E343D] pb-3">
+                  <div className="flex items-start justify-between gap-3 border-b border-[#243552] pb-3">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex size-7 items-center justify-center rounded-md bg-[#111315] font-mono text-xs font-bold text-[#9AA4B2]">
+                        <span className="inline-flex size-7 items-center justify-center rounded-md bg-[#070d18] font-mono text-xs font-bold text-[#9AA4B2]">
                           {index + 1}
                         </span>
-                        <span className="font-mono text-3xl font-bold tracking-tight text-[#F4F6F8]">
+                        <span className="font-mono text-3xl font-bold tracking-tight text-[#E8F0FF]">
                           {ticket.tableNumber
                             ? ticket.tableNumber
                             : `#${ticket.tokenNumber}`}
@@ -530,7 +536,7 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
                         className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-mono text-sm font-bold tabular-nums shadow-sm ${slaBadgeClass}`}
                       >
                         {slaState === 'OVERDUE' ? (
-                          <Flame className="size-4 animate-bounce" aria-hidden="true" />
+                          <Flame className="size-4 text-[#F0A202]" aria-hidden="true" />
                         ) : (
                           <Clock className="size-4" aria-hidden="true" />
                         )}
@@ -547,14 +553,14 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
                   </div>
 
                   {/* Visual SLA Countdown Bar */}
-                  <div className="mt-3 relative h-1.5 w-full overflow-hidden rounded-full bg-[#111315]">
+                  <div className="mt-3 relative h-1.5 w-full overflow-hidden rounded-full bg-[#070d18]">
                     <div
                       className={`h-full transition-all duration-500 ${
                         slaState === 'OVERDUE'
-                          ? 'bg-[#E04F44]'
+                          ? 'bg-[#D64545]'
                           : slaState === 'WARNING'
-                            ? 'bg-[#E5A93C]'
-                            : 'bg-[#2D8A56]'
+                            ? 'bg-[#F0A202]'
+                            : 'bg-[#3DCE7F]'
                       }`}
                       style={{ width: `${Math.min(100, Math.round(slaRatio * 100))}%` }}
                     />
@@ -565,16 +571,16 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
                     {ticket.items.map((item) => (
                       <li
                         key={item.id}
-                        className="rounded-xl border border-[#2E343D] bg-[#111315] p-3"
+                        className="rounded-xl border border-[#243552] bg-[#070d18] p-3"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <p className="text-base font-semibold text-[#F4F6F8]">
-                              <span className="font-mono text-[#F07346]">{item.quantity}×</span>{' '}
+                            <p className="text-base font-semibold text-[#E8F0FF]">
+                              <span className="font-mono text-[#3DE0C5]">{item.quantity}×</span>{' '}
                               {item.name}
                             </p>
                             <div className="mt-1 flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
-                              <span className="inline-flex items-center rounded-md bg-[#2E343D]/70 px-2 py-0.5 font-semibold text-[#F4F6F8]">
+                              <span className="inline-flex items-center rounded-md bg-[#243552]/70 px-2 py-0.5 font-semibold text-[#E8F0FF]">
                                 {item.stationName}
                               </span>
                               <span className="text-[#9AA4B2]">·</span>
@@ -592,7 +598,7 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
                                     NEXT_KDS_STATUS[item.status]!,
                                   )
                                 }
-                                className="min-h-12 min-w-12 rounded-lg bg-[#2D8A56] px-3 text-xs font-bold text-white"
+                                className="min-h-12 min-w-12 rounded-lg bg-[#3DCE7F] px-3 text-xs font-bold text-white"
                               >
                                 {NEXT_KDS_STATUS[item.status]}
                               </button>
@@ -609,7 +615,7 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
                                     void patchItemStatus(item, 'CANCELLED');
                                   }
                                 }}
-                                className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-[#E04F44]/60 text-[#E04F44]"
+                                className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-[#D64545]/60 text-[#D64545]"
                               >
                                 <XCircle className="size-5" aria-hidden="true" />
                               </button>
@@ -618,28 +624,28 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
                         </div>
 
                         {item.modifiers.length > 0 && (
-                          <p className="mt-1.5 text-xs font-medium text-[#E5A93C]">
+                          <p className="mt-1.5 text-xs font-medium text-[#F0A202]">
                             Mods: {item.modifiers.join(' · ')}
                             {item.spiceLevel ? ` · Spice: ${item.spiceLevel}` : ''}
                           </p>
                         )}
 
                         {item.allergens.length > 0 && (
-                          <p className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-[#E04F44]/20 px-2 py-0.5 text-xs font-bold text-[#FF8A80]">
+                          <p className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-[#D64545]/20 px-2 py-0.5 text-xs font-bold text-[#FF8A80]">
                             <AlertTriangle className="size-3.5" aria-hidden="true" />
                             ALLERGY: {item.allergens.join(', ')}
                           </p>
                         )}
 
                         {item.notes && (
-                          <p className="mt-1.5 text-xs italic text-[#F4F6F8]/90">
+                          <p className="mt-1.5 text-xs italic text-[#E8F0FF]/90">
                             “{item.notes}”
                           </p>
                         )}
 
                         {item.companionStations.length > 0 && (
-                          <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-[#2E343D] bg-[#1B1E23]/80 px-2 py-1 text-[11px] font-mono text-[#9AA4B2]">
-                            <span className="font-semibold text-[#E5A93C]">Companion:</span>
+                          <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-[#243552] bg-[#101a2c]/80 px-2 py-1 text-[11px] font-mono text-[#9AA4B2]">
+                            <span className="font-semibold text-[#F0A202]">Companion:</span>
                             <span>{item.companionStations.join(', ')}</span>
                           </div>
                         )}
@@ -651,7 +657,7 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
                 <button
                   type="button"
                   onClick={() => void handleBumpTicket(ticket)}
-                  className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#F07346] px-4 text-sm font-bold text-[#111315]"
+                  className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#3DE0C5] px-4 text-sm font-bold text-[#070d18]"
                 >
                   <CheckCircle2 className="size-5" aria-hidden="true" />
                   Bump Ticket ({index < 9 ? `Key ${index + 1}` : 'Click'})

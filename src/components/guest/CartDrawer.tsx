@@ -82,14 +82,14 @@ export function CartDrawer({
             className="mx-auto size-10 text-[var(--pb-muted)]"
             aria-hidden="true"
           />
-          <p className="mt-3 font-serif text-xl">Your table cart is empty</p>
+          <p className="mt-3 font-display text-xl">Your table cart is empty</p>
           <p className="mt-1 text-sm text-[var(--pb-muted)]">
             Add dishes from the menu. Everyone at your table sees updates in real time.
           </p>
         </div>
       ) : (
         <div className="space-y-5">
-          <div className="flex items-center gap-2 rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3 py-2 text-xs text-[var(--pb-muted)]">
+          <div className="flex items-center gap-2 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3 py-2 text-xs text-[var(--pb-muted)]">
             <Users className="size-4 shrink-0 text-[var(--pb-accent)]" aria-hidden="true" />
             <span>Live shared cart synced with everyone at this table.</span>
           </div>
@@ -159,7 +159,7 @@ export function CartDrawer({
 
           {/* Upsell Pairings (FR-008) */}
           {upsellSuggestions.length > 0 && (
-            <div className="space-y-2 rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] p-3">
+            <div className="space-y-2 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] p-3">
               <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--pb-accent)]">
                 <Sparkles className="size-3.5" aria-hidden="true" />
                 Chef&apos;s Pairings
@@ -201,7 +201,7 @@ export function CartDrawer({
               type="button"
               disabled={isSubmitting}
               onClick={onPlaceOrder}
-              className="min-h-[44px] w-full rounded-xl bg-[var(--pb-accent)] px-5 py-3 text-sm font-semibold text-[var(--pb-accent-ink)] transition-opacity hover:opacity-95 disabled:opacity-60"
+              className="min-h-[44px] w-full rounded-sm bg-[var(--pb-accent)] px-5 py-3 text-sm font-semibold text-[var(--pb-accent-ink)] transition-opacity hover:opacity-95 disabled:opacity-60"
             >
               {isSubmitting ? 'Sending to Kitchen...' : 'Send Order to Kitchen'}
             </button>

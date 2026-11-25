@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { KdsConsoleClient } from '@/components/ops/KdsConsoleClient';
 
 export const metadata = {
-  title: 'Obsidian Kitchen Display (KDS)',
+  title: 'Kitchen Display (KDS)',
 };
 
 async function KdsOutletContent({
@@ -15,23 +15,24 @@ async function KdsOutletContent({
   const { outletSlug } = await params;
 
   return (
-    <div className="kds-surface min-h-dvh flex flex-col">
-      <header className="border-b border-[#2E343D] bg-[#1B1E23]">
+    <div className="kds-surface flex min-h-dvh flex-col">
+      <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#3DE0C5] to-[#F0A202]" aria-hidden="true" />
+      <header className="border-b border-[#243552] bg-[#101a2c]">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <Link
               href="/"
               aria-label="Back to PlateBeam home"
-              className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-xl border border-[#2E343D] bg-[#111315] text-[#F4F6F8] hover:border-[#F07346]"
+              className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-sm border border-[#243552] bg-[#070d18] text-[#E8F0FF] hover:border-[#3DE0C5]"
             >
               <ArrowLeft className="size-5" aria-hidden="true" />
             </Link>
             <div>
-              <p className="font-serif text-xl leading-none text-[#F4F6F8]">
-                Obsidian Kitchen Display
+              <p className="font-display text-2xl leading-none tracking-wide text-[#E8F0FF]">
+                Kitchen Display
               </p>
-              <p className="mt-0.5 font-mono text-xs text-[#9AA4B2]">
-                Outlet: {outletSlug} · Bump keys: 1–9, Space, R (Recall)
+              <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-[#8fa0b8]">
+                {outletSlug} · bump 1–9 · space · R recall
               </p>
             </div>
           </div>
@@ -39,7 +40,7 @@ async function KdsOutletContent({
           <nav aria-label="KDS navigation" className="flex items-center gap-2">
             <Link
               href={`/pos/${outletSlug}`}
-              className="inline-flex min-h-12 items-center rounded-xl border border-[#2E343D] bg-[#111315] px-4 text-xs font-semibold text-[#F4F6F8] hover:border-[#F07346]"
+              className="inline-flex min-h-12 items-center rounded-sm border border-[#243552] bg-[#070d18] px-4 text-xs font-semibold text-[#E8F0FF] hover:border-[#3DE0C5]"
             >
               FOH POS
             </Link>
@@ -47,14 +48,14 @@ async function KdsOutletContent({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6 pb-safe-bottom-bar">
+      <main className="pb-safe-bottom-bar mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6">
         <KdsConsoleClient outletSlug={outletSlug} />
       </main>
     </div>
   );
 }
 
-export default function KdsOutletPage({
+export default function KdsPage({
   params,
 }: {
   params: Promise<{ outletSlug: string }>;
@@ -62,8 +63,8 @@ export default function KdsOutletPage({
   return (
     <Suspense
       fallback={
-        <div className="kds-surface min-h-dvh flex items-center justify-center p-8 text-sm text-[#9AA4B2]">
-          Loading Obsidian Kitchen Display…
+        <div className="kds-surface flex min-h-dvh items-center justify-center font-mono text-sm text-[#8fa0b8]">
+          Loading station tickets…
         </div>
       }
     >

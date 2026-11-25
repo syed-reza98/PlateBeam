@@ -57,6 +57,8 @@ export async function POST(
     const autoApprove = isStaff && orderSource !== 'QR';
 
     let targetSessionId = sessionId;
+    let targetTenantId = tenant.id;
+    let targetOutletId = outlet.id;
 
     // Support `/api/v1/sessions/counter/orders` for Pay-First Counter Takeaway
     if (sessionId === 'counter') {
@@ -80,6 +82,8 @@ export async function POST(
       if (!existing) {
         throw new NotFoundError('Table session not found', { sessionId });
       }
+      targetTenantId = existing.tenantId;
+      targetOutletId = existing.outletId;
     }
 
     const result = await placeOrder(
@@ -93,8 +97,8 @@ export async function POST(
         print,
       },
       {
-        tenantId: tenant.id,
-        outletId: outlet.id,
+        tenantId: targetTenantId,
+        outletId: targetOutletId,
         sessionId: targetSessionId,
         source: orderSource,
         guestId: body.guestId ?? null,

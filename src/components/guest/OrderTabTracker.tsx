@@ -72,13 +72,13 @@ export function OrderTabTracker({
   return (
     <section aria-label="Running table tab and orders" className="space-y-4">
       {/* Running Bill Summary Card */}
-      <div className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4 sm:p-5">
+      <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
               Running Table Tab
             </p>
-            <h2 className="mt-0.5 font-serif text-2xl tracking-tight">
+            <h2 className="mt-0.5 font-display text-2xl tracking-tight">
               {orders.length === 0
                 ? 'No rounds sent yet'
                 : `${orders.length} ${orders.length === 1 ? 'Round' : 'Rounds'} Ordered`}
@@ -167,7 +167,7 @@ export function OrderTabTracker({
               <button
                 type="button"
                 onClick={onOpenCheckout}
-                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--pb-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--pb-accent-ink)]"
+                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-sm bg-[var(--pb-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--pb-accent-ink)]"
               >
                 <CreditCard className="size-4" aria-hidden="true" />
                 Split &amp; Pay Bill
@@ -177,7 +177,7 @@ export function OrderTabTracker({
               <button
                 type="button"
                 onClick={onOpenReceipt}
-                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-4 py-2.5 text-sm font-semibold text-[var(--pb-ink)] hover:border-[var(--pb-accent)]"
+                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-4 py-2.5 text-sm font-semibold text-[var(--pb-ink)] hover:border-[var(--pb-accent)]"
               >
                 <Receipt className="size-4" aria-hidden="true" />
                 Receipt &amp; Review
@@ -191,7 +191,7 @@ export function OrderTabTracker({
       {orders.map((order, idx) => (
         <article
           key={order.id}
-          className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4"
+          className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4"
         >
           <div className="flex items-center justify-between gap-2 border-b border-[var(--pb-border)] pb-2.5">
             <div>

@@ -177,13 +177,13 @@ export function SuperAdminClient() {
   return (
     <div className="space-y-6">
       <section className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
+        <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
             Provisioned Tenants
           </p>
           <p className="mt-2 font-mono text-3xl font-bold tabular-nums">{tenants.length}</p>
         </div>
-        <div className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
+        <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
             Active Outlets
           </p>
@@ -191,7 +191,7 @@ export function SuperAdminClient() {
             {tenants.reduce((acc, t) => acc + t.outletCount, 0)}
           </p>
         </div>
-        <div className="rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
+        <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
             Active Tables
           </p>

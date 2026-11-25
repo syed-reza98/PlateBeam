@@ -16,21 +16,22 @@ async function PosOutletContent({
   const { outletSlug } = await params;
 
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--pb-canvas)] text-[var(--pb-ink)]">
-      <header className="border-b border-[var(--pb-border)] bg-[var(--pb-surface)]/90 backdrop-blur-sm">
+    <div className="tower-field flex min-h-dvh flex-col text-[var(--pb-ink)]">
+      <div className="led-rail" aria-hidden="true" />
+      <header className="border-b border-[var(--pb-border)] bg-[color-mix(in_srgb,var(--pb-surface)_92%,transparent)] backdrop-blur-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <Link
               href="/"
               aria-label="Back to PlateBeam home"
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] hover:border-[var(--pb-accent)]"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] hover:border-[var(--pb-accent)]"
             >
               <ArrowLeft className="size-4" aria-hidden="true" />
             </Link>
             <div>
-              <p className="font-serif text-xl leading-none">Front-of-House POS</p>
-              <p className="mt-0.5 font-mono text-xs text-[var(--pb-muted)]">
-                Outlet: {outletSlug}
+              <p className="font-display text-2xl leading-none tracking-wide">Front-of-House POS</p>
+              <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--pb-muted)]">
+                Outlet · {outletSlug}
               </p>
             </div>
           </div>
@@ -38,13 +39,13 @@ async function PosOutletContent({
           <nav aria-label="Operations navigation" className="flex items-center gap-2">
             <Link
               href={`/kds/${outletSlug}`}
-              className="inline-flex min-h-11 items-center rounded-xl border border-[var(--pb-border)] px-3 py-2 text-xs font-semibold hover:border-[var(--pb-accent)]"
+              className="inline-flex min-h-11 items-center rounded-sm border border-[var(--pb-border)] px-3 py-2 text-xs font-semibold hover:border-[var(--pb-accent)]"
             >
               Open KDS
             </Link>
             <Link
               href="/dashboard"
-              className="hidden sm:inline-flex min-h-11 items-center rounded-xl border border-[var(--pb-border)] px-3 py-2 text-xs font-semibold hover:border-[var(--pb-accent)]"
+              className="hidden sm:inline-flex min-h-11 items-center rounded-sm border border-[var(--pb-border)] px-3 py-2 text-xs font-semibold hover:border-[var(--pb-accent)]"
             >
               Dashboard
             </Link>

@@ -119,7 +119,7 @@ export function MenuBrowser({
   return (
     <section aria-label="Digital menu" className="space-y-4">
       {heroItem?.imageUrl && (
-        <article className="relative overflow-hidden rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)]">
+        <article className="relative overflow-hidden rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)]">
           <div className="relative aspect-[16/9] w-full overflow-hidden bg-[var(--pb-canvas)] sm:aspect-[21/9]">
             <Image
               src={heroItem.imageUrl}
@@ -137,7 +137,7 @@ export function MenuBrowser({
                   <Sparkles className="size-3" aria-hidden="true" />
                   Chef&apos;s Spotlight
                 </span>
-                <h2 className="mt-1.5 font-serif text-2xl leading-tight tracking-tight">
+                <h2 className="mt-1.5 font-display text-2xl leading-tight tracking-tight">
                   {heroItem.name}
                 </h2>
                 {heroItem.description && (
@@ -162,7 +162,7 @@ export function MenuBrowser({
       )}
 
       {/* Search & Sticky Category Tabs */}
-      <div className="sticky top-0 z-20 -mx-4 border-b border-[var(--pb-border)] bg-[var(--pb-canvas)]/95 px-4 py-3 backdrop-blur-md sm:mx-0 sm:rounded-2xl sm:border">
+      <div className="sticky top-0 z-20 -mx-4 border-b border-[var(--pb-border)] bg-[var(--pb-canvas)]/95 px-4 py-3 backdrop-blur-md sm:mx-0 sm:rounded-sm sm:border">
         <div className="relative">
           <Search
             className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[var(--pb-muted)]"
@@ -174,7 +174,7 @@ export function MenuBrowser({
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search dishes, ingredients, or allergens..."
             aria-label="Search menu dishes"
-            className="min-h-[44px] w-full rounded-xl border border-[var(--pb-border)] bg-[var(--pb-surface)] pl-10 pr-4 text-sm text-[var(--pb-ink)] placeholder:text-[var(--pb-muted)] focus-visible:outline-2 focus-visible:outline-[var(--pb-accent)]"
+            className="min-h-[44px] w-full rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] pl-10 pr-4 text-sm text-[var(--pb-ink)] placeholder:text-[var(--pb-muted)] focus-visible:outline-2 focus-visible:outline-[var(--pb-accent)]"
           />
         </div>
 
@@ -216,7 +216,7 @@ export function MenuBrowser({
         </div>
 
         {/* Dietary Filters */}
-        <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5">
+        <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
           {DIETARY_FILTERS.map((filter) => (
             <button
               key={filter.value}
@@ -237,8 +237,8 @@ export function MenuBrowser({
 
       {/* Menu List */}
       {filteredItems.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[var(--pb-border)] bg-[var(--pb-surface)] p-8 text-center">
-          <p className="font-serif text-xl">No dishes match your filters</p>
+        <div className="rounded-sm border border-dashed border-[var(--pb-border)] bg-[var(--pb-surface)] p-8 text-center">
+          <p className="font-display text-xl">No dishes match your filters</p>
           <p className="mt-1 text-sm text-[var(--pb-muted)]">
             Try clearing your search query or switching dietary preferences.
           </p>
@@ -251,7 +251,7 @@ export function MenuBrowser({
             return (
               <div key={cat.id} className="space-y-3">
                 <div className="flex items-baseline justify-between">
-                  <h2 className="font-serif text-2xl tracking-tight">{cat.name}</h2>
+                  <h2 className="font-display text-2xl tracking-tight">{cat.name}</h2>
                   <span className="font-mono text-xs font-medium text-[var(--pb-muted)]">
                     {items.length} {items.length === 1 ? 'dish' : 'dishes'}
                   </span>
@@ -264,7 +264,7 @@ export function MenuBrowser({
                     return (
                       <article
                         key={item.id}
-                        className={`group relative flex gap-3.5 rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--pb-accent)]/40 hover:shadow-md ${
+                        className={`group relative flex gap-3.5 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--pb-accent)]/40 hover:shadow-md ${
                           item.isAvailable ? '' : 'opacity-65'
                         }`}
                       >
@@ -288,7 +288,7 @@ export function MenuBrowser({
                               )}
                             </div>
 
-                            <h3 className="mt-1.5 font-serif text-lg leading-snug tracking-tight text-[var(--pb-ink)] transition-colors group-hover:text-[var(--pb-accent)]">
+                            <h3 className="mt-1.5 font-display text-lg leading-snug tracking-tight text-[var(--pb-ink)] transition-colors group-hover:text-[var(--pb-accent)]">
                               {item.name}
                             </h3>
                             {item.description && (
@@ -318,7 +318,7 @@ export function MenuBrowser({
                                   ? `Customize and add ${item.name}`
                                   : `${item.name} is sold out`
                               }
-                              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-xl bg-[var(--pb-accent)] px-3.5 text-xs font-semibold text-[var(--pb-accent-ink)] shadow-sm transition-all hover:opacity-95 active:scale-95 disabled:cursor-not-allowed disabled:bg-[var(--pb-border)] disabled:text-[var(--pb-muted)] disabled:active:scale-100"
+                              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-sm bg-[var(--pb-accent)] px-3.5 text-xs font-semibold text-[var(--pb-accent-ink)] shadow-sm transition-all hover:opacity-95 active:scale-95 disabled:cursor-not-allowed disabled:bg-[var(--pb-border)] disabled:text-[var(--pb-muted)] disabled:active:scale-100"
                             >
                               <Plus className="size-4" aria-hidden="true" />
                               <span>{item.isAvailable ? 'Add' : 'Unavailable'}</span>
@@ -327,7 +327,7 @@ export function MenuBrowser({
                         </div>
 
                         {item.imageUrl && (
-                          <div className="relative size-24 shrink-0 overflow-hidden rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)]">
+                          <div className="relative size-24 shrink-0 overflow-hidden rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)]">
                             <Image
                               src={item.imageUrl}
                               alt={item.name}

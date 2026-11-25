@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "world": "Control Tower Dispatch Overlook",
+  "seedKey": "4a33c557",
+  "buildPath": "code",
+  "fonts": {
+    "display": "Teko",
+    "sans": "Karla",
+    "mono": "Share Tech Mono"
+  },
+  "palette": {
+    "canvasDark": "#0B1220",
+    "canvasLight": "#E7EEF8",
+    "accentDark": "#3DE0C5",
+    "accentLight": "#0F9F8A",
+    "gold": "#F0A202",
+    "chili": "#D64545"
+  },
+  "surfaces": ["/", "/login", "/t/[qrToken]", "/pos/[outletSlug]", "/kds/[outletSlug]", "/dashboard", "/admin"]
+}
