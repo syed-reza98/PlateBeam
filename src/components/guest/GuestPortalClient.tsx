@@ -14,6 +14,7 @@ import { showToast } from '@/components/ui/ToastRegion';
 import { CallWaiterDialog } from './CallWaiterDialog';
 import { CartDrawer } from './CartDrawer';
 import { ItemModifierDialog } from './ItemModifierDialog';
+import { PairingUpsellDialog } from './PairingUpsellDialog';
 import { MenuBrowser } from './MenuBrowser';
 import { OrderTabTracker } from './OrderTabTracker';
 import { ReceiptReviewDialog } from './ReceiptReviewDialog';
@@ -44,6 +45,11 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
 
   // Dialog states
   const [selectedItem, setSelectedItem] = useState<GuestMenuItem | null>(null);
+  const [upsellCandidate, setUpsellCandidate] = useState<{
+    triggerItem: GuestMenuItem;
+    rule: typeof data extends null ? null : (NonNullable<typeof data>)['upsellRules'][number];
+    suggestedItem: GuestMenuItem;
+  } | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [waiterOpen, setWaiterOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
@@ -194,6 +200,24 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
       description: 'Synced to shared table cart',
       variant: 'success',
     });
+
+    // Check if an upsell rule applies to this item
+    const rule = data.upsellRules.find(
+      (r) =>
+        r.triggerMenuItemId === cartItem.menuItemId ||
+        (r.triggerCategoryId &&
+          data.menuItems.find((m) => m.id === cartItem.menuItemId)?.categoryId ===
+            r.triggerCategoryId),
+    );
+    if (rule) {
+      const triggerItem = data.menuItems.find((m) => m.id === cartItem.menuItemId);
+      const suggestedItem = data.menuItems.find((m) => m.id === rule.suggestedMenuItemId);
+      if (triggerItem && suggestedItem && suggestedItem.isAvailable) {
+        setTimeout(() => {
+          setUpsellCandidate({ triggerItem, rule, suggestedItem });
+        }, 400);
+      }
+    }
   };
 
   const handleQuickAddUpsell = (item: GuestMenuItem) => {
@@ -491,6 +515,27 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
         onAddToCart={handleAddToCart}
       />
 
+      <PairingUpsellDialog
+        open={Boolean(upsellCandidate)}
+        onClose={() => setUpsellCandidate(null)}
+        triggerItem={upsellCandidate?.triggerItem ?? null}
+        rule={upsellCandidate?.rule ?? null}
+        suggestedItem={upsellCandidate?.suggestedItem ?? null}
+        currency={data.outlet.currency}
+        onAcceptUpsell={(item, promoPrice) => {
+          handleAddToCart({
+            cartItemId: crypto.randomUUID(),
+            menuItemId: item.id,
+            name: item.name,
+            unitPriceMinor: promoPrice ?? item.basePriceMinor,
+            quantity: 1,
+            modifierIds: [],
+            modifierLabels: ['Chef Pairing Deal'],
+            addedByNickname: guestNickname,
+          });
+        }}
+      />
+
       <CartDrawer
         open={cartOpen}
         onClose={() => setCartOpen(false)}
@@ -516,6 +561,7 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
         onClose={() => setQuizOpen(false)}
         sessionId={data.session.id}
         playerNickname={guestNickname}
+        tableNumber={data.table?.tableNumber ?? null}
         leaderboard={data.leaderboard ?? []}
         onScoreSubmitted={handleScoreSubmitted}
       />

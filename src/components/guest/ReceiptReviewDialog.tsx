@@ -199,14 +199,17 @@ export function ReceiptReviewDialog({
           {submittedReview ? (
             <div className="space-y-3 rounded-xl border border-[var(--pb-olive)]/40 bg-[var(--pb-olive)]/10 p-4 text-center">
               <p className="font-serif text-xl">Thank you for dining with us!</p>
-              {rating >= 4 && outlet.googleReviewUrl ? (
+              {rating >= 4 ? (
                 <a
-                  href={outlet.googleReviewUrl}
+                  href={
+                    outlet.googleReviewUrl ||
+                    `https://www.google.com/search?q=${encodeURIComponent(`${outlet.name} review`)}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[var(--pb-accent)] px-4 py-2 text-xs font-semibold text-[var(--pb-accent-ink)]"
+                  className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[var(--pb-accent)] px-5 py-2.5 text-xs font-bold text-[var(--pb-accent-ink)] shadow-md glow-accent active:scale-98 transition-all"
                 >
-                  Share on Google Reviews
+                  Post 5-Star on Google Reviews
                   <ExternalLink className="size-3.5" aria-hidden="true" />
                 </a>
               ) : (

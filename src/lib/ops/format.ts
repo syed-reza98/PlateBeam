@@ -5,10 +5,16 @@
 
 export function formatMinorCurrency(
   amountMinor: number,
-  currencyCode = 'USD',
+  currencyCode = 'BDT',
   locale = 'en-US',
 ): string {
   const major = amountMinor / 100;
+  if (currencyCode.toUpperCase() === 'BDT') {
+    return `৳${major.toLocaleString('en-US', {
+      minimumFractionDigits: amountMinor % 100 === 0 ? 0 : 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }
   try {
     return new Intl.NumberFormat(locale, {
       style: 'currency',

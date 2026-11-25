@@ -58,7 +58,7 @@ export function SuperAdminClient() {
   const [newName, setNewName] = useState('');
   const [newSlug, setNewSlug] = useState('');
   const [newPlan, setNewPlan] = useState<SubscriptionPlan>('GROWTH');
-  const [newCurrency, setNewCurrency] = useState('USD');
+  const [newCurrency, setNewCurrency] = useState('BDT');
   const [newOutletName, setNewOutletName] = useState('Main Flagship');
 
   const loadTenants = useCallback(async () => {

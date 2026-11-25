@@ -1274,7 +1274,8 @@ class DrizzleBillingRepository implements BillingRepository {
         );
       const seq = Number(rows[0]?.count ?? 0) + 1;
       const prefix = outletId.slice(0, 4).toUpperCase();
-      return `INV-${prefix}-${String(seq).padStart(6, '0')}`;
+      const rand = Math.floor(1000 + Math.random() * 9000);
+      return `INV-${prefix}-${String(seq).padStart(5, '0')}-${rand}`;
     });
   }
 }
@@ -1478,8 +1479,27 @@ class DrizzleInventoryRepository implements InventoryRepository {
     return withSchemaTx(tenantId, async (tx, s) => {
       const depletedItemIds: string[] = [];
       for (const d of deductions) {
+        if (d.qtyToDeduct <= 0) continue;
+
+        // Atomic stock deduction to prevent TOCTOU race conditions under concurrency
+        await tx
+          .update(s.inventoryItems)
+          .set({
+            currentQty: sql`GREATEST(0, CAST(${s.inventoryItems.currentQty} AS DECIMAL(10,3)) - ${d.qtyToDeduct})`,
+          })
+          .where(
+            and(
+              eq(s.inventoryItems.tenantId, tenantId),
+              eq(s.inventoryItems.outletId, outletId),
+              eq(s.inventoryItems.id, d.inventoryItemId),
+            ),
+          );
+
         const rows = await tx
-          .select()
+          .select({
+            id: s.inventoryItems.id,
+            currentQty: s.inventoryItems.currentQty,
+          })
           .from(s.inventoryItems)
           .where(
             and(
@@ -1489,23 +1509,11 @@ class DrizzleInventoryRepository implements InventoryRepository {
             ),
           )
           .limit(1);
-        const item = rows[0];
-        if (!item) continue;
 
-        const nextQty = Number(item.currentQty) - d.qtyToDeduct;
-        const clamped = Math.max(0, nextQty);
-        if (clamped <= 0) {
+        const item = rows[0];
+        if (item && Number(item.currentQty) <= 0) {
           depletedItemIds.push(item.id);
         }
-        await tx
-          .update(s.inventoryItems)
-          .set({ currentQty: clamped.toFixed(3) })
-          .where(
-            and(
-              eq(s.inventoryItems.tenantId, tenantId),
-              eq(s.inventoryItems.id, item.id),
-            ),
-          );
       }
       return { depletedItemIds };
     });

@@ -981,7 +981,8 @@ class SupabaseBillingRepository implements BillingRepository {
       .eq('outlet_id', outletId);
     const seq = (count ?? 0) + 1;
     const prefix = outletId.slice(0, 4).toUpperCase();
-    return `INV-${prefix}-${String(seq).padStart(6, '0')}`;
+    const rand = Math.floor(1000 + Math.random() * 9000);
+    return `INV-${prefix}-${String(seq).padStart(5, '0')}-${rand}`;
   }
 }
 

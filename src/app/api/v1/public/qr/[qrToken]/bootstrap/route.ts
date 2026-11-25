@@ -12,7 +12,7 @@ import {
   verifySignedQrToken,
   evaluateQrScanSecurity,
 } from '@/server/core';
-import { NotFoundError } from '@/server/core/errors';
+import { NotFoundError, SecurityPolicyError } from '@/server/core/errors';
 import { qrBootstrapQuerySchema } from '@/lib/schemas';
 
 export async function GET(
@@ -26,7 +26,10 @@ export async function GET(
 
     const isDemo = qrToken === 'demo';
     if (!isDemo) {
-      verifySignedQrToken(qrToken);
+      const payload = verifySignedQrToken(qrToken);
+      if (!payload) {
+        throw new SecurityPolicyError('Tampered or invalid QR code signature.', 'QR_SIGNATURE_INVALID');
+      }
     }
     const table = await repos.floor.findTableByQrToken(qrToken);
     if (!table) {
@@ -43,6 +46,14 @@ export async function GET(
     if (!tenant || !outlet) {
       throw new NotFoundError('Venue not found for QR code');
     }
+
+    // Evaluate QR Geofence, Wi-Fi subnet & Guest blocklist BEFORE mutating DB
+    evaluateQrScanSecurity({
+      outlet,
+      lat: query.lat,
+      lng: query.lng,
+      clientIp: getRequestIp(req),
+    });
 
     let session = table.activeSessionId
       ? await repos.sessionOrder.findSessionById(tenantId, table.activeSessionId)

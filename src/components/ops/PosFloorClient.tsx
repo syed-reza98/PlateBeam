@@ -48,44 +48,50 @@ import type { DiningTableStatus } from '@/server/db/types';
 
 const TABLE_STATUS_META: Record<
   DiningTableStatus,
-  { label: string; border: string; bg: string; badge: string; pulse?: boolean }
+  { label: string; border: string; bg: string; badge: string; glow: string; pulse?: boolean }
 > = {
   VACANT: {
     label: 'Vacant',
     border: 'border-[var(--pb-border)]',
-    bg: 'bg-[var(--pb-surface)]',
-    badge: 'bg-[var(--pb-canvas)] text-[var(--pb-muted)]',
+    bg: 'bg-[var(--pb-surface)]/60',
+    badge: 'bg-[var(--pb-canvas)] text-[var(--pb-muted)] border border-[var(--pb-border)]',
+    glow: '',
   },
   ORDERING: {
     label: 'Ordering',
-    border: 'border-sky-500/60',
-    bg: 'bg-sky-500/10',
-    badge: 'bg-sky-500/15 text-sky-700 dark:text-sky-300',
+    border: 'border-amber-500/80 dark:border-amber-400/70',
+    bg: 'bg-amber-500/10 dark:bg-amber-950/20',
+    badge: 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30',
+    glow: 'shadow-[0_0_15px_-3px_rgba(245,158,11,0.25)]',
   },
   EATING: {
     label: 'Eating',
-    border: 'border-[var(--pb-olive)]/70',
-    bg: 'bg-[var(--pb-olive)]/10',
-    badge: 'bg-[var(--pb-olive)]/15 text-[var(--pb-olive)]',
+    border: 'border-emerald-500/80 dark:border-emerald-400/70',
+    bg: 'bg-emerald-500/10 dark:bg-emerald-950/20',
+    badge: 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30',
+    glow: 'shadow-[0_0_15px_-3px_rgba(16,185,129,0.25)]',
   },
   CALLING_WAITER: {
     label: 'Calling Waiter',
-    border: 'border-[var(--pb-chili)]',
-    bg: 'bg-[var(--pb-chili)]/15',
-    badge: 'bg-[var(--pb-chili)] text-white',
+    border: 'border-rose-500 dark:border-rose-400 ring-2 ring-rose-500/40',
+    bg: 'bg-rose-500/15 dark:bg-rose-950/30',
+    badge: 'bg-rose-500 text-white font-bold animate-pulse shadow-sm',
+    glow: 'shadow-[0_0_20px_2px_rgba(244,63,94,0.35)]',
     pulse: true,
   },
   BILL_REQUESTED: {
     label: 'Bill Requested',
-    border: 'border-[var(--pb-turmeric)]',
-    bg: 'bg-[var(--pb-turmeric)]/15',
-    badge: 'bg-[var(--pb-turmeric)]/20 text-[var(--pb-turmeric)]',
+    border: 'border-purple-500/80 dark:border-purple-400/70',
+    bg: 'bg-purple-500/15 dark:bg-purple-950/25',
+    badge: 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/40',
+    glow: 'shadow-[0_0_15px_-3px_rgba(168,85,247,0.25)]',
   },
   CLEANING: {
-    label: 'Cleaning',
-    border: 'border-purple-500/50',
-    bg: 'bg-purple-500/10',
-    badge: 'bg-purple-500/15 text-purple-700 dark:text-purple-300',
+    label: 'Cleaning / Turn',
+    border: 'border-slate-500/60 dark:border-slate-400/50',
+    bg: 'bg-slate-500/10 dark:bg-slate-800/20',
+    badge: 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30',
+    glow: '',
   },
 };
 
@@ -94,9 +100,9 @@ function createDemoPosPayload(outletSlug: string): PosBootstrapPayload {
   const now = Date.now();
   return {
     outletId,
-    outletName: outletSlug === 'demo' ? 'Saffron & Ember — Flagship' : outletSlug,
+    outletName: outletSlug === 'demo' ? 'Zaika — Gulshan, Dhaka' : outletSlug,
     outletSlug,
-    currencyCode: 'USD',
+    currencyCode: 'BDT',
     zones: [
       { id: 'z-main', name: 'Main Hall', sortOrder: 1 },
       { id: 'z-patio', name: 'Patio', sortOrder: 2 },
@@ -115,7 +121,7 @@ function createDemoPosPayload(outletSlug: string): PosBootstrapPayload {
         posY: 40,
         qrToken: 'pb-t1-demo',
         activeGuestCount: 3,
-        runningTotalMinor: 6850,
+        runningTotalMinor: 385000,
       },
       {
         id: 't-2',
@@ -128,7 +134,7 @@ function createDemoPosPayload(outletSlug: string): PosBootstrapPayload {
         posY: 40,
         qrToken: 'pb-t2-demo',
         activeGuestCount: 2,
-        runningTotalMinor: 3400,
+        runningTotalMinor: 240000,
       },
       {
         id: 't-3',
@@ -141,7 +147,7 @@ function createDemoPosPayload(outletSlug: string): PosBootstrapPayload {
         posY: 40,
         qrToken: 'pb-t3-demo',
         activeGuestCount: 5,
-        runningTotalMinor: 14200,
+        runningTotalMinor: 620000,
       },
       {
         id: 't-4',
@@ -157,26 +163,26 @@ function createDemoPosPayload(outletSlug: string): PosBootstrapPayload {
       {
         id: 't-5',
         zoneId: 'z-patio',
-        tableNumber: 'P1',
+        tableNumber: 'T5',
         capacity: 4,
         status: 'ORDERING',
         activeSessionId: 'sess-5',
         posX: 40,
         posY: 40,
-        qrToken: 'pb-p1-demo',
-        activeGuestCount: 4,
-        runningTotalMinor: 4900,
+        qrToken: 'pb-t5-demo',
+        activeGuestCount: 2,
+        runningTotalMinor: 195000,
       },
       {
         id: 't-6',
         zoneId: 'z-vip',
-        tableNumber: 'V1',
+        tableNumber: 'T6',
         capacity: 8,
         status: 'CLEANING',
         activeSessionId: null,
         posX: 40,
         posY: 40,
-        qrToken: 'pb-v1-demo',
+        qrToken: 'pb-t6-demo',
       },
       {
         id: 't-7',
@@ -215,10 +221,10 @@ function createDemoPosPayload(outletSlug: string): PosBootstrapPayload {
         id: 'ord-pend-1',
         orderNumber: 'ORD-1048',
         tableId: 't-5',
-        tableNumber: 'P1',
+        tableNumber: 'T5',
         source: 'QR',
         status: 'PENDING_APPROVAL',
-        totalMinor: 4900,
+        totalMinor: 195000,
         createdAt: new Date(now - 60_000).toISOString(),
         items: [
           {
@@ -264,13 +270,13 @@ function createDemoPosPayload(outletSlug: string): PosBootstrapPayload {
       id: 'shift-1',
       status: 'OPEN',
       openedAt: new Date(now - 4 * 3600_000).toISOString(),
-      openingFloatMinor: 25000,
-      cashSalesMinor: 48200,
-      cardSalesMinor: 112400,
-      upiMfsSalesMinor: 34500,
-      pettyCashMinor: 1800,
-      expectedCashMinor: 71400,
-      totalOrders: 34,
+      openingFloatMinor: 500000,
+      cashSalesMinor: 1450000,
+      cardSalesMinor: 2150000,
+      upiMfsSalesMinor: 1250000,
+      pettyCashMinor: 40000,
+      expectedCashMinor: 1910000,
+      totalOrders: 46,
     },
     nextTokenNumber: 42,
   };
@@ -888,7 +894,7 @@ export function PosFloorClient({ outletSlug }: { outletSlug: string }) {
                   onDragStart={(e) => {
                     e.dataTransfer.setData('text/plain', table.id);
                   }}
-                  className={`relative flex flex-col justify-between rounded-2xl border-2 p-4 transition-colors ${meta.border} ${meta.bg} ${
+                  className={`relative flex flex-col justify-between rounded-2xl border-2 p-4 transition-all duration-200 ${meta.border} ${meta.bg} ${meta.glow} ${
                     meta.pulse ? 'animate-pulse' : ''
                   } ${layoutEditMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
                 >

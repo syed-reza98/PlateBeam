@@ -252,19 +252,19 @@ export function MenuBrowser({
               <div key={cat.id} className="space-y-3">
                 <div className="flex items-baseline justify-between">
                   <h2 className="font-serif text-2xl tracking-tight">{cat.name}</h2>
-                  <span className="font-mono text-xs text-[var(--pb-muted)]">
-                    {items.length} {items.length === 1 ? 'item' : 'items'}
+                  <span className="font-mono text-xs font-medium text-[var(--pb-muted)]">
+                    {items.length} {items.length === 1 ? 'dish' : 'dishes'}
                   </span>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3.5 sm:grid-cols-2">
                   {items.map((item) => {
                     const diet = DIETARY_META[item.dietaryType];
                     const DietIcon = diet.icon;
                     return (
                       <article
                         key={item.id}
-                        className={`flex gap-3 rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-3.5 transition-opacity ${
+                        className={`group relative flex gap-3.5 rounded-2xl border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--pb-accent)]/40 hover:shadow-md ${
                           item.isAvailable ? '' : 'opacity-65'
                         }`}
                       >
@@ -288,25 +288,25 @@ export function MenuBrowser({
                               )}
                             </div>
 
-                            <h3 className="mt-1.5 font-serif text-lg leading-snug tracking-tight">
+                            <h3 className="mt-1.5 font-serif text-lg leading-snug tracking-tight text-[var(--pb-ink)] transition-colors group-hover:text-[var(--pb-accent)]">
                               {item.name}
                             </h3>
                             {item.description && (
-                              <p className="mt-1 line-clamp-2 text-xs text-[var(--pb-muted)]">
+                              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[var(--pb-muted)]">
                                 {item.description}
                               </p>
                             )}
 
                             {item.allergens.length > 0 && (
-                              <p className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-[var(--pb-turmeric)]">
+                              <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-[var(--pb-turmeric)]">
                                 <AlertTriangle className="size-3 shrink-0" aria-hidden="true" />
                                 <span>Contains: {item.allergens.join(', ')}</span>
                               </p>
                             )}
                           </div>
 
-                          <div className="mt-3 flex items-center justify-between gap-2">
-                            <span className="font-mono text-sm font-semibold tabular-nums">
+                          <div className="mt-3.5 flex items-center justify-between gap-2 pt-1 border-t border-[var(--pb-border)]/40">
+                            <span className="font-mono text-base font-bold tabular-nums text-[var(--pb-ink)]">
                               {formatMoney(item.basePriceMinor, currency)}
                             </span>
                             <button
@@ -318,7 +318,7 @@ export function MenuBrowser({
                                   ? `Customize and add ${item.name}`
                                   : `${item.name} is sold out`
                               }
-                              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-xl bg-[var(--pb-accent)] px-3.5 text-xs font-semibold text-[var(--pb-accent-ink)] transition-colors hover:opacity-95 disabled:cursor-not-allowed disabled:bg-[var(--pb-border)] disabled:text-[var(--pb-muted)]"
+                              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-xl bg-[var(--pb-accent)] px-3.5 text-xs font-semibold text-[var(--pb-accent-ink)] shadow-sm transition-all hover:opacity-95 active:scale-95 disabled:cursor-not-allowed disabled:bg-[var(--pb-border)] disabled:text-[var(--pb-muted)] disabled:active:scale-100"
                             >
                               <Plus className="size-4" aria-hidden="true" />
                               <span>{item.isAvailable ? 'Add' : 'Unavailable'}</span>
@@ -333,7 +333,7 @@ export function MenuBrowser({
                               alt={item.name}
                               fill
                               unoptimized
-                              className="object-cover"
+                              className="object-cover transition-transform duration-300 group-hover:scale-105"
                             />
                           </div>
                         )}

@@ -51,6 +51,11 @@ export async function POST(
     );
 
     const claims = await auth.getSessionClaims(req).catch(() => null);
+    const isStaff = Boolean(claims?.userId);
+    // Diners cannot spoof 'WAITER' or 'COUNTER' to bypass captain approval
+    const orderSource = isStaff ? (body.source ?? 'WAITER') : 'QR';
+    const autoApprove = isStaff && orderSource !== 'QR';
+
     let targetSessionId = sessionId;
 
     // Support `/api/v1/sessions/counter/orders` for Pay-First Counter Takeaway
@@ -91,10 +96,10 @@ export async function POST(
         tenantId: tenant.id,
         outletId: outlet.id,
         sessionId: targetSessionId,
-        source: body.source ?? 'QR',
+        source: orderSource,
         guestId: body.guestId ?? null,
         actorUserId: claims?.userId ?? null,
-        autoApprove: (body.source ?? 'QR') !== 'QR',
+        autoApprove,
         items: body.items.map((i) => ({
           ...i,
           modifierIds: i.modifierIds ?? [],

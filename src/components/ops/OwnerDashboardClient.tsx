@@ -9,6 +9,7 @@ import {
   Plus,
   Shield,
   Sparkles,
+  Star,
   TrendingUp,
   UtensilsCrossed,
 } from 'lucide-react';
@@ -44,20 +45,20 @@ function createDemoDashboardPayload(): DashboardBootstrapPayload {
   const now = Date.now();
   return {
     outletId: '11111111-1111-4111-8111-111111111111',
-    outletName: 'Saffron & Ember — Flagship',
-    currencyCode: 'USD',
+    outletName: 'Zaika — Gulshan, Dhaka',
+    currencyCode: 'BDT',
     kpis: {
-      occupiedTables: 5,
-      totalTables: 7,
-      liveOrdersCount: 9,
-      netSalesMinor: 428650,
-      aovMinor: 4762,
-      avgTurnoverMinutes: 46,
-      kdsSlaOnTimePct: 91,
+      occupiedTables: 6,
+      totalTables: 6,
+      liveOrdersCount: 46,
+      netSalesMinor: 4850000,
+      aovMinor: 105435,
+      avgTurnoverMinutes: 38,
+      kdsSlaOnTimePct: 96,
       paymentMix: [
-        { method: 'CARD', amountMinor: 235750, pct: 55 },
-        { method: 'UPI / MFS', amountMinor: 128600, pct: 30 },
-        { method: 'CASH', amountMinor: 64300, pct: 15 },
+        { method: 'bKash / Nagad (MFS)', amountMinor: 2425000, pct: 50 },
+        { method: 'CARD / POS', amountMinor: 1697500, pct: 35 },
+        { method: 'CASH', amountMinor: 727500, pct: 15 },
       ],
     },
     menuItems: [
@@ -66,8 +67,8 @@ function createDemoDashboardPayload(): DashboardBootstrapPayload {
         name: 'Charcoal Tandoori Lamb Chops',
         categoryName: 'Tandoor',
         stationName: 'Tandoor',
-        basePriceMinor: 2400,
-        costMinor: 820,
+        basePriceMinor: 125000,
+        costMinor: 42000,
         dietaryType: 'NON_VEG',
         isAvailable: true,
         unitsSold30d: 310,
@@ -77,8 +78,8 @@ function createDemoDashboardPayload(): DashboardBootstrapPayload {
         name: 'Smoked Butter Chicken',
         categoryName: 'Mains',
         stationName: 'Curry',
-        basePriceMinor: 1950,
-        costMinor: 610,
+        basePriceMinor: 85000,
+        costMinor: 28000,
         dietaryType: 'NON_VEG',
         isAvailable: true,
         unitsSold30d: 520,
@@ -88,8 +89,8 @@ function createDemoDashboardPayload(): DashboardBootstrapPayload {
         name: 'Truffle Paneer Tikka',
         categoryName: 'Tandoor',
         stationName: 'Tandoor',
-        basePriceMinor: 1750,
-        costMinor: 490,
+        basePriceMinor: 68000,
+        costMinor: 21000,
         dietaryType: 'VEG',
         isAvailable: true,
         unitsSold30d: 140,
@@ -99,8 +100,8 @@ function createDemoDashboardPayload(): DashboardBootstrapPayload {
         name: 'Garlic Butter Naan',
         categoryName: 'Breads',
         stationName: 'Tandoor',
-        basePriceMinor: 450,
-        costMinor: 95,
+        basePriceMinor: 14000,
+        costMinor: 3500,
         dietaryType: 'VEG',
         isAvailable: true,
         unitsSold30d: 890,
@@ -110,8 +111,8 @@ function createDemoDashboardPayload(): DashboardBootstrapPayload {
         name: 'Artisan Saffron Kulfi',
         categoryName: 'Desserts',
         stationName: 'Cold',
-        basePriceMinor: 800,
-        costMinor: 410,
+        basePriceMinor: 32000,
+        costMinor: 11000,
         dietaryType: 'VEG',
         isAvailable: false,
         unitsSold30d: 75,
@@ -550,61 +551,83 @@ export function OwnerDashboardClient() {
           {(
             [
               {
-                title: 'Stars (High Popularity · High Profit)',
+                title: 'Stars',
+                subtitle: 'High Popularity · High Profit',
                 items: engineeringQuadrants.stars,
-                tone: 'border-[var(--pb-olive)]/50 bg-[var(--pb-olive)]/8',
-                hint: 'Promote prominently on QR hero & upsells.',
+                tone: 'border-amber-500/60 bg-amber-500/10 shadow-[0_0_20px_-5px_rgba(245,158,11,0.2)]',
+                hint: 'Promote prominently on QR hero & automated upsell triggers.',
+                icon: Star,
+                iconClass: 'text-amber-500 fill-amber-500',
               },
               {
-                title: 'Plowhorses (High Popularity · Lower Profit)',
+                title: 'Plowhorses',
+                subtitle: 'High Popularity · Lower Profit',
                 items: engineeringQuadrants.plowhorses,
-                tone: 'border-[var(--pb-turmeric)]/50 bg-[var(--pb-turmeric)]/8',
-                hint: 'Test portioning or pair with high-margin sides.',
+                tone: 'border-emerald-500/60 bg-emerald-500/10 shadow-[0_0_20px_-5px_rgba(16,185,129,0.15)]',
+                hint: 'Test portioning or pair with high-margin signature sides.',
+                icon: TrendingUp,
+                iconClass: 'text-emerald-500',
               },
               {
-                title: 'Puzzles (Lower Popularity · High Profit)',
+                title: 'Puzzles',
+                subtitle: 'Lower Popularity · High Profit',
                 items: engineeringQuadrants.puzzles,
-                tone: 'border-sky-500/40 bg-sky-500/8',
-                hint: 'Feature in Waiter recommendations & Spice Quiz.',
+                tone: 'border-sky-500/50 bg-sky-500/10 shadow-[0_0_20px_-5px_rgba(14,165,233,0.15)]',
+                hint: 'Feature in Captain recommendations & Spice Quiz rewards.',
+                icon: Sparkles,
+                iconClass: 'text-sky-500',
               },
               {
-                title: 'Dogs (Lower Popularity · Lower Profit)',
+                title: 'Dogs',
+                subtitle: 'Lower Popularity · Lower Profit',
                 items: engineeringQuadrants.dogs,
-                tone: 'border-[var(--pb-chili)]/40 bg-[var(--pb-chili)]/8',
-                hint: 'Consider seasonal rotation or re-costing.',
+                tone: 'border-rose-500/50 bg-rose-500/10 shadow-[0_0_20px_-5px_rgba(244,63,94,0.15)]',
+                hint: 'Consider seasonal rotation, ingredient repurposing, or re-costing.',
+                icon: AlertTriangle,
+                iconClass: 'text-rose-500',
               },
             ] as const
-          ).map((quadrant) => (
-            <div key={quadrant.title} className={`rounded-2xl border p-4 ${quadrant.tone}`}>
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="font-serif text-lg">{quadrant.title}</h2>
-                <Sparkles className="size-4 text-[var(--pb-accent)]" aria-hidden="true" />
-              </div>
-              <p className="mt-1 text-xs text-[var(--pb-muted)]">{quadrant.hint}</p>
-              <ul className="mt-3 space-y-2">
-                {quadrant.items.length === 0 ? (
-                  <li className="text-xs text-[var(--pb-muted)]">No dishes in this quadrant.</li>
-                ) : (
-                  quadrant.items.map((dish) => (
-                    <li
-                      key={dish.id}
-                      className="flex items-center justify-between rounded-xl border border-[var(--pb-border)] bg-[var(--pb-surface)] px-3 py-2 text-xs"
-                    >
-                      <span className="font-semibold">{dish.name}</span>
-                      <span className="font-mono tabular-nums text-[var(--pb-muted)]">
-                        {dish.unitsSold30d} sold ·{' '}
-                        {formatMinorCurrency(
-                          dish.basePriceMinor - dish.costMinor,
-                          data.currencyCode,
-                        )}{' '}
-                        margin
-                      </span>
+          ).map((quadrant) => {
+            const QuadIcon = quadrant.icon;
+            return (
+              <div key={quadrant.title} className={`rounded-2xl border p-4.5 transition-all ${quadrant.tone}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <h2 className="font-serif text-lg font-bold text-[var(--pb-ink)]">{quadrant.title}</h2>
+                    <p className="text-[11px] font-medium text-[var(--pb-muted)]">{quadrant.subtitle}</p>
+                  </div>
+                  <QuadIcon className={`size-5 ${quadrant.iconClass}`} aria-hidden="true" />
+                </div>
+                <p className="mt-2 text-xs leading-relaxed text-[var(--pb-muted)]">{quadrant.hint}</p>
+                <ul className="mt-3.5 space-y-2">
+                  {quadrant.items.length === 0 ? (
+                    <li className="rounded-xl border border-dashed border-[var(--pb-border)] p-3 text-center text-xs text-[var(--pb-muted)]">
+                      No dishes currently in this quadrant.
                     </li>
-                  ))
-                )}
-              </ul>
-            </div>
-          ))}
+                  ) : (
+                    quadrant.items.map((dish) => (
+                      <li
+                        key={dish.id}
+                        className="flex items-center justify-between rounded-xl border border-[var(--pb-border)] bg-[var(--pb-surface)] px-3.5 py-2.5 text-xs shadow-xs"
+                      >
+                        <span className="font-semibold text-[var(--pb-ink)]">{dish.name}</span>
+                        <span className="font-mono tabular-nums text-[var(--pb-muted)]">
+                          {dish.unitsSold30d} sold ·{' '}
+                          <span className="font-semibold text-[var(--pb-accent)]">
+                            {formatMinorCurrency(
+                              dish.basePriceMinor - dish.costMinor,
+                              data.currencyCode,
+                            )}
+                          </span>{' '}
+                          margin
+                        </span>
+                      </li>
+                    ))
+                  )}
+                </ul>
+              </div>
+            );
+          })}
         </section>
       )}
 

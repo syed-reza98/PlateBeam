@@ -238,17 +238,23 @@ export const SERVICE_REQUEST_TAGS: Array<{
   { type: 'HELP', label: 'Need Assistance', description: 'Speak with a server at your table' },
 ];
 
-export function formatMoney(minor: number, currency = 'INR'): string {
+export function formatMoney(minor: number, currency = 'BDT'): string {
   const code = currency.toUpperCase();
-  const divisor = 100;
+  const major = minor / 100;
+  if (code === 'BDT') {
+    return `৳${major.toLocaleString('en-US', {
+      minimumFractionDigits: minor % 100 === 0 ? 0 : 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }
   try {
     return new Intl.NumberFormat(code === 'INR' ? 'en-IN' : 'en-US', {
       style: 'currency',
       currency: code,
       minimumFractionDigits: minor % 100 === 0 ? 0 : 2,
       maximumFractionDigits: 2,
-    }).format(minor / divisor);
+    }).format(major);
   } catch {
-    return `${code} ${(minor / divisor).toFixed(2)}`;
+    return `${code} ${major.toFixed(2)}`;
   }
 }

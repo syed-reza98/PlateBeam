@@ -527,10 +527,10 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
 
                     <div className="text-end">
                       <div
-                        className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-mono text-sm font-bold tabular-nums ${slaBadgeClass}`}
+                        className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-mono text-sm font-bold tabular-nums shadow-sm ${slaBadgeClass}`}
                       >
                         {slaState === 'OVERDUE' ? (
-                          <Flame className="size-4" aria-hidden="true" />
+                          <Flame className="size-4 animate-bounce" aria-hidden="true" />
                         ) : (
                           <Clock className="size-4" aria-hidden="true" />
                         )}
@@ -546,6 +546,20 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
                     </div>
                   </div>
 
+                  {/* Visual SLA Countdown Bar */}
+                  <div className="mt-3 relative h-1.5 w-full overflow-hidden rounded-full bg-[#111315]">
+                    <div
+                      className={`h-full transition-all duration-500 ${
+                        slaState === 'OVERDUE'
+                          ? 'bg-[#E04F44]'
+                          : slaState === 'WARNING'
+                            ? 'bg-[#E5A93C]'
+                            : 'bg-[#2D8A56]'
+                      }`}
+                      style={{ width: `${Math.min(100, Math.round(slaRatio * 100))}%` }}
+                    />
+                  </div>
+
                   {/* Ticket Items */}
                   <ul className="mt-3 space-y-2.5">
                     {ticket.items.map((item) => (
@@ -559,9 +573,13 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
                               <span className="font-mono text-[#F07346]">{item.quantity}×</span>{' '}
                               {item.name}
                             </p>
-                            <p className="mt-0.5 font-mono text-[11px] text-[#9AA4B2]">
-                              Station: {item.stationName} · Status: {item.status}
-                            </p>
+                            <div className="mt-1 flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
+                              <span className="inline-flex items-center rounded-md bg-[#2E343D]/70 px-2 py-0.5 font-semibold text-[#F4F6F8]">
+                                {item.stationName}
+                              </span>
+                              <span className="text-[#9AA4B2]">·</span>
+                              <span className="text-[#9AA4B2]">{item.status}</span>
+                            </div>
                           </div>
 
                           <div className="flex items-center gap-1.5">
@@ -620,9 +638,10 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
                         )}
 
                         {item.companionStations.length > 0 && (
-                          <p className="mt-1.5 text-[11px] text-[#9AA4B2]">
-                            Companion stations: {item.companionStations.join(', ')}
-                          </p>
+                          <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-[#2E343D] bg-[#1B1E23]/80 px-2 py-1 text-[11px] font-mono text-[#9AA4B2]">
+                            <span className="font-semibold text-[#E5A93C]">Companion:</span>
+                            <span>{item.companionStations.join(', ')}</span>
+                          </div>
                         )}
                       </li>
                     ))}
