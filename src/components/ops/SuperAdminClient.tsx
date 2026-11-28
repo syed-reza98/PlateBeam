@@ -13,14 +13,14 @@ function createDemoTenants(): SuperAdminTenant[] {
   return [
     {
       id: 'ten-1',
-      name: 'Saffron & Ember Hospitality',
-      slug: 'saffron-ember',
+      name: 'Zaika Hospitality Group',
+      slug: 'zaika-bistro',
       plan: 'PRO',
       status: 'ACTIVE',
-      currencyCode: 'USD',
+      currencyCode: 'BDT',
       outletCount: 3,
       activeTablesCount: 42,
-      monthlyGmvMinor: 8420000,
+      monthlyGmvMinor: 84200000,
       createdAt: '2026-06-15T10:00:00Z',
     },
     {
@@ -32,7 +32,7 @@ function createDemoTenants(): SuperAdminTenant[] {
       currencyCode: 'BDT',
       outletCount: 8,
       activeTablesCount: 118,
-      monthlyGmvMinor: 21500000,
+      monthlyGmvMinor: 215000000,
       createdAt: '2026-08-02T09:30:00Z',
     },
     {
@@ -41,10 +41,10 @@ function createDemoTenants(): SuperAdminTenant[] {
       slug: 'olive-hearth',
       plan: 'STARTER',
       status: 'TRIAL',
-      currencyCode: 'EUR',
+      currencyCode: 'BDT',
       outletCount: 1,
       activeTablesCount: 14,
-      monthlyGmvMinor: 1290000,
+      monthlyGmvMinor: 12900000,
       createdAt: '2026-11-12T14:20:00Z',
     },
   ];
@@ -66,7 +66,7 @@ export function SuperAdminClient() {
       const res = await fetch('/api/v1/admin/tenants', { cache: 'no-store' });
       if (res.ok) {
         const data = (await res.json()) as { tenants?: SuperAdminTenant[] };
-        if (data.tenants) setTenants(data.tenants);
+        if (data.tenants && data.tenants.length > 0) setTenants(data.tenants);
       }
     } catch {
       // Demo fallback retained
@@ -177,34 +177,36 @@ export function SuperAdminClient() {
   return (
     <div className="space-y-6">
       <section className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
+        <div className="rounded-2xl border border-[#262630] bg-[#111115] p-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#A1A1AA]">
             Provisioned Tenants
           </p>
-          <p className="mt-2 font-mono text-3xl font-bold tabular-nums">{tenants.length}</p>
+          <p className="mt-2 font-mono text-3xl font-bold tabular-nums text-[#F4F4F5]">
+            {tenants.length}
+          </p>
         </div>
-        <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
+        <div className="rounded-2xl border border-[#262630] bg-[#111115] p-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#A1A1AA]">
             Active Outlets
           </p>
-          <p className="mt-2 font-mono text-3xl font-bold tabular-nums">
+          <p className="mt-2 font-mono text-3xl font-bold tabular-nums text-[#FF5412]">
             {tenants.reduce((acc, t) => acc + t.outletCount, 0)}
           </p>
         </div>
-        <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
+        <div className="rounded-2xl border border-[#262630] bg-[#111115] p-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#A1A1AA]">
             Active Tables
           </p>
-          <p className="mt-2 font-mono text-3xl font-bold tabular-nums">
+          <p className="mt-2 font-mono text-3xl font-bold tabular-nums text-[#10B981]">
             {tenants.reduce((acc, t) => acc + t.activeTablesCount, 0)}
           </p>
         </div>
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <label className="relative flex min-w-[240px] flex-1 max-w-md items-center">
+        <label className="relative flex min-w-[240px] max-w-md flex-1 items-center">
           <Search
-            className="pointer-events-none absolute left-3 size-4 text-[var(--pb-muted)]"
+            className="pointer-events-none absolute left-3 size-4 text-[#A1A1AA]"
             aria-hidden="true"
           />
           <input
@@ -212,14 +214,14 @@ export function SuperAdminClient() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search tenants by name, slug, or plan…"
-            className="min-h-11 w-full rounded-xl border border-[var(--pb-border)] bg-[var(--pb-surface)] pl-9 pr-3 text-sm"
+            className="min-h-11 w-full rounded-xl border border-[#262630] bg-[#111115] pl-9 pr-3 text-sm text-[#F4F4F5] placeholder:text-[#A1A1AA] focus:border-[#FF5412]"
           />
         </label>
 
         <button
           type="button"
           onClick={() => setProvisionOpen(true)}
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--pb-accent)] px-4 text-xs font-semibold text-[var(--pb-accent-ink)]"
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#FF5412] px-4 text-xs font-semibold text-white shadow-beam transition-colors hover:bg-[#FF7033]"
         >
           <Plus className="size-4" aria-hidden="true" />
           Provision New Tenant
@@ -237,10 +239,10 @@ export function SuperAdminClient() {
             isRowHeader: true,
             render: (row) => (
               <div className="flex items-center gap-2.5">
-                <Building2 className="size-4 text-[var(--pb-accent)]" aria-hidden="true" />
+                <Building2 className="size-4 text-[#FF5412]" aria-hidden="true" />
                 <div>
-                  <p className="font-semibold">{row.name}</p>
-                  <p className="font-mono text-xs text-[var(--pb-muted)]">{row.slug}</p>
+                  <p className="font-semibold text-[#F4F4F5]">{row.name}</p>
+                  <p className="font-mono text-xs text-[#A1A1AA]">{row.slug}</p>
                 </div>
               </div>
             ),
@@ -249,7 +251,7 @@ export function SuperAdminClient() {
             key: 'plan',
             header: 'Plan',
             render: (row) => (
-              <span className="rounded-full border border-[var(--pb-border)] px-2.5 py-0.5 font-mono text-xs font-semibold">
+              <span className="rounded-full border border-[#262630] bg-[#18181F] px-2.5 py-0.5 font-mono text-xs font-semibold text-[#F4F4F5]">
                 {row.plan}
               </span>
             ),
@@ -261,10 +263,10 @@ export function SuperAdminClient() {
               <span
                 className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                   row.status === 'ACTIVE'
-                    ? 'bg-[var(--pb-olive)]/15 text-[var(--pb-olive)]'
+                    ? 'bg-[#10B981]/15 text-[#10B981]'
                     : row.status === 'TRIAL'
-                      ? 'bg-[var(--pb-turmeric)]/20 text-[var(--pb-turmeric)]'
-                      : 'bg-[var(--pb-chili)]/15 text-[var(--pb-chili)]'
+                      ? 'bg-[#F59E0B]/20 text-[#F59E0B]'
+                      : 'bg-[#EF4444]/15 text-[#EF4444]'
                 }`}
               >
                 {row.status === 'ACTIVE' ? (
@@ -280,13 +282,19 @@ export function SuperAdminClient() {
             key: 'outlets',
             header: 'Outlets',
             align: 'right',
-            render: (row) => row.outletCount,
+            render: (row) => (
+              <span className="font-mono text-[#F4F4F5]">{row.outletCount}</span>
+            ),
           },
           {
             key: 'gmv',
             header: 'Monthly GMV',
             align: 'right',
-            render: (row) => formatMinorCurrency(row.monthlyGmvMinor, row.currencyCode),
+            render: (row) => (
+              <span className="font-mono font-semibold text-[#F4F4F5]">
+                {formatMinorCurrency(row.monthlyGmvMinor, 'BDT')}
+              </span>
+            ),
           },
           {
             key: 'actions',
@@ -296,7 +304,7 @@ export function SuperAdminClient() {
               <button
                 type="button"
                 onClick={() => void handleToggleStatus(row)}
-                className="min-h-11 rounded-xl border border-[var(--pb-border)] px-3 text-xs font-semibold hover:border-[var(--pb-accent)]"
+                className="min-h-11 rounded-xl border border-[#262630] bg-[#18181F] px-3 text-xs font-semibold text-[#F4F4F5] transition-colors hover:border-[#FF5412]"
               >
                 {row.status === 'SUSPENDED' ? 'Activate' : 'Suspend'}
               </button>
@@ -311,7 +319,7 @@ export function SuperAdminClient() {
         title="Provision New Restaurant Tenant"
       >
         <div className="space-y-4">
-          <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-[#A1A1AA]">
             Brand / Tenant Name
             <input
               type="text"
@@ -328,28 +336,28 @@ export function SuperAdminClient() {
                 }
               }}
               placeholder="e.g. Spice Route Hospitality"
-              className="mt-1.5 w-full rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3 py-2 text-sm"
+              className="mt-1.5 w-full rounded-xl border border-[#262630] bg-[#09090B] px-3 py-2 text-sm text-[#F4F4F5]"
             />
           </label>
 
-          <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-[#A1A1AA]">
             Subdomain Slug
             <input
               type="text"
               value={newSlug}
               onChange={(e) => setNewSlug(e.target.value)}
               placeholder="spice-route"
-              className="mt-1.5 w-full rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3 py-2 font-mono text-sm"
+              className="mt-1.5 w-full rounded-xl border border-[#262630] bg-[#09090B] px-3 py-2 font-mono text-sm text-[#F4F4F5]"
             />
           </label>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[#A1A1AA]">
               Subscription Plan
               <select
                 value={newPlan}
                 onChange={(e) => setNewPlan(e.target.value as SubscriptionPlan)}
-                className="mt-1.5 w-full rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3 py-2 text-sm"
+                className="mt-1.5 w-full rounded-xl border border-[#262630] bg-[#09090B] px-3 py-2 text-sm text-[#F4F4F5]"
               >
                 <option value="STARTER">STARTER</option>
                 <option value="GROWTH">GROWTH</option>
@@ -358,29 +366,25 @@ export function SuperAdminClient() {
               </select>
             </label>
 
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[#A1A1AA]">
               Default Currency
               <select
                 value={newCurrency}
                 onChange={(e) => setNewCurrency(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3 py-2 font-mono text-sm"
+                className="mt-1.5 w-full rounded-xl border border-[#262630] bg-[#09090B] px-3 py-2 font-mono text-sm text-[#F4F4F5]"
               >
-                <option value="USD">USD</option>
-                <option value="BDT">BDT</option>
-                <option value="INR">INR</option>
-                <option value="EUR">EUR</option>
-                <option value="GBP">GBP</option>
+                <option value="BDT">BDT (৳)</option>
               </select>
             </label>
           </div>
 
-          <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
+          <label className="block text-xs font-semibold uppercase tracking-wider text-[#A1A1AA]">
             Initial Outlet Name
             <input
               type="text"
               value={newOutletName}
               onChange={(e) => setNewOutletName(e.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3 py-2 text-sm"
+              className="mt-1.5 w-full rounded-xl border border-[#262630] bg-[#09090B] px-3 py-2 text-sm text-[#F4F4F5]"
             />
           </label>
 
@@ -388,14 +392,14 @@ export function SuperAdminClient() {
             <button
               type="button"
               onClick={() => setProvisionOpen(false)}
-              className="min-h-11 rounded-xl border border-[var(--pb-border)] px-4 text-xs font-semibold"
+              className="min-h-11 rounded-xl border border-[#262630] bg-[#18181F] px-4 text-xs font-semibold text-[#F4F4F5]"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={() => void handleProvision()}
-              className="min-h-11 rounded-xl bg-[var(--pb-accent)] px-5 text-xs font-semibold text-[var(--pb-accent-ink)]"
+              className="min-h-11 rounded-xl bg-[#FF5412] px-5 text-xs font-semibold text-white shadow-beam hover:bg-[#FF7033]"
             >
               Provision Tenant
             </button>
