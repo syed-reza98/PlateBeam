@@ -29,32 +29,32 @@ const DIETARY_META: Record<
 > = {
   VEG: {
     label: 'Veg',
-    badgeClass: 'border-[var(--pb-olive)] text-[var(--pb-olive)]',
+    badgeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
     icon: Leaf,
   },
   VEGAN: {
     label: 'Vegan',
-    badgeClass: 'border-[var(--pb-olive)] text-[var(--pb-olive)]',
+    badgeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
     icon: Sparkles,
   },
   JAIN: {
     label: 'Jain',
-    badgeClass: 'border-[var(--pb-olive)] text-[var(--pb-olive)]',
+    badgeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
     icon: Leaf,
   },
   GLUTEN_FREE: {
     label: 'GF',
-    badgeClass: 'border-[var(--pb-turmeric)] text-[var(--pb-turmeric)]',
+    badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
     icon: Check,
   },
   EGG: {
     label: 'Egg',
-    badgeClass: 'border-[var(--pb-turmeric)] text-[var(--pb-turmeric)]',
+    badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
     icon: Utensils,
   },
   NON_VEG: {
     label: 'Non-Veg',
-    badgeClass: 'border-[var(--pb-chili)] text-[var(--pb-chili)]',
+    badgeClass: 'border-red-200 bg-red-50 text-red-700',
     icon: Flame,
   },
 };
@@ -119,8 +119,8 @@ export function MenuBrowser({
   return (
     <section aria-label="Digital menu" className="space-y-4">
       {heroItem?.imageUrl && (
-        <article className="relative overflow-hidden rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)]">
-          <div className="relative aspect-[16/9] w-full overflow-hidden bg-[var(--pb-canvas)] sm:aspect-[21/9]">
+        <article className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+          <div className="relative aspect-[16/9] w-full overflow-hidden bg-zinc-100 sm:aspect-[21/9]">
             <Image
               src={heroItem.imageUrl}
               alt={heroItem.name}
@@ -130,14 +130,14 @@ export function MenuBrowser({
               fetchPriority="high"
               className="object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4 text-white">
               <div className="min-w-0">
-                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--pb-accent)] px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--pb-accent-ink)]">
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#FF5412] px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white">
                   <Sparkles className="size-3" aria-hidden="true" />
                   Chef&apos;s Spotlight
                 </span>
-                <h2 className="mt-1.5 font-display text-2xl leading-tight tracking-tight">
+                <h2 className="mt-1.5 font-sans text-[clamp(1.25rem,1rem+1.5vw,1.75rem)] font-extrabold leading-tight tracking-tight">
                   {heroItem.name}
                 </h2>
                 {heroItem.description && (
@@ -150,7 +150,7 @@ export function MenuBrowser({
                 type="button"
                 disabled={!heroItem.isAvailable}
                 onClick={() => onSelectItem(heroItem)}
-                className="min-h-[44px] shrink-0 rounded-full bg-[var(--pb-surface)] px-4 py-2 text-xs font-semibold text-[var(--pb-ink)] shadow-md transition-transform active:scale-95 disabled:opacity-50"
+                className="min-h-[44px] min-w-[44px] shrink-0 rounded-full bg-white px-4 py-2 font-mono text-xs font-bold text-zinc-900 shadow-md transition-transform active:scale-95 disabled:opacity-50"
               >
                 {heroItem.isAvailable
                   ? `Add · ${formatMoney(heroItem.basePriceMinor, currency)}`
@@ -162,10 +162,10 @@ export function MenuBrowser({
       )}
 
       {/* Search & Sticky Category Tabs */}
-      <div className="sticky top-0 z-20 -mx-4 border-b border-[var(--pb-border)] bg-[var(--pb-canvas)]/95 px-4 py-3 backdrop-blur-md sm:mx-0 sm:rounded-sm sm:border">
+      <div className="sticky top-0 z-20 -mx-4 border-b border-zinc-200/80 bg-[#FAF7F2]/95 px-4 py-3 backdrop-blur-md sm:mx-0 sm:rounded-2xl sm:border">
         <div className="relative">
           <Search
-            className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[var(--pb-muted)]"
+            className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-zinc-400"
             aria-hidden="true"
           />
           <input
@@ -174,7 +174,7 @@ export function MenuBrowser({
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search dishes, ingredients, or allergens..."
             aria-label="Search menu dishes"
-            className="min-h-[44px] w-full rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] pl-10 pr-4 text-sm text-[var(--pb-ink)] placeholder:text-[var(--pb-muted)] focus-visible:outline-2 focus-visible:outline-[var(--pb-accent)]"
+            className="min-h-[44px] w-full rounded-xl border border-zinc-200 bg-white pl-10 pr-4 text-sm text-zinc-900 placeholder:text-zinc-400 focus-visible:outline-2 focus-visible:outline-[#FF5412]"
           />
         </div>
 
@@ -189,10 +189,10 @@ export function MenuBrowser({
             role="tab"
             aria-selected={activeCategoryId === 'ALL'}
             onClick={() => setActiveCategoryId('ALL')}
-            className={`min-h-[44px] shrink-0 rounded-full border px-4 text-xs font-semibold transition-colors ${
+            className={`min-h-[44px] shrink-0 rounded-full border px-4 text-xs font-bold transition-colors ${
               activeCategoryId === 'ALL'
-                ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)] text-[var(--pb-accent-ink)]'
-                : 'border-[var(--pb-border)] bg-[var(--pb-surface)] text-[var(--pb-ink)] hover:border-[var(--pb-accent)]'
+                ? 'border-[#FF5412] bg-[#FF5412] text-white'
+                : 'border-zinc-200 bg-white text-zinc-700 hover:border-[#FF5412]'
             }`}
           >
             All Dishes
@@ -204,10 +204,10 @@ export function MenuBrowser({
               role="tab"
               aria-selected={activeCategoryId === cat.id}
               onClick={() => setActiveCategoryId(cat.id)}
-              className={`min-h-[44px] shrink-0 rounded-full border px-4 text-xs font-semibold transition-colors ${
+              className={`min-h-[44px] shrink-0 rounded-full border px-4 text-xs font-bold transition-colors ${
                 activeCategoryId === cat.id
-                  ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)] text-[var(--pb-accent-ink)]'
-                  : 'border-[var(--pb-border)] bg-[var(--pb-surface)] text-[var(--pb-ink)] hover:border-[var(--pb-accent)]'
+                  ? 'border-[#FF5412] bg-[#FF5412] text-white'
+                  : 'border-zinc-200 bg-white text-zinc-700 hover:border-[#FF5412]'
               }`}
             >
               {cat.name}
@@ -223,10 +223,10 @@ export function MenuBrowser({
               type="button"
               aria-pressed={dietaryFilter === filter.value}
               onClick={() => setDietaryFilter(filter.value)}
-              className={`min-h-[44px] shrink-0 rounded-lg border px-3 text-xs font-medium transition-colors ${
+              className={`min-h-[44px] shrink-0 rounded-xl border px-3 text-xs font-semibold transition-colors ${
                 dietaryFilter === filter.value
-                  ? 'border-[var(--pb-ink)] bg-[var(--pb-ink)] text-[var(--pb-canvas)]'
-                  : 'border-[var(--pb-border)] bg-[var(--pb-surface)] text-[var(--pb-muted)] hover:text-[var(--pb-ink)]'
+                  ? 'border-zinc-900 bg-zinc-900 text-white'
+                  : 'border-zinc-200 bg-white text-zinc-600 hover:text-zinc-900'
               }`}
             >
               {filter.label}
@@ -237,9 +237,9 @@ export function MenuBrowser({
 
       {/* Menu List */}
       {filteredItems.length === 0 ? (
-        <div className="rounded-sm border border-dashed border-[var(--pb-border)] bg-[var(--pb-surface)] p-8 text-center">
-          <p className="font-display text-xl">No dishes match your filters</p>
-          <p className="mt-1 text-sm text-[var(--pb-muted)]">
+        <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-8 text-center">
+          <p className="font-sans text-lg font-bold text-zinc-900">No dishes match your filters</p>
+          <p className="mt-1 text-sm text-zinc-500">
             Try clearing your search query or switching dietary preferences.
           </p>
         </div>
@@ -251,8 +251,10 @@ export function MenuBrowser({
             return (
               <div key={cat.id} className="space-y-3">
                 <div className="flex items-baseline justify-between">
-                  <h2 className="font-display text-2xl tracking-tight">{cat.name}</h2>
-                  <span className="font-mono text-xs font-medium text-[var(--pb-muted)]">
+                  <h2 className="font-sans text-[clamp(1.125rem,1rem+0.9vw,1.375rem)] font-extrabold tracking-tight text-zinc-900">
+                    {cat.name}
+                  </h2>
+                  <span className="font-mono text-xs font-medium text-zinc-500">
                     {items.length} {items.length === 1 ? 'dish' : 'dishes'}
                   </span>
                 </div>
@@ -264,7 +266,7 @@ export function MenuBrowser({
                     return (
                       <article
                         key={item.id}
-                        className={`group relative flex gap-3.5 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--pb-accent)]/40 hover:shadow-md ${
+                        className={`group relative flex gap-3.5 rounded-2xl border border-zinc-200/90 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#FF5412]/40 hover:shadow-md ${
                           item.isAvailable ? '' : 'opacity-65'
                         }`}
                       >
@@ -272,41 +274,41 @@ export function MenuBrowser({
                           <div>
                             <div className="flex flex-wrap items-center gap-1.5">
                               <span
-                                className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${diet.badgeClass}`}
+                                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${diet.badgeClass}`}
                               >
                                 <DietIcon className="size-3" aria-hidden="true" />
                                 {diet.label}
                               </span>
-                              <span className="inline-flex items-center gap-1 text-[11px] text-[var(--pb-muted)]">
+                              <span className="inline-flex items-center gap-1 font-mono text-[11px] text-zinc-500">
                                 <Clock className="size-3" aria-hidden="true" />
                                 {item.prepTimeMins}m
                               </span>
                               {!item.isAvailable && (
-                                <span className="inline-flex items-center gap-1 rounded-md bg-[var(--pb-chili)]/15 px-1.5 py-0.5 text-[10px] font-bold uppercase text-[var(--pb-chili)]">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-red-50 border border-red-200 px-2 py-0.5 text-[10px] font-bold uppercase text-red-600">
                                   Sold Out (86)
                                 </span>
                               )}
                             </div>
 
-                            <h3 className="mt-1.5 font-display text-lg leading-snug tracking-tight text-[var(--pb-ink)] transition-colors group-hover:text-[var(--pb-accent)]">
+                            <h3 className="mt-1.5 font-sans text-base font-bold leading-snug tracking-tight text-zinc-900 transition-colors group-hover:text-[#FF5412]">
                               {item.name}
                             </h3>
                             {item.description && (
-                              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[var(--pb-muted)]">
+                              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-500">
                                 {item.description}
                               </p>
                             )}
 
                             {item.allergens.length > 0 && (
-                              <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-[var(--pb-turmeric)]">
+                              <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-amber-700">
                                 <AlertTriangle className="size-3 shrink-0" aria-hidden="true" />
                                 <span>Contains: {item.allergens.join(', ')}</span>
                               </p>
                             )}
                           </div>
 
-                          <div className="mt-3.5 flex items-center justify-between gap-2 pt-1 border-t border-[var(--pb-border)]/40">
-                            <span className="font-mono text-base font-bold tabular-nums text-[var(--pb-ink)]">
+                          <div className="mt-3.5 flex items-center justify-between gap-2 border-t border-zinc-100 pt-2.5">
+                            <span className="font-mono text-base font-bold tabular-nums text-zinc-900">
                               {formatMoney(item.basePriceMinor, currency)}
                             </span>
                             <button
@@ -318,7 +320,7 @@ export function MenuBrowser({
                                   ? `Customize and add ${item.name}`
                                   : `${item.name} is sold out`
                               }
-                              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-sm bg-[var(--pb-accent)] px-3.5 text-xs font-semibold text-[var(--pb-accent-ink)] shadow-sm transition-all hover:opacity-95 active:scale-95 disabled:cursor-not-allowed disabled:bg-[var(--pb-border)] disabled:text-[var(--pb-muted)] disabled:active:scale-100"
+                              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-xl bg-[#FF5412] px-3.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#FF7033] active:scale-95 disabled:cursor-not-allowed disabled:bg-zinc-200 disabled:text-zinc-500 disabled:active:scale-100"
                             >
                               <Plus className="size-4" aria-hidden="true" />
                               <span>{item.isAvailable ? 'Add' : 'Unavailable'}</span>
@@ -327,7 +329,7 @@ export function MenuBrowser({
                         </div>
 
                         {item.imageUrl && (
-                          <div className="relative size-24 shrink-0 overflow-hidden rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)]">
+                          <div className="relative size-24 shrink-0 overflow-hidden rounded-xl border border-zinc-200 bg-[#FAF7F2]">
                             <Image
                               src={item.imageUrl}
                               alt={item.name}

@@ -30,32 +30,32 @@ const KDS_STATUS_META: Record<
 > = {
   PENDING: {
     label: 'Received',
-    className: 'border-[var(--pb-border)] bg-[var(--pb-canvas)] text-[var(--pb-muted)]',
+    className: 'border-zinc-200 bg-[#FAF7F2] text-zinc-600',
     icon: Clock,
   },
   ACCEPTED: {
     label: 'Queued',
-    className: 'border-[var(--pb-turmeric)]/50 bg-[var(--pb-turmeric)]/12 text-[var(--pb-turmeric)]',
+    className: 'border-amber-200 bg-amber-50 text-amber-700',
     icon: Clock,
   },
   PREPARING: {
     label: 'Cooking',
-    className: 'border-[var(--pb-accent)]/50 bg-[var(--pb-accent)]/12 text-[var(--pb-accent)]',
+    className: 'border-[#FF5412]/40 bg-[#FF5412]/10 text-[#FF5412]',
     icon: ChefHat,
   },
   READY: {
     label: 'Ready to Serve',
-    className: 'border-[var(--pb-olive)]/50 bg-[var(--pb-olive)]/12 text-[var(--pb-olive)]',
+    className: 'border-emerald-200 bg-emerald-50 text-emerald-700',
     icon: Utensils,
   },
   SERVED: {
     label: 'Served',
-    className: 'border-[var(--pb-olive)] bg-[var(--pb-olive)]/15 text-[var(--pb-olive)]',
+    className: 'border-emerald-300 bg-emerald-50 text-emerald-700',
     icon: CheckCircle2,
   },
   CANCELLED: {
     label: 'Cancelled',
-    className: 'border-[var(--pb-chili)]/50 bg-[var(--pb-chili)]/12 text-[var(--pb-chili)]',
+    className: 'border-red-200 bg-red-50 text-red-600',
     icon: XCircle,
   },
 };
@@ -72,13 +72,13 @@ export function OrderTabTracker({
   return (
     <section aria-label="Running table tab and orders" className="space-y-4">
       {/* Running Bill Summary Card */}
-      <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4 sm:p-5">
+      <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
+            <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
               Running Table Tab
             </p>
-            <h2 className="mt-0.5 font-display text-2xl tracking-tight">
+            <h2 className="mt-0.5 font-sans text-[clamp(1.125rem,1rem+0.9vw,1.5rem)] font-extrabold tracking-tight text-zinc-900">
               {orders.length === 0
                 ? 'No rounds sent yet'
                 : `${orders.length} ${orders.length === 1 ? 'Round' : 'Rounds'} Ordered`}
@@ -86,10 +86,10 @@ export function OrderTabTracker({
           </div>
 
           <span
-            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${
               isPaid
-                ? 'border-[var(--pb-olive)] bg-[var(--pb-olive)]/12 text-[var(--pb-olive)]'
-                : 'border-[var(--pb-accent)]/50 bg-[var(--pb-accent)]/10 text-[var(--pb-accent)]'
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                : 'border-[#FF5412]/30 bg-[#FF5412]/10 text-[#FF5412]'
             }`}
           >
             {isPaid ? (
@@ -107,43 +107,43 @@ export function OrderTabTracker({
         </div>
 
         {orders.length > 0 && (
-          <dl className="mt-4 space-y-1.5 border-t border-[var(--pb-border)] pt-3 text-sm">
+          <dl className="mt-4 space-y-1.5 border-t border-zinc-100 pt-3 text-sm">
             <div className="flex justify-between">
-              <dt className="text-[var(--pb-muted)]">Subtotal</dt>
-              <dd className="font-mono tabular-nums">
+              <dt className="text-zinc-500">Subtotal</dt>
+              <dd className="font-mono font-medium tabular-nums text-zinc-900">
                 {formatMoney(session.subtotalMinor, currency)}
               </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-[var(--pb-muted)]">Taxes</dt>
-              <dd className="font-mono tabular-nums">
+              <dt className="text-zinc-500">Taxes</dt>
+              <dd className="font-mono font-medium tabular-nums text-zinc-900">
                 {formatMoney(session.taxMinor, currency)}
               </dd>
             </div>
             {session.serviceChargeMinor > 0 && (
               <div className="flex justify-between">
-                <dt className="text-[var(--pb-muted)]">Service Charge</dt>
-                <dd className="font-mono tabular-nums">
+                <dt className="text-zinc-500">Service Charge</dt>
+                <dd className="font-mono font-medium tabular-nums text-zinc-900">
                   {formatMoney(session.serviceChargeMinor, currency)}
                 </dd>
               </div>
             )}
             {session.discountMinor > 0 && (
-              <div className="flex justify-between text-[var(--pb-olive)]">
-                <dt>Discounts</dt>
+              <div className="flex justify-between font-medium text-emerald-600">
+                <dt>Discounts / Loyalty Voucher</dt>
                 <dd className="font-mono tabular-nums">
                   -{formatMoney(session.discountMinor, currency)}
                 </dd>
               </div>
             )}
-            <div className="flex justify-between border-t border-[var(--pb-border)] pt-2 text-base font-bold">
+            <div className="flex justify-between border-t border-zinc-200 pt-2 text-base font-bold text-zinc-900">
               <dt>Grand Total</dt>
               <dd className="font-mono tabular-nums">
                 {formatMoney(session.totalMinor, currency)}
               </dd>
             </div>
             {session.paidMinor > 0 && (
-              <div className="flex justify-between text-xs text-[var(--pb-olive)]">
+              <div className="flex justify-between text-xs font-medium text-emerald-600">
                 <dt>Paid So Far</dt>
                 <dd className="font-mono tabular-nums">
                   {formatMoney(session.paidMinor, currency)}
@@ -151,7 +151,7 @@ export function OrderTabTracker({
               </div>
             )}
             {!isPaid && session.remainingMinor > 0 && (
-              <div className="flex justify-between text-sm font-semibold text-[var(--pb-accent)]">
+              <div className="flex justify-between text-sm font-bold text-[#FF5412]">
                 <dt>Balance Due</dt>
                 <dd className="font-mono tabular-nums">
                   {formatMoney(session.remainingMinor, currency)}
@@ -167,7 +167,7 @@ export function OrderTabTracker({
               <button
                 type="button"
                 onClick={onOpenCheckout}
-                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-sm bg-[var(--pb-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--pb-accent-ink)]"
+                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-[#FF5412] px-4 py-2.5 text-sm font-bold text-white shadow-beam transition-colors hover:bg-[#FF7033]"
               >
                 <CreditCard className="size-4" aria-hidden="true" />
                 Split &amp; Pay Bill
@@ -177,7 +177,7 @@ export function OrderTabTracker({
               <button
                 type="button"
                 onClick={onOpenReceipt}
-                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-4 py-2.5 text-sm font-semibold text-[var(--pb-ink)] hover:border-[var(--pb-accent)]"
+                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-[#FAF7F2] px-4 py-2.5 text-sm font-bold text-zinc-900 transition-colors hover:border-[#FF5412]"
               >
                 <Receipt className="size-4" aria-hidden="true" />
                 Receipt &amp; Review
@@ -191,27 +191,27 @@ export function OrderTabTracker({
       {orders.map((order, idx) => (
         <article
           key={order.id}
-          className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-4"
+          className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm"
         >
-          <div className="flex items-center justify-between gap-2 border-b border-[var(--pb-border)] pb-2.5">
+          <div className="flex items-center justify-between gap-2 border-b border-zinc-100 pb-2.5">
             <div>
-              <p className="font-mono text-xs font-semibold text-[var(--pb-muted)]">
+              <p className="font-mono text-xs font-bold text-zinc-600">
                 ROUND {orders.length - idx} · #{order.orderNumber}
                 {order.tokenNumber ? ` · Token #${order.tokenNumber}` : ''}
               </p>
-              <p className="text-xs text-[var(--pb-muted)]">
+              <p className="text-xs text-zinc-500">
                 {new Date(order.createdAt).toLocaleTimeString([], {
                   hour: '2-digit',
                   minute: '2-digit',
                 })}
               </p>
             </div>
-            <span className="rounded-full border border-[var(--pb-border)] px-2.5 py-0.5 text-[11px] font-semibold">
+            <span className="rounded-full border border-zinc-200 bg-[#FAF7F2] px-2.5 py-0.5 text-[11px] font-bold text-zinc-700">
               {order.status.replace('_', ' ')}
             </span>
           </div>
 
-          <ul className="divide-y divide-[var(--pb-border)]">
+          <ul className="divide-y divide-zinc-100">
             {order.items.map((item) => {
               const statusMeta = KDS_STATUS_META[item.kdsStatus];
               const StatusIcon = statusMeta.icon;
@@ -221,19 +221,19 @@ export function OrderTabTracker({
                   className="flex items-center justify-between gap-3 py-2.5 text-sm"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium">
-                      <span className="font-mono text-xs text-[var(--pb-muted)]">
+                    <p className="font-semibold text-zinc-900">
+                      <span className="font-mono text-xs text-zinc-500">
                         {item.quantity}×{' '}
                       </span>
                       {item.itemNameSnapshot}
                     </p>
                     {item.spiceLevel && (
-                      <p className="text-xs text-[var(--pb-muted)]">
+                      <p className="text-xs text-zinc-500">
                         Spice: {item.spiceLevel}
                       </p>
                     )}
                     {item.notes && (
-                      <p className="text-xs italic text-[var(--pb-muted)]">
+                      <p className="text-xs italic text-zinc-500">
                         {item.notes}
                       </p>
                     )}
@@ -241,12 +241,12 @@ export function OrderTabTracker({
 
                   <div className="flex flex-col items-end gap-1">
                     <span
-                      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${statusMeta.className}`}
+                      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${statusMeta.className}`}
                     >
                       <StatusIcon className="size-3" aria-hidden="true" />
                       {statusMeta.label}
                     </span>
-                    <span className="font-mono text-xs text-[var(--pb-muted)] tabular-nums">
+                    <span className="font-mono text-xs font-semibold text-zinc-600 tabular-nums">
                       {formatMoney(item.lineTotalMinor, currency)}
                     </span>
                   </div>

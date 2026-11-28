@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { AlertTriangle, Flame, Minus, Plus } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
+import { GUEST_DIALOG_CLASS } from './GuestPortalClient';
 import { formatMoney, type GuestCartItem, type GuestMenuItem, type GuestModifier } from './types';
 
 interface ItemModifierDialogProps {
@@ -61,8 +62,14 @@ export function ItemModifierDialog({
 
   if (!item) {
     return (
-      <Dialog open={open} onClose={onClose} title="Customize Dish" closedby="any">
-        <p className="text-sm text-[var(--pb-muted)]">Select a dish to customize.</p>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        title="Customize Dish"
+        closedby="any"
+        className={GUEST_DIALOG_CLASS}
+      >
+        <p className="text-sm text-zinc-500">Select a dish to customize.</p>
       </Dialog>
     );
   }
@@ -106,10 +113,16 @@ export function ItemModifierDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title={item.name} closedby="any">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title={item.name}
+      closedby="any"
+      className={GUEST_DIALOG_CLASS}
+    >
       <div className="space-y-5">
         {item.imageUrl && (
-          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-sm border border-[var(--pb-border)]">
+          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-zinc-200 bg-[#FAF7F2]">
             <Image
               src={item.imageUrl}
               alt={item.name}
@@ -121,20 +134,20 @@ export function ItemModifierDialog({
         )}
 
         {item.description && (
-          <p className="text-sm text-[var(--pb-muted)]">{item.description}</p>
+          <p className="text-sm leading-relaxed text-zinc-500">{item.description}</p>
         )}
 
         {item.allergens.length > 0 && (
-          <div className="flex items-center gap-2 rounded-sm border border-[var(--pb-turmeric)]/40 bg-[var(--pb-turmeric)]/10 px-3 py-2 text-xs">
-            <AlertTriangle className="size-4 shrink-0 text-[var(--pb-turmeric)]" aria-hidden="true" />
+          <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-xs font-medium text-amber-800">
+            <AlertTriangle className="size-4 shrink-0 text-amber-600" aria-hidden="true" />
             <span>Allergens: {item.allergens.join(', ')}</span>
           </div>
         )}
 
         {/* Spice Level */}
         <fieldset className="space-y-2">
-          <legend className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
-            <Flame className="size-3.5 text-[var(--pb-accent)]" aria-hidden="true" />
+          <legend className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-zinc-500">
+            <Flame className="size-3.5 text-[#FF5412]" aria-hidden="true" />
             Spice Preference
           </legend>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -144,10 +157,10 @@ export function ItemModifierDialog({
                 type="button"
                 aria-pressed={spiceLevel === level}
                 onClick={() => setSpiceLevel(level)}
-                className={`min-h-[44px] rounded-sm border px-3 text-xs font-semibold transition-colors ${
+                className={`min-h-[44px] rounded-xl border px-3 text-xs font-bold transition-colors ${
                   spiceLevel === level
-                    ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)] text-[var(--pb-accent-ink)]'
-                    : 'border-[var(--pb-border)] bg-[var(--pb-canvas)] text-[var(--pb-ink)]'
+                    ? 'border-[#FF5412] bg-[#FF5412] text-white'
+                    : 'border-zinc-200 bg-[#FAF7F2] text-zinc-900 hover:border-zinc-300'
                 }`}
               >
                 {level}
@@ -162,9 +175,9 @@ export function ItemModifierDialog({
           const isMulti = mods.some((m) => m.isMultiSelect);
           return (
             <fieldset key={groupName} className="space-y-2">
-              <legend className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
+              <legend className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-500">
                 <span>{groupName}</span>
-                <span className="rounded-full border border-[var(--pb-border)] px-2 py-0.5 text-[10px] font-medium">
+                <span className="rounded-full border border-zinc-200 bg-[#FAF7F2] px-2 py-0.5 text-[10px] font-semibold text-zinc-600">
                   {isRequired ? 'Required' : isMulti ? 'Multi-select' : 'Optional'}
                 </span>
               </legend>
@@ -174,10 +187,10 @@ export function ItemModifierDialog({
                   return (
                     <label
                       key={mod.id}
-                      className={`flex min-h-[44px] w-full cursor-pointer items-center justify-between gap-3 rounded-sm border px-3.5 py-2 text-sm transition-colors ${
+                      className={`flex min-h-[44px] w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-3.5 py-2 text-sm transition-colors ${
                         checked
-                          ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)]/8'
-                          : 'border-[var(--pb-border)] bg-[var(--pb-canvas)]'
+                          ? 'border-[#FF5412] bg-[#FF5412]/8 text-zinc-900'
+                          : 'border-zinc-200 bg-[#FAF7F2] text-zinc-900'
                       }`}
                     >
                       <span className="flex items-center gap-2.5">
@@ -186,11 +199,11 @@ export function ItemModifierDialog({
                           name={`mod-${groupName}`}
                           checked={checked}
                           onChange={() => toggleModifier(mod, mods)}
-                          className="size-4 accent-[var(--pb-accent)]"
+                          className="size-4 accent-[#FF5412]"
                         />
-                        <span className="font-medium">{mod.optionName}</span>
+                        <span className="font-semibold">{mod.optionName}</span>
                       </span>
-                      <span className="font-mono text-xs text-[var(--pb-muted)] tabular-nums">
+                      <span className="font-mono text-xs font-medium text-zinc-500 tabular-nums">
                         {mod.priceDeltaMinor > 0
                           ? `+${formatMoney(mod.priceDeltaMinor, currency)}`
                           : 'Included'}
@@ -205,7 +218,7 @@ export function ItemModifierDialog({
 
         {/* Kitchen Notes */}
         <div className="space-y-1.5">
-          <label htmlFor="kitchen-notes" className="block text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
+          <label htmlFor="kitchen-notes" className="block text-xs font-bold uppercase tracking-wider text-zinc-500">
             Kitchen Notes (Optional)
           </label>
           <textarea
@@ -215,29 +228,29 @@ export function ItemModifierDialog({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="e.g., No cilantro, extra crispy, dressing on the side..."
-            className="w-full rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3.5 py-2.5 text-sm text-[var(--pb-ink)] placeholder:text-[var(--pb-muted)] focus-visible:outline-2 focus-visible:outline-[var(--pb-accent)]"
+            className="w-full rounded-xl border border-zinc-200 bg-[#FAF7F2] px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus-visible:outline-2 focus-visible:outline-[#FF5412]"
           />
         </div>
 
         {/* Quantity + Add CTA */}
-        <div className="flex items-center justify-between gap-3 border-t border-[var(--pb-border)] pt-4">
-          <div className="inline-flex items-center rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)]">
+        <div className="flex items-center justify-between gap-3 border-t border-zinc-200 pt-4">
+          <div className="inline-flex items-center rounded-xl border border-zinc-200 bg-[#FAF7F2]">
             <button
               type="button"
               aria-label="Decrease quantity"
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center text-[var(--pb-ink)]"
+              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center text-zinc-900"
             >
               <Minus className="size-4" aria-hidden="true" />
             </button>
-            <span className="min-w-[2.5rem] text-center font-mono text-sm font-semibold tabular-nums">
+            <span className="min-w-[2.5rem] text-center font-mono text-sm font-bold tabular-nums text-zinc-900">
               {quantity}
             </span>
             <button
               type="button"
               aria-label="Increase quantity"
               onClick={() => setQuantity((q) => Math.min(99, q + 1))}
-              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center text-[var(--pb-ink)]"
+              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center text-zinc-900"
             >
               <Plus className="size-4" aria-hidden="true" />
             </button>
@@ -246,7 +259,7 @@ export function ItemModifierDialog({
           <button
             type="button"
             onClick={handleConfirm}
-            className="min-h-[44px] flex-1 rounded-sm bg-[var(--pb-accent)] px-5 py-2.5 text-sm font-semibold text-[var(--pb-accent-ink)] transition-opacity hover:opacity-95"
+            className="min-h-[44px] flex-1 rounded-xl bg-[#FF5412] px-5 py-2.5 text-sm font-bold text-white shadow-beam transition-colors hover:bg-[#FF7033]"
           >
             Add to Table Cart · {formatMoney(lineTotalMinor, currency)}
           </button>

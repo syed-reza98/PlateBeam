@@ -1,22 +1,24 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
   BellRing,
+  QrCode,
   Receipt,
   RefreshCw,
+  ShieldAlert,
   ShoppingBag,
   UtensilsCrossed,
 } from 'lucide-react';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { showToast } from '@/components/ui/ToastRegion';
 import { CallWaiterDialog } from './CallWaiterDialog';
 import { CartDrawer } from './CartDrawer';
 import { ItemModifierDialog } from './ItemModifierDialog';
-import { PairingUpsellDialog } from './PairingUpsellDialog';
 import { MenuBrowser } from './MenuBrowser';
 import { OrderTabTracker } from './OrderTabTracker';
+import { PairingUpsellDialog } from './PairingUpsellDialog';
 import { ReceiptReviewDialog } from './ReceiptReviewDialog';
 import { SpiceQuizDialog } from './SpiceQuizDialog';
 import { SplitBillCheckoutDialog } from './SplitBillCheckoutDialog';
@@ -35,19 +37,29 @@ interface GuestPortalClientProps {
 
 type ActiveTab = 'MENU' | 'TAB';
 
+export const GUEST_THEME_VARS =
+  '[--pb-canvas:#FAF7F2] [--pb-surface:#FFFFFF] [--pb-surface-raised:#F4F1EA] [--pb-border:#E4E4E7] [--pb-border-subtle:#F4F4F5] [--pb-ink:#18181B] [--pb-muted:#71717A] [--pb-accent:#FF5412] [--pb-accent-hover:#FF7033] [--pb-accent-ink:#FFFFFF] [--pb-olive:#10B981] [--pb-turmeric:#F59E0B] [--pb-gold:#F59E0B] [--pb-chili:#EF4444]';
+
+export const GUEST_DIALOG_CLASS =
+  `${GUEST_THEME_VARS} rounded-3xl border border-zinc-200 bg-white text-zinc-900 shadow-2xl`;
+
 export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
+  const router = useRouter();
   const [data, setData] = useState<BootstrapPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isQrRotated, setIsQrRotated] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>('MENU');
   const [guestNickname, setGuestNickname] = useState('Guest');
   const [guestId, setGuestId] = useState<string | undefined>(undefined);
+  const [freshTokenInput, setFreshTokenInput] = useState('');
+  const [showTokenPrompt, setShowTokenPrompt] = useState(false);
 
   // Dialog states
   const [selectedItem, setSelectedItem] = useState<GuestMenuItem | null>(null);
   const [upsellCandidate, setUpsellCandidate] = useState<{
     triggerItem: GuestMenuItem;
-    rule: typeof data extends null ? null : (NonNullable<typeof data>)['upsellRules'][number];
+    rule: typeof data extends null ? null : NonNullable<typeof data>['upsellRules'][number];
     suggestedItem: GuestMenuItem;
   } | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
@@ -86,12 +98,22 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
         { cache: 'no-store' },
       );
       if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        const body = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          code?: string;
+        };
+        const rotated =
+          res.status === 401 ||
+          body.code === 'QR_ROTATED' ||
+          body.code === 'QR_SIGNATURE_INVALID' ||
+          Boolean(body.error && /rotated/i.test(body.error));
+        setIsQrRotated(rotated);
         throw new Error(body.error ?? `Unable to load table menu (${res.status})`);
       }
       const payload = (await res.json()) as BootstrapPayload;
       setData(payload);
       setError(null);
+      setIsQrRotated(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load menu');
     } finally {
@@ -307,6 +329,14 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
     );
   };
 
+  const handleNavigateFreshQr = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleaned = freshTokenInput.trim();
+    if (!cleaned) return;
+    const token = cleaned.includes('/t/') ? cleaned.split('/t/').pop() ?? cleaned : cleaned;
+    router.push(`/t/${encodeURIComponent(token)}`);
+  };
+
   const cartCount = useMemo(
     () => data?.sharedCart.reduce((sum, item) => sum + item.quantity, 0) ?? 0,
     [data?.sharedCart],
@@ -323,31 +353,106 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
 
   if (loading) {
     return (
-      <div className="min-h-dvh bg-[var(--pb-canvas)] px-4 py-12 text-center">
-        <p className="font-display text-2xl">Syncing table channel…</p>
-        <p className="mt-2 text-sm text-[var(--pb-muted)]">
-          Loading live menu and table session
-        </p>
+      <div className={`${GUEST_THEME_VARS} min-h-dvh bg-[#FAF7F2] px-4 py-16 text-center text-zinc-900`}>
+        <div className="mx-auto max-w-sm rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-[#FF5412]/10 text-[#FF5412]">
+            <UtensilsCrossed className="size-6 animate-pulse" aria-hidden="true" />
+          </div>
+          <p className="mt-4 font-sans text-[clamp(1.25rem,1rem+1.2vw,1.625rem)] font-bold tracking-tight text-zinc-900">
+            Syncing table channel…
+          </p>
+          <p className="mt-1.5 text-sm text-zinc-500">
+            Loading live menu and table session
+          </p>
+        </div>
       </div>
+    );
+  }
+
+  if (isQrRotated) {
+    return (
+      <main className={`${GUEST_THEME_VARS} flex min-h-dvh items-center justify-center bg-[#FAF7F2] px-4 py-12 text-zinc-900`}>
+        <div className="w-full max-w-md rounded-3xl border border-zinc-200 bg-white p-6 text-center shadow-lg sm:p-8">
+          <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#FF5412]/12 text-[#FF5412]">
+            <ShieldAlert className="size-7" aria-hidden="true" />
+          </div>
+          <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-wider text-amber-700 border border-amber-200">
+            Session Locked · QR Rotated
+          </span>
+          <h1 className="mt-3 font-sans text-[clamp(1.375rem,1.1rem+1.5vw,1.875rem)] font-extrabold tracking-tight text-zinc-900">
+            QR Session Rotated
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+            {error ??
+              'This table QR code has been rotated for your security. Please scan the fresh QR code on your table stand to start a new session.'}
+          </p>
+
+          <div className="mt-6 space-y-2.5">
+            <button
+              type="button"
+              onClick={() => setShowTokenPrompt((v) => !v)}
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#FF5412] px-5 py-3 text-sm font-bold text-white shadow-beam transition-colors hover:bg-[#FF7033]"
+            >
+              <QrCode className="size-4" aria-hidden="true" />
+              Scan Fresh Table QR
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void fetchBootstrap()}
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-[#FAF7F2] px-5 py-2.5 text-sm font-semibold text-zinc-800 transition-colors hover:border-[#FF5412]"
+            >
+              <RefreshCw className="size-4" aria-hidden="true" />
+              Retry Current Code
+            </button>
+          </div>
+
+          {showTokenPrompt && (
+            <form onSubmit={handleNavigateFreshQr} className="mt-4 space-y-2.5 border-t border-zinc-200 pt-4 text-left">
+              <label htmlFor="fresh-qr-token" className="block text-xs font-semibold text-zinc-700">
+                Point your phone camera at the table tent, or enter the new table code:
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="fresh-qr-token"
+                  type="text"
+                  value={freshTokenInput}
+                  onChange={(e) => setFreshTokenInput(e.target.value)}
+                  placeholder="Paste QR token or 'demo'"
+                  className="min-h-[44px] flex-1 rounded-xl border border-zinc-300 bg-[#FAF7F2] px-3.5 font-mono text-xs text-zinc-900 placeholder:text-zinc-400 focus-visible:outline-2 focus-visible:outline-[#FF5412]"
+                />
+                <button
+                  type="submit"
+                  className="min-h-[44px] shrink-0 rounded-xl bg-zinc-900 px-4 text-xs font-bold text-white hover:bg-zinc-800"
+                >
+                  Open
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </main>
     );
   }
 
   if (error || !data) {
     return (
-      <main className="min-h-dvh bg-[var(--pb-canvas)] px-4 py-14">
-        <div className="mx-auto max-w-md rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-6 text-center">
+      <main className={`${GUEST_THEME_VARS} flex min-h-dvh items-center justify-center bg-[#FAF7F2] px-4 py-12 text-zinc-900`}>
+        <div className="w-full max-w-md rounded-3xl border border-zinc-200 bg-white p-6 text-center shadow-lg sm:p-8">
           <AlertCircle
-            className="mx-auto size-10 text-[var(--pb-chili)]"
+            className="mx-auto size-10 text-red-500"
             aria-hidden="true"
           />
-          <h1 className="mt-3 font-display text-2xl">QR Code Unavailable</h1>
-          <p className="mt-2 text-sm text-[var(--pb-muted)]">
+          <h1 className="mt-3 font-sans text-[clamp(1.375rem,1.1rem+1.5vw,1.875rem)] font-extrabold tracking-tight text-zinc-900">
+            QR Code Unavailable
+          </h1>
+          <p className="mt-2 text-sm text-zinc-500">
             {error ?? 'This table QR code could not be verified. Please ask your server for assistance.'}
           </p>
           <button
             type="button"
             onClick={() => void fetchBootstrap()}
-            className="mt-5 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-sm bg-[var(--pb-accent)] px-5 text-sm font-semibold text-[var(--pb-accent-ink)]"
+            className="mt-5 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#FF5412] px-6 text-sm font-bold text-white shadow-beam transition-colors hover:bg-[#FF7033]"
           >
             <RefreshCw className="size-4" aria-hidden="true" />
             Try Again
@@ -358,46 +463,49 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
   }
 
   return (
-    <div className="min-h-dvh bg-[var(--pb-canvas)] pb-28">
+    <div className={`${GUEST_THEME_VARS} min-h-dvh bg-[#FAF7F2] pb-28 text-zinc-900`}>
       {/* Header */}
-      <header className="border-b border-[var(--pb-border)] bg-[var(--pb-surface)]">
+      <header className="border-b border-zinc-200/80 bg-white/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3.5">
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-sm bg-[var(--pb-accent)] font-display text-lg text-[var(--pb-accent-ink)]">
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#FF5412] font-sans text-lg font-black text-white shadow-sm">
                 {data.outlet.name.charAt(0)}
               </span>
               <div className="min-w-0">
-                <h1 className="truncate font-display text-xl leading-none tracking-tight">
+                <h1 className="font-sans text-[clamp(1.125rem,1rem+0.9vw,1.375rem)] font-extrabold leading-tight tracking-tight text-zinc-900">
                   {data.outlet.name}
                 </h1>
-                <p className="mt-0.5 truncate text-xs text-[var(--pb-muted)]">
+                <p className="mt-0.5 truncate text-xs font-medium text-zinc-500">
                   {data.table
                     ? `Table ${data.table.tableNumber}${
                         data.table.zoneName ? ` · ${data.table.zoneName}` : ''
                       }`
                     : 'Counter / Takeaway'}
                   {' · '}
-                  {guestNickname}
+                  <span className="text-zinc-700">{guestNickname}</span>
                 </p>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <ThemeToggle />
+            <span className="inline-flex min-h-[32px] items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-mono text-[11px] font-semibold text-emerald-700">
+              <span className="size-2 rounded-full bg-emerald-500 animate-ping" aria-hidden="true" />
+              LIVE
+            </span>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="mx-auto flex max-w-3xl gap-2 px-4 pb-3">
+        <div className="mx-auto flex max-w-3xl gap-2 px-4 pb-3.5">
           <button
             type="button"
             onClick={() => setActiveTab('MENU')}
-            className={`inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-sm border text-xs font-semibold transition-colors ${
+            className={`inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border text-xs font-bold transition-all ${
               activeTab === 'MENU'
-                ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)] text-[var(--pb-accent-ink)]'
-                : 'border-[var(--pb-border)] bg-[var(--pb-canvas)] text-[var(--pb-ink)]'
+                ? 'border-[#FF5412] bg-[#FF5412] text-white shadow-sm'
+                : 'border-zinc-200 bg-[#FAF7F2] text-zinc-700 hover:border-zinc-300'
             }`}
           >
             <UtensilsCrossed className="size-4" aria-hidden="true" />
@@ -406,16 +514,22 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
           <button
             type="button"
             onClick={() => setActiveTab('TAB')}
-            className={`inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-sm border text-xs font-semibold transition-colors ${
+            className={`inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border text-xs font-bold transition-all ${
               activeTab === 'TAB'
-                ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)] text-[var(--pb-accent-ink)]'
-                : 'border-[var(--pb-border)] bg-[var(--pb-canvas)] text-[var(--pb-ink)]'
+                ? 'border-[#FF5412] bg-[#FF5412] text-white shadow-sm'
+                : 'border-zinc-200 bg-[#FAF7F2] text-zinc-700 hover:border-zinc-300'
             }`}
           >
             <Receipt className="size-4" aria-hidden="true" />
             Tab &amp; Status
             {data.orders.length > 0 && (
-              <span className="rounded-full bg-[var(--pb-surface)] px-2 py-0.5 font-mono text-[11px] text-[var(--pb-ink)]">
+              <span
+                className={`rounded-full px-2 py-0.5 font-mono text-[11px] font-bold ${
+                  activeTab === 'TAB'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-white text-zinc-900 border border-zinc-200'
+                }`}
+              >
                 {data.orders.length}
               </span>
             )}
@@ -440,6 +554,7 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
               orders={data.orders}
               loyalty={data.loyalty}
               onOpenSpiceQuiz={() => setQuizOpen(true)}
+              onLoyaltyRedeemed={() => void fetchBootstrap()}
             />
             <OrderTabTracker
               currency={data.outlet.currency}
@@ -453,14 +568,14 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
       </main>
 
       {/* Persistent Bottom Action Bar */}
-      <div className="pb-safe-bottom-bar fixed inset-x-0 bottom-0 z-30 border-t border-[var(--pb-border)] bg-[var(--pb-surface)]/95 pt-2.5 backdrop-blur-md">
+      <div className="pb-safe-bottom-bar fixed inset-x-0 bottom-0 z-30 border-t border-zinc-200 bg-white/95 px-4 pt-2.5 backdrop-blur-md shadow-[0_-8px_24px_-12px_rgba(24,24,27,0.12)]">
         <div className="mx-auto flex max-w-3xl items-center gap-2.5">
           <button
             type="button"
             onClick={() => setWaiterOpen(true)}
-            className="inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3.5 text-xs font-semibold text-[var(--pb-ink)] hover:border-[var(--pb-accent)]"
+            className="animate-halo inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-xl border border-zinc-200 bg-[#FAF7F2] px-3.5 text-xs font-bold text-zinc-900 transition-colors hover:border-[#FF5412]"
           >
-            <BellRing className="size-4 text-[var(--pb-accent)]" aria-hidden="true" />
+            <BellRing className="size-4 text-[#FF5412]" aria-hidden="true" />
             Call Waiter
           </button>
 
@@ -468,7 +583,7 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
             <button
               type="button"
               onClick={() => setCartOpen(true)}
-              className="inline-flex min-h-[44px] flex-1 items-center justify-between rounded-sm bg-[var(--pb-accent)] px-4 text-sm font-semibold text-[var(--pb-accent-ink)]"
+              className="inline-flex min-h-[44px] flex-1 items-center justify-between rounded-xl bg-[#FF5412] px-4 text-sm font-bold text-white shadow-beam transition-colors hover:bg-[#FF7033]"
             >
               <span className="inline-flex items-center gap-2">
                 <ShoppingBag className="size-4" aria-hidden="true" />
@@ -486,7 +601,7 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
                   ? setCheckoutOpen(true)
                   : setCartOpen(true)
               }
-              className="inline-flex min-h-[44px] flex-1 items-center justify-between rounded-sm bg-[var(--pb-ink)] px-4 text-sm font-semibold text-[var(--pb-canvas)]"
+              className="inline-flex min-h-[44px] flex-1 items-center justify-between rounded-xl bg-zinc-900 px-4 text-sm font-bold text-white transition-colors hover:bg-zinc-800"
             >
               <span>
                 {data.orders.length > 0 && data.session.remainingMinor > 0

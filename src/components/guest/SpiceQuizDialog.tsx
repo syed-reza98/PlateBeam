@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CheckCircle2, Flame, Trophy, Users } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
 import { showToast } from '@/components/ui/ToastRegion';
+import { GUEST_DIALOG_CLASS } from './GuestPortalClient';
 import type { GuestLeaderboardEntry } from './types';
 
 interface SpiceQuizDialogProps {
@@ -129,28 +130,36 @@ export function SpiceQuizDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title="Table Multiplayer: Spice Quiz">
-      <div className="space-y-5 py-2">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title="Table Multiplayer: Spice Quiz"
+      closedby="any"
+      className={GUEST_DIALOG_CLASS}
+    >
+      <div className="space-y-5 py-1">
         {/* Table Contest Header */}
-        <div className="flex items-center justify-between rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface-raised)] p-3.5">
+        <div className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-[#FAF7F2] p-3.5">
           <div className="flex items-center gap-2.5">
-            <span className="flex size-9 items-center justify-center rounded-sm bg-[var(--pb-accent)] text-[var(--pb-accent-ink)] font-bold shadow-sm">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-[#FF5412] text-white shadow-sm">
               <Flame className="size-5" aria-hidden="true" />
             </span>
             <div>
-              <p className="text-xs font-semibold text-[var(--pb-muted)]">
+              <p className="text-xs font-semibold text-zinc-500">
                 {tableNumber ? `Table ${tableNumber} Challenge` : 'Live Table Trivia'}
               </p>
-              <p className="font-display text-sm font-bold text-[var(--pb-ink)]">
-                Player: <span className="text-[var(--pb-accent)]">{playerNickname || 'Guest'}</span>
+              <p className="font-sans text-sm font-bold text-zinc-900">
+                Player: <span className="text-[#FF5412]">{playerNickname || 'Guest'}</span>
               </p>
             </div>
           </div>
           <div className="text-right">
-            <span className="font-mono text-xl font-bold tabular-nums text-[var(--pb-gold)]">
+            <span className="font-mono text-xl font-bold tabular-nums text-amber-600 block">
               {score}
             </span>
-            <span className="text-xs font-semibold text-[var(--pb-muted)] block">PTS</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 block">
+              PTS
+            </span>
           </div>
         </div>
 
@@ -158,37 +167,37 @@ export function SpiceQuizDialog({
           <div className="space-y-4">
             {/* Progress Bar */}
             <div className="space-y-1.5">
-              <div className="flex justify-between text-xs font-medium text-[var(--pb-muted)]">
+              <div className="flex justify-between text-xs font-semibold text-zinc-500">
                 <span>Question {step + 1} of {QUESTIONS.length}</span>
                 <span>Round {step + 1}</span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--pb-border)]">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-200">
                 <div
-                  className="h-full bg-[var(--pb-accent)] transition-all duration-300"
+                  className="h-full bg-[#FF5412] transition-all duration-300"
                   style={{ width: `${((step + 1) / QUESTIONS.length) * 100}%` }}
                 />
               </div>
             </div>
 
             {/* Question Card */}
-            <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface)] p-5 shadow-sm">
-              <h3 className="font-display text-lg font-bold leading-snug text-[var(--pb-ink)]">
+            <div className="rounded-2xl border border-zinc-200 bg-[#FAF7F2] p-4">
+              <h3 className="font-sans text-base font-bold leading-snug text-zinc-900">
                 {currentQ.q}
               </h3>
             </div>
 
             {/* Options */}
-            <div className="grid gap-2.5">
+            <div className="grid gap-2">
               {currentQ.options.map((option, idx) => {
                 const isSelected = selectedIdx === idx;
                 const isCorrect = idx === currentQ.answerIndex;
-                let stateClasses = 'border-[var(--pb-border)] bg-[var(--pb-surface)] hover:border-[var(--pb-accent)]';
+                let stateClasses = 'border-zinc-200 bg-white text-zinc-900 hover:border-[#FF5412]';
 
                 if (selectedIdx !== null) {
                   if (isCorrect) {
-                    stateClasses = 'border-[var(--pb-olive)] bg-[var(--pb-olive)]/15 text-[var(--pb-olive)] font-bold';
+                    stateClasses = 'border-emerald-300 bg-emerald-50 text-emerald-700 font-bold';
                   } else if (isSelected) {
-                    stateClasses = 'border-[var(--pb-chili)] bg-[var(--pb-chili)]/15 text-[var(--pb-chili)] line-through';
+                    stateClasses = 'border-red-300 bg-red-50 text-red-600 line-through';
                   }
                 }
 
@@ -198,11 +207,11 @@ export function SpiceQuizDialog({
                     type="button"
                     disabled={selectedIdx !== null}
                     onClick={() => handleSelectOption(idx)}
-                    className={`flex items-center justify-between rounded-sm border p-3.5 text-left text-sm font-medium transition-all active:scale-98 ${stateClasses}`}
+                    className={`flex min-h-[44px] items-center justify-between rounded-xl border px-4 py-2.5 text-left text-sm font-semibold transition-all ${stateClasses}`}
                   >
                     <span>{option}</span>
                     {selectedIdx !== null && isCorrect && (
-                      <CheckCircle2 className="size-4 text-[var(--pb-olive)] shrink-0" />
+                      <CheckCircle2 className="size-4 text-emerald-600 shrink-0" aria-hidden="true" />
                     )}
                   </button>
                 );
@@ -210,53 +219,53 @@ export function SpiceQuizDialog({
             </div>
 
             {selectedIdx !== null && (
-              <p className="rounded-sm bg-[var(--pb-surface-raised)] p-3 text-xs text-[var(--pb-muted)] italic animate-fadeIn">
-                💡 <span className="font-semibold text-[var(--pb-ink)]">Chef Fact:</span> {currentQ.fact}
+              <p className="rounded-xl border border-zinc-200 bg-[#FAF7F2] p-3 text-xs text-zinc-600">
+                <span className="font-bold text-zinc-900">Chef Fact:</span> {currentQ.fact}
               </p>
             )}
           </div>
         ) : (
           <div className="space-y-4 text-center">
-            <div className="mx-auto flex size-16 items-center justify-center rounded-sm bg-[var(--pb-gold)]/15 text-[var(--pb-gold)]">
+            <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600">
               <Trophy className="size-8" aria-hidden="true" />
             </div>
 
             <div>
-              <h3 className="font-display text-2xl font-bold text-[var(--pb-ink)]">
+              <h3 className="font-sans text-xl font-extrabold text-zinc-900">
                 Quiz Completed!
               </h3>
-              <p className="text-sm text-[var(--pb-muted)]">
-                You earned <span className="font-bold text-[var(--pb-gold)]">{score} points</span> out of {QUESTIONS.length * 100}
+              <p className="text-sm text-zinc-500">
+                You earned <span className="font-bold text-amber-600">{score} points</span> out of {QUESTIONS.length * 100}
               </p>
             </div>
 
             {couponCode && (
-              <div className="rounded-sm border-2 border-dashed border-[var(--pb-accent)] bg-[var(--pb-accent)]/10 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-accent)]">
+              <div className="rounded-2xl border-2 border-dashed border-[#FF5412] bg-[#FF5412]/8 p-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-[#FF5412]">
                   Table High-Score Reward Unlocked!
                 </p>
-                <p className="mt-1 font-mono text-xl font-bold tracking-widest text-[var(--pb-ink)]">
+                <p className="mt-1 font-mono text-xl font-bold tracking-widest text-zinc-900">
                   {couponCode}
                 </p>
-                <p className="mt-1 text-[11px] text-[var(--pb-muted)]">
+                <p className="mt-1 text-[11px] text-zinc-500">
                   Show this code to your waiter for 5% off dessert or coffee!
                 </p>
               </div>
             )}
 
             {/* Table Leaderboard */}
-            <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-surface-raised)] p-4 text-left">
-              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)] mb-3">
+            <div className="rounded-2xl border border-zinc-200 bg-[#FAF7F2] p-4 text-left">
+              <p className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-zinc-500">
                 <Users className="size-3.5" aria-hidden="true" />
-                Live Table & Venue Leaderboard
+                Live Table &amp; Venue Leaderboard
               </p>
-              <div className="divide-y divide-[var(--pb-border)]">
+              <div className="divide-y divide-zinc-200">
                 {leaderboard.slice(0, 5).map((entry, idx) => (
                   <div key={idx} className="flex items-center justify-between py-2 text-xs">
-                    <span className="font-medium text-[var(--pb-ink)]">
+                    <span className="font-semibold text-zinc-900">
                       #{idx + 1} {entry.playerNickname}
                     </span>
-                    <span className="font-mono font-bold text-[var(--pb-gold)]">
+                    <span className="font-mono font-bold text-amber-600">
                       {entry.score} pts
                     </span>
                   </div>
@@ -264,11 +273,11 @@ export function SpiceQuizDialog({
               </div>
             </div>
 
-            <div className="flex gap-2.5 pt-2">
+            <div className="flex gap-2.5 pt-1">
               <button
                 type="button"
                 onClick={handleRestart}
-                className="flex-1 rounded-sm border border-[var(--pb-border)] py-3 text-xs font-semibold hover:border-[var(--pb-accent)] transition-all"
+                className="min-h-[44px] flex-1 rounded-xl border border-zinc-200 bg-[#FAF7F2] py-2.5 text-xs font-bold text-zinc-900 transition-colors hover:border-[#FF5412]"
               >
                 Play Again
               </button>
@@ -276,7 +285,7 @@ export function SpiceQuizDialog({
                 type="button"
                 onClick={onClose}
                 disabled={submitting}
-                className="flex-1 rounded-sm bg-[var(--pb-accent)] py-3 text-xs font-bold text-[var(--pb-accent-ink)] hover:opacity-95 shadow-md transition-all disabled:opacity-50"
+                className="min-h-[44px] flex-1 rounded-xl bg-[#FF5412] py-2.5 text-xs font-bold text-white shadow-beam transition-colors hover:bg-[#FF7033] disabled:opacity-50"
               >
                 {submitting ? 'Submitting Score…' : 'Back to Table'}
               </button>

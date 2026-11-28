@@ -5,6 +5,7 @@ import { BellRing, CheckCircle2 } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
 import { showToast } from '@/components/ui/ToastRegion';
 import type { ServiceRequestType } from '@/server/db/types';
+import { GUEST_DIALOG_CLASS } from './GuestPortalClient';
 import { SERVICE_REQUEST_TAGS } from './types';
 
 interface CallWaiterDialogProps {
@@ -77,9 +78,15 @@ export function CallWaiterDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title="Call Waiter" closedby="any">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title="Call Waiter"
+      closedby="any"
+      className={GUEST_DIALOG_CLASS}
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
-        <p className="text-sm text-[var(--pb-muted)]">
+        <p className="text-sm text-zinc-500">
           Tap a quick request below to alert your table&apos;s server immediately.
         </p>
 
@@ -92,22 +99,22 @@ export function CallWaiterDialog({
                 type="button"
                 aria-pressed={active}
                 onClick={() => setSelectedType(tag.type)}
-                className={`flex min-h-[56px] flex-col items-start justify-center rounded-sm border px-3.5 py-2 text-left transition-colors ${
+                className={`flex min-h-[56px] flex-col items-start justify-center rounded-2xl border px-3.5 py-2.5 text-left transition-colors ${
                   active
-                    ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)]/10 text-[var(--pb-ink)]'
-                    : 'border-[var(--pb-border)] bg-[var(--pb-canvas)] text-[var(--pb-ink)]'
+                    ? 'border-[#FF5412] bg-[#FF5412]/10 text-zinc-900'
+                    : 'border-zinc-200 bg-[#FAF7F2] text-zinc-900 hover:border-zinc-300'
                 }`}
               >
-                <span className="flex w-full items-center justify-between text-xs font-semibold">
+                <span className="flex w-full items-center justify-between text-xs font-bold">
                   {tag.label}
                   {active && (
                     <CheckCircle2
-                      className="size-4 text-[var(--pb-accent)]"
+                      className="size-4 text-[#FF5412]"
                       aria-hidden="true"
                     />
                   )}
                 </span>
-                <span className="mt-0.5 line-clamp-1 text-[11px] text-[var(--pb-muted)]">
+                <span className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500">
                   {tag.description}
                 </span>
               </button>
@@ -118,7 +125,7 @@ export function CallWaiterDialog({
         <div className="space-y-1.5">
           <label
             htmlFor="waiter-note"
-            className="block text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]"
+            className="block text-xs font-bold uppercase tracking-wider text-zinc-500"
           >
             Short Note (Optional)
           </label>
@@ -129,14 +136,14 @@ export function CallWaiterDialog({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="e.g., 2 extra glasses, baby high-chair..."
-            className="min-h-[44px] w-full rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3.5 text-sm text-[var(--pb-ink)] placeholder:text-[var(--pb-muted)] focus-visible:outline-2 focus-visible:outline-[var(--pb-accent)]"
+            className="min-h-[44px] w-full rounded-xl border border-zinc-200 bg-[#FAF7F2] px-3.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus-visible:outline-2 focus-visible:outline-[#FF5412]"
           />
         </div>
 
         <button
           type="submit"
           disabled={submitting}
-          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-sm bg-[var(--pb-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--pb-accent-ink)] disabled:opacity-60"
+          className="animate-halo inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#FF5412] px-4 py-3 text-sm font-bold text-white shadow-beam transition-colors hover:bg-[#FF7033] disabled:opacity-60"
         >
           <BellRing className="size-4" aria-hidden="true" />
           {submitting ? 'Alerting Server...' : 'Send Request'}

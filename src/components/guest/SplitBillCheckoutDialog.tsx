@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, CreditCard, Divide, ListChecks, Wallet } from 'lucide-react';
+import { CheckCircle2, CreditCard, Divide, Gift, ListChecks, Wallet } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
 import { showToast } from '@/components/ui/ToastRegion';
 import type { PaymentMethod, PaymentProvider } from '@/server/db/types';
+import { GUEST_DIALOG_CLASS } from './GuestPortalClient';
 import {
   formatMoney,
   type GuestOrder,
@@ -122,7 +123,7 @@ export function SplitBillCheckoutDialog({
     return () => {
       cancelled = true;
     };
-  }, [open, mode, splitCount, selectedItemIds, customAmountMinor, tipMinor, session.id]);
+  }, [open, mode, splitCount, selectedItemIds, customAmountMinor, tipMinor, session.id, session.discountMinor, session.remainingMinor]);
 
   const activeShare = breakdown?.shares[selectedShareIndex];
   const payableAmountMinor =
@@ -207,8 +208,26 @@ export function SplitBillCheckoutDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title="Split & Pay Bill" closedby="any">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title="Split & Pay Bill"
+      closedby="any"
+      className={GUEST_DIALOG_CLASS}
+    >
       <div className="space-y-5">
+        {session.discountMinor > 0 && (
+          <div className="flex items-center justify-between gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs font-semibold text-emerald-800">
+            <span className="inline-flex items-center gap-1.5">
+              <Gift className="size-4 text-emerald-600" aria-hidden="true" />
+              Loyalty / Voucher Discount Applied
+            </span>
+            <span className="font-mono font-bold tabular-nums">
+              -{formatMoney(session.discountMinor, currency)}
+            </span>
+          </div>
+        )}
+
         {/* Mode Selector */}
         <div role="tablist" aria-label="Split bill mode" className="grid grid-cols-3 gap-2">
           {(
@@ -227,10 +246,10 @@ export function SplitBillCheckoutDialog({
                 role="tab"
                 aria-selected={active}
                 onClick={() => setMode(tab.id)}
-                className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-sm border px-2 text-xs font-semibold transition-colors ${
+                className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 text-xs font-bold transition-colors ${
                   active
-                    ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)] text-[var(--pb-accent-ink)]'
-                    : 'border-[var(--pb-border)] bg-[var(--pb-canvas)] text-[var(--pb-ink)]'
+                    ? 'border-[#FF5412] bg-[#FF5412] text-white'
+                    : 'border-zinc-200 bg-[#FAF7F2] text-zinc-900 hover:border-zinc-300'
                 }`}
               >
                 <Icon className="size-3.5" aria-hidden="true" />
@@ -242,22 +261,22 @@ export function SplitBillCheckoutDialog({
 
         {/* Mode Controls */}
         {mode === 'EQUAL' && (
-          <div className="space-y-3 rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] p-3.5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
+          <div className="space-y-3 rounded-2xl border border-zinc-200 bg-[#FAF7F2] p-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">
                 Number of Diners
               </span>
-              <div className="inline-flex items-center gap-2">
+              <div className="inline-flex items-center gap-1.5">
                 {[1, 2, 3, 4, 6].map((n) => (
                   <button
                     key={n}
                     type="button"
                     aria-pressed={splitCount === n}
                     onClick={() => setSplitCount(n)}
-                    className={`min-h-[44px] min-w-[44px] rounded-lg border font-mono text-xs font-bold ${
+                    className={`min-h-[44px] min-w-[44px] rounded-xl border font-mono text-xs font-bold transition-colors ${
                       splitCount === n
-                        ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)] text-[var(--pb-accent-ink)]'
-                        : 'border-[var(--pb-border)] bg-[var(--pb-surface)]'
+                        ? 'border-[#FF5412] bg-[#FF5412] text-white'
+                        : 'border-zinc-200 bg-white text-zinc-900'
                     }`}
                   >
                     {n}
@@ -267,8 +286,8 @@ export function SplitBillCheckoutDialog({
             </div>
 
             {breakdown && breakdown.shares.length > 1 && (
-              <div className="space-y-1.5 border-t border-[var(--pb-border)] pt-2.5">
-                <p className="text-xs text-[var(--pb-muted)]">
+              <div className="space-y-1.5 border-t border-zinc-200 pt-2.5">
+                <p className="text-xs font-medium text-zinc-500">
                   Select which share to pay now:
                 </p>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -278,10 +297,10 @@ export function SplitBillCheckoutDialog({
                       type="button"
                       aria-pressed={selectedShareIndex === idx}
                       onClick={() => setSelectedShareIndex(idx)}
-                      className={`min-h-[44px] rounded-lg border px-2.5 py-1.5 text-left text-xs ${
+                      className={`min-h-[44px] rounded-xl border px-3 py-1.5 text-left text-xs transition-colors ${
                         selectedShareIndex === idx
-                          ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)]/12 font-semibold'
-                          : 'border-[var(--pb-border)] bg-[var(--pb-surface)]'
+                          ? 'border-[#FF5412] bg-[#FF5412]/10 font-bold text-zinc-900'
+                          : 'border-zinc-200 bg-white text-zinc-700'
                       }`}
                     >
                       <span className="block">{share.label}</span>
@@ -297,8 +316,8 @@ export function SplitBillCheckoutDialog({
         )}
 
         {mode === 'BY_ITEM' && (
-          <div className="max-h-48 space-y-1.5 overflow-y-auto rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] p-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
+          <div className="max-h-48 space-y-1.5 overflow-y-auto rounded-2xl border border-zinc-200 bg-[#FAF7F2] p-3">
+            <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
               Select Dishes to Pay For
             </p>
             {allOrderItems.map((item) => {
@@ -306,20 +325,20 @@ export function SplitBillCheckoutDialog({
               return (
                 <label
                   key={item.id}
-                  className="flex min-h-[44px] w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-[var(--pb-border)] bg-[var(--pb-surface)] px-3 py-2 text-xs"
+                  className="flex min-h-[44px] w-full cursor-pointer items-center justify-between gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs text-zinc-900"
                 >
                   <span className="flex items-center gap-2">
                     <input
                       type="checkbox"
                       checked={checked}
                       onChange={() => handleToggleOrderItem(item.id)}
-                      className="size-4 accent-[var(--pb-accent)]"
+                      className="size-4 accent-[#FF5412]"
                     />
-                    <span>
+                    <span className="font-medium">
                       {item.quantity}× {item.itemNameSnapshot}
                     </span>
                   </span>
-                  <span className="font-mono tabular-nums">
+                  <span className="font-mono font-semibold tabular-nums">
                     {formatMoney(item.lineTotalMinor, currency)}
                   </span>
                 </label>
@@ -332,7 +351,7 @@ export function SplitBillCheckoutDialog({
           <div className="space-y-1.5">
             <label
               htmlFor="custom-pay-amount"
-              className="block text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]"
+              className="block text-xs font-bold uppercase tracking-wider text-zinc-500"
             >
               Custom Amount (Remaining:{' '}
               {formatMoney(session.remainingMinor, currency)})
@@ -345,7 +364,7 @@ export function SplitBillCheckoutDialog({
               value={customAmountInput}
               onChange={(e) => setCustomAmountInput(e.target.value)}
               placeholder={(session.remainingMinor / 100).toFixed(2)}
-              className="min-h-[44px] w-full rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3.5 font-mono text-sm"
+              className="min-h-[44px] w-full rounded-xl border border-zinc-200 bg-[#FAF7F2] px-3.5 font-mono text-sm text-zinc-900 focus-visible:outline-2 focus-visible:outline-[#FF5412]"
             />
           </div>
         )}
@@ -353,10 +372,10 @@ export function SplitBillCheckoutDialog({
         {/* Tipping (FR-027) */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
+            <span className="font-bold uppercase tracking-wider text-zinc-500">
               Add Staff Tip (Pre-tax)
             </span>
-            <span className="font-mono font-semibold tabular-nums">
+            <span className="font-mono font-bold tabular-nums text-zinc-900">
               {formatMoney(tipMinor, currency)}
             </span>
           </div>
@@ -367,10 +386,10 @@ export function SplitBillCheckoutDialog({
                 type="button"
                 aria-pressed={tipPct === pct}
                 onClick={() => setTipPct(pct)}
-                className={`min-h-[44px] rounded-sm border font-mono text-xs font-semibold ${
+                className={`min-h-[44px] rounded-xl border font-mono text-xs font-bold transition-colors ${
                   tipPct === pct
-                    ? 'border-[var(--pb-olive)] bg-[var(--pb-olive)] text-white'
-                    : 'border-[var(--pb-border)] bg-[var(--pb-canvas)]'
+                    ? 'border-emerald-600 bg-emerald-600 text-white'
+                    : 'border-zinc-200 bg-[#FAF7F2] text-zinc-900'
                 }`}
               >
                 {pct === 0 ? 'No Tip' : `${pct}%`}
@@ -381,7 +400,7 @@ export function SplitBillCheckoutDialog({
 
         {/* Payment Method */}
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
+          <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
             Payment Method
           </p>
           <div className="space-y-1.5">
@@ -393,16 +412,16 @@ export function SplitBillCheckoutDialog({
                   type="button"
                   aria-pressed={active}
                   onClick={() => setPaymentOptionId(opt.id)}
-                  className={`flex min-h-[44px] w-full items-center justify-between rounded-sm border px-3.5 text-left text-xs font-medium ${
+                  className={`flex min-h-[44px] w-full items-center justify-between rounded-xl border px-3.5 text-left text-xs font-semibold transition-colors ${
                     active
-                      ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)]/10 font-semibold'
-                      : 'border-[var(--pb-border)] bg-[var(--pb-canvas)]'
+                      ? 'border-[#FF5412] bg-[#FF5412]/10 font-bold text-zinc-900'
+                      : 'border-zinc-200 bg-[#FAF7F2] text-zinc-700 hover:border-zinc-300'
                   }`}
                 >
                   <span>{opt.label}</span>
                   {active && (
                     <CheckCircle2
-                      className="size-4 text-[var(--pb-accent)]"
+                      className="size-4 text-[#FF5412]"
                       aria-hidden="true"
                     />
                   )}
@@ -417,7 +436,7 @@ export function SplitBillCheckoutDialog({
           type="button"
           disabled={paying || calculating}
           onClick={handlePay}
-          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-sm bg-[var(--pb-accent)] px-5 py-3 text-sm font-semibold text-[var(--pb-accent-ink)] disabled:opacity-60"
+          className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-[#FF5412] px-5 py-3 text-sm font-bold text-white shadow-beam transition-colors hover:bg-[#FF7033] disabled:opacity-60"
         >
           <CreditCard className="size-4" aria-hidden="true" />
           {paying

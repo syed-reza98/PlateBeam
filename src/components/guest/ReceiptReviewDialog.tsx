@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ExternalLink, Printer, Star } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
 import { showToast } from '@/components/ui/ToastRegion';
+import { GUEST_DIALOG_CLASS } from './GuestPortalClient';
 import { formatMoney, type GuestOutletInfo, type ReceiptPayload } from './types';
 
 interface ReceiptReviewDialogProps {
@@ -102,16 +103,22 @@ export function ReceiptReviewDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title="Digital Receipt & Review" closedby="any">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title="Digital Receipt & Review"
+      closedby="any"
+      className={GUEST_DIALOG_CLASS}
+    >
       <div className="space-y-6">
         {/* Statutory Receipt (FR-030) */}
         <section aria-label="Tax invoice receipt" className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg">Tax Receipt</h2>
+            <h2 className="font-sans text-base font-bold text-zinc-900">Tax Receipt</h2>
             <button
               type="button"
               onClick={() => window.print()}
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-sm border border-[var(--pb-border)] px-3 text-xs font-semibold hover:border-[var(--pb-accent)]"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-zinc-200 bg-[#FAF7F2] px-3.5 text-xs font-bold text-zinc-900 transition-colors hover:border-[#FF5412]"
             >
               <Printer className="size-4" aria-hidden="true" />
               Print / Save PDF
@@ -119,73 +126,81 @@ export function ReceiptReviewDialog({
           </div>
 
           {loadingReceipt ? (
-            <div className="h-28 animate-pulse rounded-sm bg-[var(--pb-canvas)]" />
+            <div className="h-28 animate-pulse rounded-2xl bg-[#FAF7F2]" />
           ) : receipt ? (
-            <div className="rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] p-4 text-xs">
-              <div className="flex justify-between border-b border-[var(--pb-border)] pb-2">
+            <div className="thermal-receipt mx-auto rounded-xl border border-zinc-200 bg-white p-4 font-mono text-xs text-zinc-900 shadow-sm">
+              <div className="flex justify-between border-b border-dashed border-zinc-300 pb-2.5">
                 <div>
-                  <p className="font-semibold">{receipt.outletName}</p>
-                  {receipt.gstin && <p className="text-[var(--pb-muted)]">GSTIN: {receipt.gstin}</p>}
+                  <p className="font-bold uppercase tracking-wide">{receipt.outletName}</p>
+                  {receipt.gstin && <p className="text-zinc-500">GSTIN: {receipt.gstin}</p>}
                   {receipt.vatNumber && (
-                    <p className="text-[var(--pb-muted)]">VAT: {receipt.vatNumber}</p>
+                    <p className="text-zinc-500">VAT: {receipt.vatNumber}</p>
                   )}
                 </div>
-                <div className="text-right font-mono">
-                  <p>#{receipt.invoiceNumber}</p>
-                  <p className="text-[var(--pb-muted)]">
+                <div className="text-right">
+                  <p className="font-bold">#{receipt.invoiceNumber}</p>
+                  <p className="text-zinc-500">
                     {new Date(receipt.issuedAt).toLocaleDateString()}
                   </p>
                 </div>
               </div>
 
-              <ul className="divide-y divide-[var(--pb-border)] py-2">
+              <ul className="divide-y divide-dashed divide-zinc-200 py-2">
                 {receipt.items.map((item, idx) => (
                   <li key={idx} className="flex justify-between py-1">
                     <span>
                       {item.quantity}× {item.name}
                     </span>
-                    <span className="font-mono tabular-nums">
+                    <span className="tabular-nums">
                       {formatMoney(item.lineTotalMinor, outlet.currency)}
                     </span>
                   </li>
                 ))}
               </ul>
 
-              <dl className="space-y-1 border-t border-[var(--pb-border)] pt-2">
+              <dl className="space-y-1 border-t border-dashed border-zinc-300 pt-2">
                 <div className="flex justify-between">
-                  <dt className="text-[var(--pb-muted)]">Subtotal</dt>
-                  <dd className="font-mono tabular-nums">
+                  <dt className="text-zinc-500">Subtotal</dt>
+                  <dd className="tabular-nums">
                     {formatMoney(receipt.subtotalMinor, outlet.currency)}
                   </dd>
                 </div>
                 {receipt.taxBreakdown.map((tax) => (
                   <div key={tax.name} className="flex justify-between">
-                    <dt className="text-[var(--pb-muted)]">
+                    <dt className="text-zinc-500">
                       {tax.name} ({(tax.rateBps / 100).toFixed(2)}%)
                     </dt>
-                    <dd className="font-mono tabular-nums">
+                    <dd className="tabular-nums">
                       {formatMoney(tax.taxMinor, outlet.currency)}
                     </dd>
                   </div>
                 ))}
+                {receipt.discountMinor > 0 && (
+                  <div className="flex justify-between text-emerald-700">
+                    <dt>Discount / Voucher</dt>
+                    <dd className="tabular-nums">
+                      -{formatMoney(receipt.discountMinor, outlet.currency)}
+                    </dd>
+                  </div>
+                )}
                 {receipt.tipMinor > 0 && (
                   <div className="flex justify-between">
-                    <dt className="text-[var(--pb-muted)]">Staff Tip</dt>
-                    <dd className="font-mono tabular-nums">
+                    <dt className="text-zinc-500">Staff Tip</dt>
+                    <dd className="tabular-nums">
                       {formatMoney(receipt.tipMinor, outlet.currency)}
                     </dd>
                   </div>
                 )}
-                <div className="flex justify-between pt-1 text-sm font-bold">
+                <div className="flex justify-between border-t border-dashed border-zinc-300 pt-1.5 text-sm font-bold">
                   <dt>Total Paid</dt>
-                  <dd className="font-mono tabular-nums">
+                  <dd className="tabular-nums">
                     {formatMoney(receipt.totalMinor, outlet.currency)}
                   </dd>
                 </div>
               </dl>
             </div>
           ) : (
-            <p className="rounded-sm border border-dashed border-[var(--pb-border)] p-4 text-xs text-[var(--pb-muted)]">
+            <p className="rounded-2xl border border-dashed border-zinc-300 bg-[#FAF7F2] p-4 text-xs text-zinc-500">
               Your statutory receipt will appear here as soon as payment settles.
             </p>
           )}
@@ -194,11 +209,13 @@ export function ReceiptReviewDialog({
         {/* Post-Payment 5-Star Review Routing (FR-031) */}
         <section
           aria-label="Rate your dining experience"
-          className="border-t border-[var(--pb-border)] pt-5"
+          className="border-t border-zinc-200 pt-5"
         >
           {submittedReview ? (
-            <div className="space-y-3 rounded-sm border border-[var(--pb-olive)]/40 bg-[var(--pb-olive)]/10 p-4 text-center">
-              <p className="font-display text-xl">Thank you for dining with us!</p>
+            <div className="space-y-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center">
+              <p className="font-sans text-lg font-bold text-zinc-900">
+                Thank you for dining with us!
+              </p>
               {rating >= 4 ? (
                 <a
                   href={
@@ -207,13 +224,13 @@ export function ReceiptReviewDialog({
                   }
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-sm bg-[var(--pb-accent)] px-5 py-2.5 text-xs font-bold text-[var(--pb-accent-ink)] shadow-md glow-accent active:scale-98 transition-all"
+                  className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#FF5412] px-5 py-2.5 text-xs font-bold text-white shadow-beam transition-colors hover:bg-[#FF7033]"
                 >
                   Post 5-Star on Google Reviews
                   <ExternalLink className="size-3.5" aria-hidden="true" />
                 </a>
               ) : (
-                <p className="text-xs text-[var(--pb-muted)]">
+                <p className="text-xs text-zinc-600">
                   Your feedback has been routed directly to our on-duty manager.
                 </p>
               )}
@@ -221,8 +238,8 @@ export function ReceiptReviewDialog({
           ) : (
             <form onSubmit={handleSubmitReview} className="space-y-4">
               <div>
-                <h2 className="font-display text-lg">How was your meal?</h2>
-                <p className="text-xs text-[var(--pb-muted)]">
+                <h2 className="font-sans text-base font-bold text-zinc-900">How was your meal?</h2>
+                <p className="text-xs text-zinc-500">
                   Tap a star rating to help our kitchen and service team.
                 </p>
               </div>
@@ -236,10 +253,10 @@ export function ReceiptReviewDialog({
                     aria-checked={rating === star}
                     aria-label={`${star} ${star === 1 ? 'star' : 'stars'}`}
                     onClick={() => setRating(star)}
-                    className={`flex min-h-[44px] flex-1 items-center justify-center rounded-sm border transition-colors ${
+                    className={`flex min-h-[44px] flex-1 items-center justify-center rounded-xl border transition-colors ${
                       rating >= star
-                        ? 'border-[var(--pb-turmeric)] bg-[var(--pb-turmeric)]/15 text-[var(--pb-turmeric)]'
-                        : 'border-[var(--pb-border)] bg-[var(--pb-canvas)] text-[var(--pb-muted)]'
+                        ? 'border-amber-300 bg-amber-50 text-amber-500'
+                        : 'border-zinc-200 bg-[#FAF7F2] text-zinc-400'
                     }`}
                   >
                     <Star
@@ -259,10 +276,10 @@ export function ReceiptReviewDialog({
                       type="button"
                       aria-pressed={active}
                       onClick={() => toggleTag(tag)}
-                      className={`min-h-[44px] rounded-full border px-3 text-xs font-medium ${
+                      className={`min-h-[44px] rounded-full border px-3.5 text-xs font-semibold transition-colors ${
                         active
-                          ? 'border-[var(--pb-accent)] bg-[var(--pb-accent)] text-[var(--pb-accent-ink)]'
-                          : 'border-[var(--pb-border)] bg-[var(--pb-canvas)]'
+                          ? 'border-[#FF5412] bg-[#FF5412] text-white'
+                          : 'border-zinc-200 bg-[#FAF7F2] text-zinc-700'
                       }`}
                     >
                       {tag}
@@ -282,13 +299,13 @@ export function ReceiptReviewDialog({
                     : 'Optional note for the chef or team...'
                 }
                 aria-label="Review comment"
-                className="w-full rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3.5 py-2.5 text-sm"
+                className="w-full rounded-xl border border-zinc-200 bg-[#FAF7F2] px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus-visible:outline-2 focus-visible:outline-[#FF5412]"
               />
 
               <button
                 type="submit"
                 disabled={submitting || rating === 0}
-                className="min-h-[44px] w-full rounded-sm bg-[var(--pb-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--pb-accent-ink)] disabled:opacity-50"
+                className="min-h-[44px] w-full rounded-xl bg-[#FF5412] px-4 py-2.5 text-sm font-bold text-white shadow-beam transition-colors hover:bg-[#FF7033] disabled:opacity-50"
               >
                 {submitting ? 'Submitting...' : 'Submit Review'}
               </button>
