@@ -1,11 +1,10 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChefHat, LayoutDashboard } from 'lucide-react';
 import { PosFloorClient } from '@/components/ops/PosFloorClient';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 export const metadata = {
-  title: 'FOH Floor & POS',
+  title: 'FOH Floor & POS — PlateBeam OS',
 };
 
 async function PosOutletContent({
@@ -16,22 +15,33 @@ async function PosOutletContent({
   const { outletSlug } = await params;
 
   return (
-    <div className="tower-field flex min-h-dvh flex-col text-[var(--pb-ink)]">
-      <div className="led-rail" aria-hidden="true" />
-      <header className="border-b border-[var(--pb-border)] bg-[color-mix(in_srgb,var(--pb-surface)_92%,transparent)] backdrop-blur-sm">
+    <div className="grid-bg flex min-h-dvh flex-col bg-[#09090B] text-[#F4F4F5]">
+      <div
+        className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#FF5412] to-transparent"
+        aria-hidden="true"
+      />
+      <header className="sticky top-0 z-20 border-b border-white/10 bg-[#111115]/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <Link
               href="/"
               aria-label="Back to PlateBeam home"
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm border border-[var(--pb-border)] bg-[var(--pb-canvas)] hover:border-[var(--pb-accent)]"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-white/10 bg-[#18181F] text-[#F4F4F5] transition-colors hover:border-[#FF5412]"
             >
               <ArrowLeft className="size-4" aria-hidden="true" />
             </Link>
             <div>
-              <p className="font-display text-2xl leading-none tracking-wide">Front-of-House POS</p>
-              <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--pb-muted)]">
-                Outlet · {outletSlug}
+              <div className="flex items-center gap-2">
+                <span
+                  className="inline-block size-2 rounded-full bg-[#FF5412]"
+                  aria-hidden="true"
+                />
+                <p className="text-lg font-bold tracking-tight text-[#F4F4F5] sm:text-xl">
+                  Front-of-House POS
+                </p>
+              </div>
+              <p className="mt-0.5 font-mono text-[11px] uppercase tracking-[0.14em] text-[#A1A1AA]">
+                Outlet · {outletSlug} · BDT (৳)
               </p>
             </div>
           </div>
@@ -39,22 +49,23 @@ async function PosOutletContent({
           <nav aria-label="Operations navigation" className="flex items-center gap-2">
             <Link
               href={`/kds/${outletSlug}`}
-              className="inline-flex min-h-11 items-center rounded-sm border border-[var(--pb-border)] px-3 py-2 text-xs font-semibold hover:border-[var(--pb-accent)]"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-white/10 bg-[#18181F] px-3.5 py-2 text-xs font-semibold text-[#F4F4F5] transition-colors hover:border-[#FF5412]"
             >
+              <ChefHat className="size-3.5 text-[#FF5412]" aria-hidden="true" />
               Open KDS
             </Link>
             <Link
               href="/dashboard"
-              className="hidden sm:inline-flex min-h-11 items-center rounded-sm border border-[var(--pb-border)] px-3 py-2 text-xs font-semibold hover:border-[var(--pb-accent)]"
+              className="hidden min-h-11 items-center gap-1.5 rounded-xl border border-white/10 bg-[#18181F] px-3.5 py-2 text-xs font-semibold text-[#F4F4F5] transition-colors hover:border-[#FF5412] sm:inline-flex"
             >
+              <LayoutDashboard className="size-3.5 text-[#A1A1AA]" aria-hidden="true" />
               Dashboard
             </Link>
-            <ThemeToggle />
           </nav>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6 pb-safe-bottom-bar">
+      <main className="pb-safe-bottom-bar mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6">
         <PosFloorClient outletSlug={outletSlug} />
       </main>
     </div>
@@ -69,8 +80,8 @@ export default function PosOutletPage({
   return (
     <Suspense
       fallback={
-        <div className="min-h-dvh flex items-center justify-center bg-[var(--pb-canvas)] p-8 text-sm text-[var(--pb-muted)]">
-          Loading floor map & POS state…
+        <div className="flex min-h-dvh items-center justify-center bg-[#09090B] p-8 font-mono text-sm text-[#A1A1AA]">
+          Loading floor map &amp; POS state…
         </div>
       }
     >

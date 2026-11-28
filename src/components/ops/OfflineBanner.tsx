@@ -17,15 +17,17 @@ export function OfflineBanner({
   const showBanner = !status.isOnline || status.pendingCount > 0 || status.isSyncing;
   if (!showBanner) {
     return (
-      <div className="flex items-center gap-2 text-xs text-[var(--pb-muted)]">
-        <Wifi className="size-3.5 text-[var(--pb-olive)]" aria-hidden="true" />
-        <span>Live</span>
+      <div className="flex flex-wrap items-center gap-2 text-xs text-[#A1A1AA]">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-[#111115] px-2.5 py-1 font-mono text-[11px] text-[#F4F4F5]">
+          <Wifi className="size-3.5 text-[#10B981]" aria-hidden="true" />
+          <span>{variant === 'kds' ? 'KDS Link Live' : 'POS Link Live'}</span>
+        </span>
         {status.persistedStorage && (
           <span
             title="Persistent IndexedDB storage granted"
-            className="inline-flex items-center gap-1 rounded-full border border-[var(--pb-border)] px-2 py-0.5 text-[11px]"
+            className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-[#111115] px-2.5 py-1 font-mono text-[11px] text-[#A1A1AA]"
           >
-            <ShieldCheck className="size-3 text-[var(--pb-olive)]" aria-hidden="true" />
+            <ShieldCheck className="size-3 text-[#10B981]" aria-hidden="true" />
             Offline Ready
           </span>
         )}
@@ -34,33 +36,28 @@ export function OfflineBanner({
   }
 
   const isOffline = !status.isOnline;
-  const containerClass =
-    variant === 'kds'
-      ? isOffline
-        ? 'border-[#E04F44] bg-[#2B1716] text-[#F4F6F8]'
-        : 'border-[#E5A93C] bg-[#282114] text-[#F4F6F8]'
-      : isOffline
-        ? 'border-[var(--pb-chili)] bg-[var(--pb-chili)]/10 text-[var(--pb-ink)]'
-        : 'border-[var(--pb-turmeric)] bg-[var(--pb-turmeric)]/12 text-[var(--pb-ink)]';
+  const containerClass = isOffline
+    ? 'border-[#EF4444]/50 bg-[#EF4444]/10 text-[#F4F4F5]'
+    : 'border-[#F59E0B]/50 bg-[#F59E0B]/10 text-[#F4F4F5]';
 
   return (
     <div
       role="status"
       aria-live="polite"
-      className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-2.5 text-sm ${containerClass}`}
+      className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm ${containerClass}`}
     >
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-3">
         <CloudOff
-          className={`size-4 shrink-0 ${isOffline ? 'text-[var(--pb-chili)]' : 'text-[var(--pb-turmeric)]'}`}
+          className={`size-4 shrink-0 ${isOffline ? 'text-[#EF4444]' : 'text-[#F59E0B]'}`}
           aria-hidden="true"
         />
         <div>
-          <p className="font-semibold">
+          <p className="font-semibold text-[#F4F4F5]">
             {isOffline
               ? 'Offline Mode — Operations Queued in IndexedDB'
               : `Reconnecting — ${status.pendingCount} queued mutation${status.pendingCount === 1 ? '' : 's'} pending`}
           </p>
-          <p className="text-xs opacity-80">
+          <p className="font-mono text-xs text-[#A1A1AA]">
             {status.pendingCount} queued action{status.pendingCount === 1 ? '' : 's'}
             {status.lastSyncedAt
               ? ` · Last synced ${new Date(status.lastSyncedAt).toLocaleTimeString()}`
@@ -73,7 +70,7 @@ export function OfflineBanner({
         type="button"
         disabled={isOffline || status.isSyncing}
         onClick={onSyncNow}
-        className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-[var(--pb-border)] bg-[var(--pb-surface)] px-3.5 py-2 text-xs font-semibold text-[var(--pb-ink)] disabled:opacity-50"
+        className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-[#18181F] px-3.5 py-2 text-xs font-semibold text-[#F4F4F5] transition-colors hover:border-[#FF5412] disabled:opacity-50"
       >
         <RefreshCw
           className={`size-3.5 ${status.isSyncing ? 'animate-spin' : ''}`}

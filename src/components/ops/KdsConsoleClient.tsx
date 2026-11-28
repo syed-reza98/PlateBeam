@@ -6,7 +6,11 @@ import {
   CheckCircle2,
   ChefHat,
   Clock,
+  Columns3,
   Flame,
+  LayoutGrid,
+  Plus,
+  Printer,
   RotateCcw,
   Volume2,
   VolumeX,
@@ -29,6 +33,31 @@ const NEXT_KDS_STATUS: Record<KdsStatus, KdsStatus | null> = {
   SERVED: null,
   CANCELLED: null,
 };
+
+const STATION_COLUMNS = [
+  {
+    key: 'Tandoor',
+    label: 'Tandoor',
+    dotClass: 'bg-[#FF5412]',
+    badgeClass: 'border-[#FF5412]/40 bg-[#FF5412]/15 text-[#FFA06D]',
+    match: (name: string) => name.toLowerCase().includes('tandoor'),
+  },
+  {
+    key: 'Curry',
+    label: 'Curry',
+    dotClass: 'bg-[#F59E0B]',
+    badgeClass: 'border-[#F59E0B]/40 bg-[#F59E0B]/15 text-[#FBBF24]',
+    match: (name: string) => name.toLowerCase().includes('curry'),
+  },
+  {
+    key: 'Drinks',
+    label: 'Drinks & Bar',
+    dotClass: 'bg-[#0EA5E9]',
+    badgeClass: 'border-[#0EA5E9]/40 bg-[#0EA5E9]/15 text-[#38BDF8]',
+    match: (name: string) =>
+      name.toLowerCase().includes('drink') || name.toLowerCase().includes('bar'),
+  },
+] as const;
 
 function createDemoKdsTickets(): { outletId: string; tickets: KdsTicket[] } {
   const now = Date.now();
@@ -57,7 +86,7 @@ function createDemoKdsTickets(): { outletId: string; tickets: KdsTicket[] } {
             spiceLevel: 'Hot',
             allergens: ['Dairy'],
             notes: 'Guest has peanut allergy — keep prep clean',
-            companionStations: ['Bar'],
+            companionStations: ['Drinks'],
           },
           {
             id: 'ki-2',
@@ -127,7 +156,7 @@ function createDemoKdsTickets(): { outletId: string; tickets: KdsTicket[] } {
             name: 'Saffron Old Fashioned',
             quantity: 1,
             stationId: 'st-bar',
-            stationName: 'Bar',
+            stationName: 'Drinks',
             status: 'PENDING',
             modifiers: ['Large Ice'],
             allergens: [],
@@ -143,9 +172,11 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
   const [outletId, setOutletId] = useState('11111111-1111-4111-8111-111111111111');
   const [tickets, setTickets] = useState<KdsTicket[]>(() => createDemoKdsTickets().tickets);
   const [bumpedHistory, setBumpedHistory] = useState<KdsTicket[]>([]);
+  const [viewMode, setViewMode] = useState<'BOARD' | 'GRID'>('BOARD');
   const [activeStation, setActiveStation] = useState<string>('ALL');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [rushCounter, setRushCounter] = useState(207);
 
   const [syncStatus, setSyncStatus] = useState<SyncStatusSnapshot>({
     isOnline: true,
@@ -159,9 +190,12 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
   const [cancelTarget, setCancelTarget] = useState<KdsTicketItem | null>(null);
   const [managerPin, setManagerPin] = useState('');
 
+  // Thermal KOT Preview modal
+  const [kotPreviewTicket, setKotPreviewTicket] = useState<KdsTicket | null>(null);
+  const [kotPreviewLines, setKotPreviewLines] = useState<string[] | null>(null);
+
   const seenOrderIdsRef = useRef<Set<string>>(new Set());
 
-  // 1-second timer tick for tabular-nums SLA timers
   useEffect(() => {
     const timer = setInterval(() => setNowMs(Date.now()), 1000);
     return () => clearInterval(timer);
@@ -223,7 +257,6 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
     };
   }, [outletId]);
 
-  // Web Audio chime on new KOT
   useEffect(() => {
     let hasNew = false;
     for (const t of tickets) {
@@ -247,8 +280,16 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
     return ['ALL', ...Array.from(set)];
   }, [tickets]);
 
-  const visibleTickets = useMemo(() => {
-    return tickets
+  const activeTickets = useMemo(
+    () =>
+      tickets.filter((t) =>
+        t.items.some((i) => i.status !== 'SERVED' && i.status !== 'CANCELLED'),
+      ),
+    [tickets],
+  );
+
+  const visibleGridTickets = useMemo(() => {
+    return activeTickets
       .map((ticket) => {
         const items =
           activeStation === 'ALL'
@@ -261,7 +302,7 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
           t.items.length > 0 &&
           t.items.some((i) => i.status !== 'SERVED' && i.status !== 'CANCELLED'),
       );
-  }, [activeStation, tickets]);
+  }, [activeStation, activeTickets]);
 
   const patchItemStatus = useCallback(
     async (item: KdsTicketItem, nextStatus: KdsStatus, pin?: string) => {
@@ -281,7 +322,7 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
           managerPin: pin,
         });
         showToast({
-          title: `Offline KDS update queued`,
+          title: 'Offline KDS update queued',
           description: `${item.name} -> ${nextStatus}`,
           variant: 'warning',
         });
@@ -313,7 +354,6 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
       );
       if (activeItems.length === 0) return;
 
-      // Advance all active items on this ticket by one stage, or mark SERVED if READY
       for (const item of activeItems) {
         const next = NEXT_KDS_STATUS[item.status] ?? 'SERVED';
         await patchItemStatus(item, next);
@@ -374,8 +414,92 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
     });
   }, [bumpedHistory]);
 
+  const handleSimulateRushKot = () => {
+    const num = rushCounter;
+    setRushCounter((c) => c + 1);
+    const orderId = `ord-rush-${num}-${Date.now()}`;
+    const newTicket: KdsTicket = {
+      orderId,
+      orderNumber: `KOT-${num}`,
+      tableNumber: `T${(num % 6) + 1}`,
+      tokenNumber: null,
+      source: 'WAITER',
+      createdAt: new Date().toISOString(),
+      slaMinutes: 12,
+      items: [
+        {
+          id: `${orderId}-1`,
+          orderId,
+          menuItemId: 'm-1',
+          name: 'Seekh Kebab Platter',
+          quantity: 2,
+          stationId: 'st-tandoor',
+          stationName: 'Tandoor',
+          status: 'PENDING',
+          modifiers: ['Extra Mint Chutney'],
+          spiceLevel: 'Medium',
+          allergens: [],
+          companionStations: ['Curry'],
+        },
+        {
+          id: `${orderId}-2`,
+          orderId,
+          menuItemId: 'm-3',
+          name: 'Kacchi Biryani',
+          quantity: 2,
+          stationId: 'st-curry',
+          stationName: 'Curry',
+          status: 'PENDING',
+          modifiers: ['With Borhani'],
+          allergens: ['Dairy'],
+          companionStations: ['Tandoor', 'Drinks'],
+        },
+        {
+          id: `${orderId}-3`,
+          orderId,
+          menuItemId: 'm-4',
+          name: 'Rose Falooda',
+          quantity: 2,
+          stationId: 'st-drinks',
+          stationName: 'Drinks',
+          status: 'PENDING',
+          modifiers: ['Less Ice'],
+          allergens: ['Dairy'],
+          companionStations: ['Curry'],
+        },
+      ],
+    };
+
+    setTickets((prev) => [newTicket, ...prev]);
+    if (soundEnabled) playAlertChime('kot');
+    showToast({
+      title: `Rush Ticket ${newTicket.orderNumber} Fired`,
+      description: `Table ${newTicket.tableNumber} · Tandoor, Curry & Drinks`,
+      variant: 'info',
+    });
+  };
+
+  const openKotPreview = async (ticket: KdsTicket) => {
+    setKotPreviewTicket(ticket);
+    setKotPreviewLines(null);
+    try {
+      const res = await fetch(
+        `/api/v1/kds/${encodeURIComponent(outletSlug)}/tickets/${encodeURIComponent(ticket.orderId)}/kot-preview`,
+      );
+      if (res.ok) {
+        const data = (await res.json()) as { lines?: string[] };
+        if (Array.isArray(data.lines) && data.lines.length > 0) {
+          setKotPreviewLines(data.lines);
+        }
+      }
+    } catch {
+      // Local fallback rendered automatically below
+    }
+  };
+
   // Keyboard Bump-Bar Shortcuts: 1-9, Space, R
   useEffect(() => {
+    const shortcutList = viewMode === 'BOARD' ? activeTickets : visibleGridTickets;
     const onKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (
@@ -395,15 +519,15 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
 
       if (e.key === ' ') {
         e.preventDefault();
-        if (visibleTickets[0]) {
-          void handleBumpTicket(visibleTickets[0]);
+        if (shortcutList[0]) {
+          void handleBumpTicket(shortcutList[0]);
         }
         return;
       }
 
       const num = Number(e.key);
       if (Number.isInteger(num) && num >= 1 && num <= 9) {
-        const ticket = visibleTickets[num - 1];
+        const ticket = shortcutList[num - 1];
         if (ticket) {
           e.preventDefault();
           void handleBumpTicket(ticket);
@@ -413,7 +537,194 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [handleBumpTicket, handleRecallLast, visibleTickets]);
+  }, [activeTickets, handleBumpTicket, handleRecallLast, viewMode, visibleGridTickets]);
+
+  const renderTicketCard = (ticket: KdsTicket, index: number) => {
+    const elapsedMins = (nowMs - new Date(ticket.createdAt).getTime()) / 60_000;
+    const slaRatio = elapsedMins / Math.max(1, ticket.slaMinutes);
+    const slaState =
+      slaRatio >= 1 ? 'OVERDUE' : slaRatio >= 0.65 ? 'WARNING' : 'ON_TIME';
+
+    const borderColor =
+      slaState === 'OVERDUE'
+        ? 'border-[#EF4444]'
+        : slaState === 'WARNING'
+          ? 'border-[#F59E0B]'
+          : 'border-[#10B981]/70';
+
+    const slaBadgeClass =
+      slaState === 'OVERDUE'
+        ? 'bg-[#EF4444] text-white'
+        : slaState === 'WARNING'
+          ? 'bg-[#F59E0B] text-[#09090B]'
+          : 'bg-[#10B981] text-white';
+
+    return (
+      <article
+        key={ticket.orderId}
+        aria-label={`Ticket ${ticket.orderNumber}`}
+        className={`flex flex-col justify-between rounded-2xl border-2 bg-[#111115] p-4 ${borderColor}`}
+      >
+        <div>
+          {/* Ticket Header */}
+          <div className="flex items-start justify-between gap-2 border-b border-white/10 pb-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex size-7 items-center justify-center rounded-lg bg-[#18181F] font-mono text-xs font-bold text-[#A1A1AA]">
+                  {index + 1}
+                </span>
+                <span className="font-mono text-2xl font-bold tracking-tight text-[#F4F4F5]">
+                  {ticket.tableNumber ? ticket.tableNumber : `#${ticket.tokenNumber}`}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void openKotPreview(ticket)}
+                  aria-label={`Thermal KOT preview for ${ticket.orderNumber}`}
+                  title="Thermal KOT Preview"
+                  className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-white/10 bg-[#18181F] text-[#A1A1AA] transition-colors hover:border-[#FF5412] hover:text-[#F4F4F5]"
+                >
+                  <Printer className="size-4" aria-hidden="true" />
+                </button>
+              </div>
+              <p className="mt-1 font-mono text-xs text-[#A1A1AA]">
+                {ticket.orderNumber} · {ticket.source}
+              </p>
+            </div>
+
+            <div className="text-end">
+              <div
+                className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-mono text-sm font-bold tabular-nums shadow-sm ${slaBadgeClass}`}
+              >
+                {slaState === 'OVERDUE' ? (
+                  <Flame className="size-4" aria-hidden="true" />
+                ) : (
+                  <Clock className="size-4" aria-hidden="true" />
+                )}
+                {formatElapsedMmSs(ticket.createdAt, nowMs)}
+              </div>
+              <p className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-[#A1A1AA]">
+                {slaState === 'OVERDUE'
+                  ? 'OVERDUE'
+                  : slaState === 'WARNING'
+                    ? 'NEAR SLA'
+                    : 'ON TIME'}
+              </p>
+            </div>
+          </div>
+
+          {/* Visual SLA Countdown Bar */}
+          <div className="relative mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[#18181F]">
+            <div
+              className={`h-full transition-all duration-500 ${
+                slaState === 'OVERDUE'
+                  ? 'bg-[#EF4444]'
+                  : slaState === 'WARNING'
+                    ? 'bg-[#F59E0B]'
+                    : 'bg-[#10B981]'
+              }`}
+              style={{ width: `${Math.min(100, Math.round(slaRatio * 100))}%` }}
+            />
+          </div>
+
+          {/* Ticket Items */}
+          <ul className="mt-3 space-y-2.5">
+            {ticket.items.map((item) => (
+              <li
+                key={item.id}
+                className="rounded-xl border border-white/10 bg-[#18181F] p-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold text-[#F4F4F5]">
+                      <span className="font-mono text-[#FF5412]">{item.quantity}×</span>{' '}
+                      {item.name}
+                    </p>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
+                      <span className="inline-flex items-center rounded-md bg-[#09090B] px-2 py-0.5 font-semibold text-[#F4F4F5]">
+                        {item.stationName}
+                      </span>
+                      <span className="text-[#A1A1AA]">·</span>
+                      <span className="text-[#A1A1AA]">{item.status}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    {NEXT_KDS_STATUS[item.status] && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void patchItemStatus(
+                            item,
+                            NEXT_KDS_STATUS[item.status]!,
+                          )
+                        }
+                        className="min-h-11 min-w-11 rounded-xl bg-[#10B981] px-2.5 text-xs font-bold text-white"
+                      >
+                        {NEXT_KDS_STATUS[item.status]}
+                      </button>
+                    )}
+                    {item.status !== 'SERVED' && item.status !== 'CANCELLED' && (
+                      <button
+                        type="button"
+                        aria-label={`Cancel ${item.name}`}
+                        onClick={() => {
+                          if (item.status === 'PREPARING') {
+                            setCancelTarget(item);
+                            setManagerPin('');
+                          } else {
+                            void patchItemStatus(item, 'CANCELLED');
+                          }
+                        }}
+                        className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[#EF4444]/60 text-[#EF4444]"
+                      >
+                        <XCircle className="size-4" aria-hidden="true" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {item.modifiers.length > 0 && (
+                  <p className="mt-1.5 text-xs font-medium text-[#FBBF24]">
+                    Mods: {item.modifiers.join(' · ')}
+                    {item.spiceLevel ? ` · Spice: ${item.spiceLevel}` : ''}
+                  </p>
+                )}
+
+                {item.allergens.length > 0 && (
+                  <p className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-[#EF4444]/20 px-2 py-0.5 text-xs font-bold text-[#FCA5A5]">
+                    <AlertTriangle className="size-3.5" aria-hidden="true" />
+                    ALLERGY: {item.allergens.join(', ')}
+                  </p>
+                )}
+
+                {item.notes && (
+                  <p className="mt-1.5 text-xs italic text-[#F4F4F5]/90">
+                    “{item.notes}”
+                  </p>
+                )}
+
+                {item.companionStations.length > 0 && (
+                  <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-white/10 bg-[#09090B]/70 px-2 py-1 font-mono text-[11px] text-[#A1A1AA]">
+                    <span className="font-semibold text-[#FBBF24]">Companion:</span>
+                    <span>{item.companionStations.join(', ')}</span>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => void handleBumpTicket(ticket)}
+          className="shadow-beam mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#FF5412] px-4 text-sm font-bold text-white transition-colors hover:bg-[#FF7033]"
+        >
+          <CheckCircle2 className="size-5" aria-hidden="true" />
+          Bump Ticket ({index < 9 ? `Key ${index + 1}` : 'Click'})
+        </button>
+      </article>
+    );
+  };
 
   return (
     <div className="space-y-5">
@@ -423,41 +734,86 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
         variant="kds"
       />
 
-      {/* Station Tabs & Bump Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div role="tablist" aria-label="Kitchen stations" className="flex flex-wrap gap-2">
-          {stations.map((station) => {
-            const active = activeStation === station;
-            return (
-              <button
-                key={station}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setActiveStation(station)}
-                className={`min-h-12 rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${
-                  active
-                    ? 'border-[#3DE0C5] bg-[#3DE0C5] text-[#070d18]'
-                    : 'border-[#243552] bg-[#101a2c] text-[#E8F0FF] hover:border-[#3DE0C5]'
-                }`}
-              >
-                {station === 'ALL' ? `All Stations (${visibleTickets.length})` : station}
-              </button>
-            );
-          })}
+      {/* Station Mode & Bump Controls */}
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/10 bg-[#111115] p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* View Mode Toggle */}
+          <div
+            role="group"
+            aria-label="KDS view mode"
+            className="inline-flex rounded-xl border border-white/10 bg-[#09090B] p-1"
+          >
+            <button
+              type="button"
+              onClick={() => setViewMode('BOARD')}
+              className={`inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3.5 text-xs font-semibold transition-colors ${
+                viewMode === 'BOARD'
+                  ? 'bg-[#FF5412] text-white'
+                  : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
+              }`}
+            >
+              <Columns3 className="size-4" aria-hidden="true" />
+              3-Column Station Board
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('GRID')}
+              className={`inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3.5 text-xs font-semibold transition-colors ${
+                viewMode === 'GRID'
+                  ? 'bg-[#FF5412] text-white'
+                  : 'text-[#A1A1AA] hover:text-[#F4F4F5]'
+              }`}
+            >
+              <LayoutGrid className="size-4" aria-hidden="true" />
+              All-Tickets Grid
+            </button>
+          </div>
+
+          {viewMode === 'GRID' && (
+            <div role="tablist" aria-label="Kitchen stations" className="flex flex-wrap gap-1.5">
+              {stations.map((station) => {
+                const active = activeStation === station;
+                return (
+                  <button
+                    key={station}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setActiveStation(station)}
+                    className={`min-h-11 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                      active
+                        ? 'border-[#FF5412] bg-[#FF5412]/15 text-[#FFA06D]'
+                        : 'border-white/10 bg-[#18181F] text-[#F4F4F5] hover:border-white/25'
+                    }`}
+                  >
+                    {station === 'ALL' ? `All (${visibleGridTickets.length})` : station}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleSimulateRushKot}
+            className="shadow-beam inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-[#FF5412] px-4 text-xs font-semibold text-white transition-colors hover:bg-[#FF7033]"
+          >
+            <Plus className="size-4" aria-hidden="true" />
+            Simulate Rush KOT
+          </button>
+
           <button
             type="button"
             onClick={() => setSoundEnabled((v) => !v)}
             aria-pressed={soundEnabled}
-            className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-[#243552] bg-[#101a2c] px-4 text-xs font-semibold text-[#E8F0FF]"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-[#18181F] px-3.5 text-xs font-semibold text-[#F4F4F5]"
           >
             {soundEnabled ? (
-              <Volume2 className="size-4 text-[#3DCE7F]" aria-hidden="true" />
+              <Volume2 className="size-4 text-[#10B981]" aria-hidden="true" />
             ) : (
-              <VolumeX className="size-4 text-[#9AA4B2]" aria-hidden="true" />
+              <VolumeX className="size-4 text-[#A1A1AA]" aria-hidden="true" />
             )}
             {soundEnabled ? 'Chime On' : 'Muted'}
           </button>
@@ -466,207 +822,163 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
             type="button"
             onClick={() => void handleRecallLast()}
             disabled={bumpedHistory.length === 0}
-            className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-[#243552] bg-[#101a2c] px-4 text-xs font-semibold text-[#E8F0FF] disabled:opacity-40"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-[#18181F] px-3.5 text-xs font-semibold text-[#F4F4F5] disabled:opacity-40"
           >
             <RotateCcw className="size-4" aria-hidden="true" />
             Recall (R)
           </button>
         </div>
-      </div>
+      </section>
 
-      {/* KDS Ticket Grid */}
-      {visibleTickets.length === 0 ? (
-        <div className="rounded-2xl border border-[#243552] bg-[#101a2c] p-12 text-center">
-          <ChefHat className="mx-auto size-10 text-[#3DCE7F]" aria-hidden="true" />
-          <p className="mt-3 font-display text-2xl text-[#E8F0FF]">All Clear — Kitchen Caught Up</p>
-          <p className="mt-1 text-sm text-[#9AA4B2]">
+      {/* Tickets View */}
+      {activeTickets.length === 0 ? (
+        <div className="rounded-3xl border border-white/10 bg-[#111115] p-12 text-center">
+          <ChefHat className="mx-auto size-10 text-[#10B981]" aria-hidden="true" />
+          <p className="mt-3 text-xl font-bold text-[#F4F4F5]">All Clear — Kitchen Caught Up</p>
+          <p className="mt-1 text-sm text-[#A1A1AA]">
             New KOT tickets from QR, Waiter, or Counter POS will chime and appear here.
           </p>
         </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {visibleTickets.map((ticket, index) => {
-            const elapsedMins =
-              (nowMs - new Date(ticket.createdAt).getTime()) / 60_000;
-            const slaRatio = elapsedMins / Math.max(1, ticket.slaMinutes);
-            const slaState =
-              slaRatio >= 1 ? 'OVERDUE' : slaRatio >= 0.75 ? 'WARNING' : 'ON_TIME';
-
-            const borderColor =
-              slaState === 'OVERDUE'
-                ? 'border-[#D64545] kds-overdue-pulse'
-                : slaState === 'WARNING'
-                  ? 'border-[#F0A202]'
-                  : 'border-[#3DCE7F]';
-
-            const slaBadgeClass =
-              slaState === 'OVERDUE'
-                ? 'bg-[#D64545] text-white'
-                : slaState === 'WARNING'
-                  ? 'bg-[#F0A202] text-[#070d18]'
-                  : 'bg-[#3DCE7F] text-white';
+      ) : viewMode === 'BOARD' ? (
+        <div className="grid gap-4 lg:grid-cols-3">
+          {STATION_COLUMNS.map((col) => {
+            const stationTickets = activeTickets
+              .map((ticket) => ({
+                ...ticket,
+                items: ticket.items.filter(
+                  (i) =>
+                    col.match(i.stationName) &&
+                    i.status !== 'SERVED' &&
+                    i.status !== 'CANCELLED',
+                ),
+              }))
+              .filter((t) => t.items.length > 0);
 
             return (
-              <article
-                key={ticket.orderId}
-                aria-label={`Ticket ${ticket.orderNumber}`}
-                className={`flex flex-col justify-between rounded-2xl border-2 bg-[#101a2c] p-4 ${borderColor}`}
+              <section
+                key={col.key}
+                aria-label={`${col.label} Station Column`}
+                className="ops-column-contain flex flex-col gap-3 rounded-3xl border border-white/10 bg-[#111115]/70 p-4"
               >
-                <div>
-                  {/* Ticket Header */}
-                  <div className="flex items-start justify-between gap-3 border-b border-[#243552] pb-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex size-7 items-center justify-center rounded-md bg-[#070d18] font-mono text-xs font-bold text-[#9AA4B2]">
-                          {index + 1}
-                        </span>
-                        <span className="font-mono text-3xl font-bold tracking-tight text-[#E8F0FF]">
-                          {ticket.tableNumber
-                            ? ticket.tableNumber
-                            : `#${ticket.tokenNumber}`}
-                        </span>
-                      </div>
-                      <p className="mt-1 font-mono text-xs text-[#9AA4B2]">
-                        {ticket.orderNumber} · {ticket.source}
-                      </p>
-                    </div>
-
-                    <div className="text-end">
-                      <div
-                        className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-mono text-sm font-bold tabular-nums shadow-sm ${slaBadgeClass}`}
-                      >
-                        {slaState === 'OVERDUE' ? (
-                          <Flame className="size-4 text-[#F0A202]" aria-hidden="true" />
-                        ) : (
-                          <Clock className="size-4" aria-hidden="true" />
-                        )}
-                        {formatElapsedMmSs(ticket.createdAt, nowMs)}
-                      </div>
-                      <p className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-[#9AA4B2]">
-                        {slaState === 'OVERDUE'
-                          ? 'OVERDUE'
-                          : slaState === 'WARNING'
-                            ? 'NEAR SLA'
-                            : 'ON TIME'}
-                      </p>
-                    </div>
+                <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className={`size-2.5 rounded-full ${col.dotClass}`} aria-hidden="true" />
+                    <h2 className="text-base font-bold text-[#F4F4F5]">{col.label}</h2>
                   </div>
-
-                  {/* Visual SLA Countdown Bar */}
-                  <div className="mt-3 relative h-1.5 w-full overflow-hidden rounded-full bg-[#070d18]">
-                    <div
-                      className={`h-full transition-all duration-500 ${
-                        slaState === 'OVERDUE'
-                          ? 'bg-[#D64545]'
-                          : slaState === 'WARNING'
-                            ? 'bg-[#F0A202]'
-                            : 'bg-[#3DCE7F]'
-                      }`}
-                      style={{ width: `${Math.min(100, Math.round(slaRatio * 100))}%` }}
-                    />
-                  </div>
-
-                  {/* Ticket Items */}
-                  <ul className="mt-3 space-y-2.5">
-                    {ticket.items.map((item) => (
-                      <li
-                        key={item.id}
-                        className="rounded-xl border border-[#243552] bg-[#070d18] p-3"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="text-base font-semibold text-[#E8F0FF]">
-                              <span className="font-mono text-[#3DE0C5]">{item.quantity}×</span>{' '}
-                              {item.name}
-                            </p>
-                            <div className="mt-1 flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
-                              <span className="inline-flex items-center rounded-md bg-[#243552]/70 px-2 py-0.5 font-semibold text-[#E8F0FF]">
-                                {item.stationName}
-                              </span>
-                              <span className="text-[#9AA4B2]">·</span>
-                              <span className="text-[#9AA4B2]">{item.status}</span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1.5">
-                            {NEXT_KDS_STATUS[item.status] && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  void patchItemStatus(
-                                    item,
-                                    NEXT_KDS_STATUS[item.status]!,
-                                  )
-                                }
-                                className="min-h-12 min-w-12 rounded-lg bg-[#3DCE7F] px-3 text-xs font-bold text-white"
-                              >
-                                {NEXT_KDS_STATUS[item.status]}
-                              </button>
-                            )}
-                            {item.status !== 'SERVED' && item.status !== 'CANCELLED' && (
-                              <button
-                                type="button"
-                                aria-label={`Cancel ${item.name}`}
-                                onClick={() => {
-                                  if (item.status === 'PREPARING') {
-                                    setCancelTarget(item);
-                                    setManagerPin('');
-                                  } else {
-                                    void patchItemStatus(item, 'CANCELLED');
-                                  }
-                                }}
-                                className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-lg border border-[#D64545]/60 text-[#D64545]"
-                              >
-                                <XCircle className="size-5" aria-hidden="true" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-
-                        {item.modifiers.length > 0 && (
-                          <p className="mt-1.5 text-xs font-medium text-[#F0A202]">
-                            Mods: {item.modifiers.join(' · ')}
-                            {item.spiceLevel ? ` · Spice: ${item.spiceLevel}` : ''}
-                          </p>
-                        )}
-
-                        {item.allergens.length > 0 && (
-                          <p className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-[#D64545]/20 px-2 py-0.5 text-xs font-bold text-[#FF8A80]">
-                            <AlertTriangle className="size-3.5" aria-hidden="true" />
-                            ALLERGY: {item.allergens.join(', ')}
-                          </p>
-                        )}
-
-                        {item.notes && (
-                          <p className="mt-1.5 text-xs italic text-[#E8F0FF]/90">
-                            “{item.notes}”
-                          </p>
-                        )}
-
-                        {item.companionStations.length > 0 && (
-                          <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-[#243552] bg-[#101a2c]/80 px-2 py-1 text-[11px] font-mono text-[#9AA4B2]">
-                            <span className="font-semibold text-[#F0A202]">Companion:</span>
-                            <span>{item.companionStations.join(', ')}</span>
-                          </div>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
+                  <span
+                    className={`rounded-full border px-2.5 py-0.5 font-mono text-xs font-semibold ${col.badgeClass}`}
+                  >
+                    {stationTickets.length} active
+                  </span>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => void handleBumpTicket(ticket)}
-                  className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#3DE0C5] px-4 text-sm font-bold text-[#070d18]"
-                >
-                  <CheckCircle2 className="size-5" aria-hidden="true" />
-                  Bump Ticket ({index < 9 ? `Key ${index + 1}` : 'Click'})
-                </button>
-              </article>
+                {stationTickets.length === 0 ? (
+                  <p className="py-8 text-center font-mono text-xs text-[#A1A1AA]">
+                    No active {col.label} tickets
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {stationTickets.map((ticket) => {
+                      const globalIdx = activeTickets.findIndex(
+                        (t) => t.orderId === ticket.orderId,
+                      );
+                      return renderTicketCard(ticket, globalIdx >= 0 ? globalIdx : 0);
+                    })}
+                  </div>
+                )}
+              </section>
             );
           })}
         </div>
+      ) : (
+        <div className="ops-column-contain grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {visibleGridTickets.map((ticket, index) => renderTicketCard(ticket, index))}
+        </div>
       )}
+
+      {/* Thermal KOT Preview Modal */}
+      <Dialog
+        open={kotPreviewTicket !== null}
+        onClose={() => setKotPreviewTicket(null)}
+        title={kotPreviewTicket ? `Thermal KOT — ${kotPreviewTicket.orderNumber}` : 'Thermal KOT'}
+      >
+        {kotPreviewTicket && (
+          <div className="space-y-4">
+            <div className="thermal-receipt mx-auto max-w-xs p-5 font-mono text-xs leading-relaxed">
+              {kotPreviewLines ? (
+                <pre className="whitespace-pre-wrap font-mono text-xs">{kotPreviewLines.join('\n')}</pre>
+              ) : (
+                <>
+                  <p className="text-center text-sm font-bold uppercase tracking-wider">
+                    KITCHEN ORDER TICKET
+                  </p>
+                  <p className="text-center text-[11px] opacity-75">
+                    {kotPreviewTicket.orderNumber} · {kotPreviewTicket.source}
+                  </p>
+                  <div className="my-3 border-t border-dashed border-zinc-400" />
+                  <div className="flex justify-between font-bold">
+                    <span>
+                      {kotPreviewTicket.tableNumber
+                        ? `TABLE: ${kotPreviewTicket.tableNumber}`
+                        : `TOKEN: #${kotPreviewTicket.tokenNumber}`}
+                    </span>
+                    <span>
+                      {new Date(kotPreviewTicket.createdAt).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                  <div className="my-3 border-t border-dashed border-zinc-400" />
+                  <ul className="space-y-2">
+                    {kotPreviewTicket.items.map((item) => (
+                      <li key={item.id}>
+                        <div className="flex justify-between font-bold">
+                          <span>
+                            {item.quantity}x {item.name}
+                          </span>
+                          <span>[{item.stationName}]</span>
+                        </div>
+                        {item.modifiers.length > 0 && (
+                          <p className="pl-3 text-[11px]">+ {item.modifiers.join(', ')}</p>
+                        )}
+                        {item.allergens.length > 0 && (
+                          <p className="pl-3 text-[11px] font-bold">
+                            ! ALLERGY: {item.allergens.join(', ')}
+                          </p>
+                        )}
+                        {item.notes && <p className="pl-3 text-[11px]">* {item.notes}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="my-3 border-t border-dashed border-zinc-400" />
+                  <p className="text-center text-[10px] opacity-75">
+                    80mm ESC/POS · PlateBeam KDS
+                  </p>
+                </>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setKotPreviewTicket(null)}
+                className="min-h-11 rounded-xl border border-white/10 px-4 text-xs font-semibold text-[#F4F4F5]"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="shadow-beam inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#FF5412] px-5 text-xs font-semibold text-white hover:bg-[#FF7033]"
+              >
+                <Printer className="size-4" aria-hidden="true" />
+                Print KOT
+              </button>
+            </div>
+          </div>
+        )}
+      </Dialog>
 
       {/* Manager PIN Cancellation Dialog */}
       <Dialog
@@ -676,11 +988,12 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
       >
         {cancelTarget && (
           <div className="space-y-4">
-            <p className="text-sm text-[var(--pb-muted)]">
-              <strong>{cancelTarget.name}</strong> is already in <strong>PREPARING</strong>{' '}
-              state. Enter Manager PIN to authorize cancellation.
+            <p className="text-sm text-[#A1A1AA]">
+              <strong className="text-[#F4F4F5]">{cancelTarget.name}</strong> is already in{' '}
+              <strong className="text-[#F4F4F5]">PREPARING</strong> state. Enter Manager PIN to
+              authorize cancellation.
             </p>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--pb-muted)]">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[#A1A1AA]">
               Manager PIN
               <input
                 type="password"
@@ -688,14 +1001,14 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
                 maxLength={8}
                 value={managerPin}
                 onChange={(e) => setManagerPin(e.target.value.replace(/\D/g, ''))}
-                className="mt-1.5 w-full rounded-xl border border-[var(--pb-border)] bg-[var(--pb-canvas)] px-3 py-2 font-mono text-lg tracking-[0.4em]"
+                className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#09090B] px-3 py-2 font-mono text-lg tracking-[0.4em] text-[#F4F4F5]"
               />
             </label>
             <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setCancelTarget(null)}
-                className="min-h-11 rounded-xl border border-[var(--pb-border)] px-4 text-xs font-semibold"
+                className="min-h-11 rounded-xl border border-white/10 px-4 text-xs font-semibold text-[#F4F4F5]"
               >
                 Keep Cooking
               </button>
@@ -710,7 +1023,7 @@ export function KdsConsoleClient({ outletSlug }: { outletSlug: string }) {
                   setCancelTarget(null);
                   setManagerPin('');
                 }}
-                className="min-h-11 rounded-xl bg-[var(--pb-chili)] px-4 text-xs font-semibold text-white"
+                className="min-h-11 rounded-xl bg-[#EF4444] px-4 text-xs font-semibold text-white"
               >
                 Authorize Cancel
               </button>
