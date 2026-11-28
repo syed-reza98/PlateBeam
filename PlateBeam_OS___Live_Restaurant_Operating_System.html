@@ -1,0 +1,2415 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PlateBeam OS — Live Restaurant Management &amp; QR Ordering System</title>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Tone.js for Synthesized KDS & Waiter Alert Chimes (No external audio files) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            obsidian: '#09090B',
+            carbon: '#111115',
+            graphite: '#18181F',
+            slateborder: '#262630',
+            beam: {
+              50: '#FFF4ED',
+              100: '#FFE5D3',
+              200: '#FFC7A5',
+              300: '#FFA06D',
+              400: '#FF7033',
+              500: '#FF5412',
+              600: '#E53E06',
+              700: '#BD2E08',
+            },
+            cream: '#FAF7F2',
+          },
+          boxShadow: {
+            'beam': '0 0 32px -8px rgba(255, 84, 18, 0.5)',
+            'panel': '0 18px 42px -18px rgba(0, 0, 0, 0.8)',
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    body {
+      background-color: #09090B;
+      color: #F4F4F5;
+      overflow-x: hidden;
+    }
+    .grid-bg {
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 36px 36px;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @keyframes pulseHalo {
+      0% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(255, 84, 18, 0.6); }
+      70% { transform: scale(1); box-shadow: 0 0 0 14px rgba(255, 84, 18, 0); }
+      100% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(255, 84, 18, 0); }
+    }
+    .animate-halo {
+      animation: pulseHalo 2s infinite;
+    }
+    .thermal-receipt {
+      background-image: radial-gradient(circle at 8px 0, transparent 5px, #FFFFFF 5.5px);
+      background-size: 16px 10px;
+      background-repeat: repeat-x;
+    }
+  </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col selection:bg-beam-500/30 selection:text-beam-200">
+
+  <!-- =================================================================== -->
+  <!-- TOAST NOTIFICATION LAYER                                            -->
+  <!-- =================================================================== -->
+  <div id="toast-root" class="fixed bottom-4 right-4 z-[70] flex flex-col gap-2 max-w-sm w-[calc(100vw-2rem)] pointer-events-none"></div>
+
+  <!-- =================================================================== -->
+  <!-- OFFLINE MODE BANNER (Visible when simulating Venue Wi-Fi Drop)      -->
+  <!-- =================================================================== -->
+  <div id="offline-banner" class="hidden bg-amber-500 text-obsidian px-4 py-2 text-xs font-bold flex flex-wrap items-center justify-between gap-2 z-50">
+    <div class="flex items-center gap-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-obsidian animate-ping"></span>
+      <span>OFFLINE RESILIENCE MODE ACTIVE — Venue internet disconnected. Orders &amp; KDS updates are caching locally in IndexedDB Queue (<span id="offline-queue-count">0</span> pending).</span>
+    </div>
+    <button onclick="toggleOfflineMode()" class="px-3 py-1 rounded-lg bg-obsidian text-amber-400 hover:bg-zinc-900 font-mono text-[11px] font-bold">
+      Reconnect &amp; Delta-Sync →
+    </button>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- TOP OS COMMAND HEADER                                               -->
+  <!-- =================================================================== -->
+  <header class="sticky top-0 z-40 bg-carbon/95 backdrop-blur-xl border-b border-white/10">
+    <div class="max-w-[1600px] mx-auto px-3 sm:px-5 h-15 py-2.5 flex items-center justify-between gap-3">
+      <!-- Brand + Outlet Selector -->
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="flex items-center gap-2 shrink-0">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-beam-400 to-beam-600 flex items-center justify-center shadow-beam">
+            <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="13" r="7" />
+              <path d="M12 2v4" />
+              <path d="M6.5 4.5l2 2" />
+              <path d="M17.5 4.5l-2 2" />
+              <circle cx="12" cy="13" r="2.4" fill="currentColor" />
+            </svg>
+          </div>
+          <div class="leading-none hidden sm:block">
+            <div class="text-base font-black tracking-tight text-white">Plate<span class="text-beam-400">Beam</span> <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-beam-500/20 text-beam-300 align-middle">OS v1.0</span></div>
+            <div class="text-[10px] font-mono text-zinc-400 mt-0.5" id="header-tenant-badge">tenant: zaika-flagship • RLS ON</div>
+          </div>
+        </div>
+
+        <div class="h-6 w-px bg-white/10 hidden md:block"></div>
+
+        <!-- Outlet Switcher -->
+        <select id="outlet-select" onchange="switchOutlet(this.value)" class="bg-obsidian border border-white/10 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-beam-400 max-w-[175px] truncate">
+          <option value="flagship">Zaika • Main Flagship</option>
+          <option value="express">Zaika Express • QSR</option>
+        </select>
+      </div>
+
+      <!-- Right OS Controls -->
+      <div class="flex items-center gap-2 shrink-0">
+        <!-- Role Switcher (Enforces RBAC live) -->
+        <select id="role-select" onchange="switchActiveRole(this.value)" title="Switch active staff role to test RBAC" class="hidden lg:block bg-obsidian border border-white/10 rounded-xl px-2.5 py-1.5 text-xs font-mono text-beam-300 focus:outline-none focus:border-beam-400">
+          <option value="OWNER">Role: Owner (Full)</option>
+          <option value="CAPTAIN">Role: Floor Captain</option>
+          <option value="CHEF">Role: Kitchen Chef</option>
+          <option value="CASHIER">Role: Cashier</option>
+        </select>
+
+        <!-- Split View Toggle (Desktop) -->
+        <button onclick="toggleSplitView()" id="btn-split-view" class="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all bg-beam-500/15 border-beam-500/40 text-beam-300 hover:bg-beam-500/25">
+          <span>◫</span>
+          <span id="split-view-label">Live Split View: ON</span>
+        </button>
+
+        <!-- Offline Simulator -->
+        <button onclick="toggleOfflineMode()" id="btn-offline" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold border border-white/10 bg-obsidian hover:bg-white/5 text-zinc-300 transition-all" title="Simulate venue Wi-Fi outage & IndexedDB Delta-Sync">
+          <span id="net-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span class="hidden sm:inline" id="net-label">Online</span>
+        </button>
+
+        <!-- Sound Chime Toggle -->
+        <button onclick="toggleSound()" id="btn-sound" class="inline-flex items-center justify-center w-8 h-8 rounded-xl border border-white/10 bg-obsidian hover:bg-white/5 text-zinc-300 text-sm transition-all" title="Toggle KDS & Waiter audio chimes">
+          🔊
+        </button>
+      </div>
+    </div>
+
+    <!-- Workspace Navigation Ribbon -->
+    <div class="border-t border-white/5 bg-obsidian/80">
+      <div class="max-w-[1600px] mx-auto px-3 sm:px-5 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+        <button onclick="setWorkspace('floor')" id="nav-floor" class="ws-btn shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all">
+          <span>🗺️</span><span>Floor Map &amp; POS</span>
+          <span id="badge-floor-alerts" class="hidden px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-black">0</span>
+        </button>
+        <button onclick="setWorkspace('kds')" id="nav-kds" class="ws-btn shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all">
+          <span>🔥</span><span>Kitchen KDS</span>
+          <span id="badge-kds-count" class="px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[10px] font-bold">0</span>
+        </button>
+        <button onclick="setWorkspace('guest')" id="nav-guest" class="ws-btn shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all xl:hidden">
+          <span>📱</span><span>Guest QR App</span>
+          <span id="badge-guest-mobile" class="hidden px-1.5 py-0.5 rounded-full bg-beam-500 text-white text-[10px] font-bold">0</span>
+        </button>
+        <button onclick="setWorkspace('menu')" id="nav-menu" class="ws-btn shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all">
+          <span>🍽️</span><span>Menu &amp; Inventory</span>
+          <span id="badge-low-stock" class="hidden px-1.5 py-0.5 rounded-full bg-amber-500 text-obsidian text-[10px] font-black">!</span>
+        </button>
+        <button onclick="setWorkspace('owner')" id="nav-owner" class="ws-btn shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all">
+          <span>📊</span><span>Owner BI &amp; Shift</span>
+        </button>
+        <button onclick="setWorkspace('security')" id="nav-security" class="ws-btn shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all">
+          <span>🔐</span><span>RBAC &amp; Audit</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- =================================================================== -->
+  <!-- MAIN LIVE OS WORKSPACE SHELL                                        -->
+  <!-- =================================================================== -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-5 py-5">
+    <div id="os-layout-grid" class="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+
+      <!-- LEFT / PRIMARY OPERATIONS WORKSPACE (8 cols in split view, 12 cols otherwise) -->
+      <section id="primary-workspace-col" class="xl:col-span-8 space-y-5 min-w-0">
+
+        <!-- ============================================================= -->
+        <!-- WORKSPACE 1: FOH FLOOR MAP, APPROVAL QUEUE & ASSISTED POS     -->
+        <!-- ============================================================= -->
+        <div id="ws-floor" class="ws-panel space-y-5">
+          <!-- Floor Summary Bar -->
+          <div class="rounded-3xl bg-carbon border border-white/10 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <h1 class="text-lg font-black text-white">Live Floor Operations</h1>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-mono font-bold">● REAL-TIME</span>
+              </div>
+              <p class="text-xs text-zinc-400 mt-0.5">Monitor tables, approve QR orders, resolve Call Waiter alerts, or fire assisted POS items.</p>
+            </div>
+
+            <!-- Floor Policy Quick Toggles -->
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="toggleCaptainApproval()" id="btn-captain-mode" class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all">
+                Captain Approval: OFF
+              </button>
+              <button onclick="openAssistedOrderModal()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-beam-500 hover:bg-beam-400 text-white shadow-beam transition-all active:scale-95">
+                + Waiter POS Order
+              </button>
+            </div>
+          </div>
+
+          <!-- Active Captain Approval Queue (Only shown when orders await approval) -->
+          <div id="captain-approval-bar" class="hidden rounded-3xl bg-beam-500/10 border border-beam-500/40 p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 text-xs font-extrabold text-beam-300 uppercase tracking-wider">
+                <span class="w-2 h-2 rounded-full bg-beam-400 animate-ping"></span>
+                Pending Captain Approval Queue
+              </div>
+              <span class="text-[11px] font-mono text-zinc-400">1-Tap Dispatch to KDS</span>
+            </div>
+            <div id="captain-approval-list" class="grid sm:grid-cols-2 gap-3"></div>
+          </div>
+
+          <!-- Floor Map + Selected Table Inspector -->
+          <div class="grid lg:grid-cols-12 gap-5">
+            <!-- Interactive Spatial Floor -->
+            <div class="lg:col-span-7 rounded-3xl bg-carbon border border-white/10 p-4 sm:p-5">
+              <!-- Zone Filter + Legend -->
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div class="flex gap-1.5">
+                  <button onclick="setFloorZone('ALL')" id="zone-ALL" class="zone-btn px-3 py-1 rounded-xl text-xs font-bold bg-white/10 text-white">All Zones</button>
+                  <button onclick="setFloorZone('Main Hall')" id="zone-Main Hall" class="zone-btn px-3 py-1 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white">Main Hall</button>
+                  <button onclick="setFloorZone('Patio')" id="zone-Patio" class="zone-btn px-3 py-1 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white">Patio</button>
+                </div>
+                <div class="flex flex-wrap gap-2.5 text-[10px] font-medium text-zinc-400">
+                  <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-zinc-600"></span>Vacant</span>
+                  <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span>Ordering</span>
+                  <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>Eating</span>
+                  <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span>Bill</span>
+                  <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>Help</span>
+                </div>
+              </div>
+
+              <!-- Floor Grid -->
+              <div class="rounded-2xl bg-obsidian border border-white/10 p-4 grid-bg">
+                <div class="text-center py-1.5 mb-4 rounded-xl bg-white/5 border border-white/10 text-[10px] font-mono tracking-[0.25em] text-zinc-400 uppercase">
+                  Kitchen Pass &amp; Bar Counter
+                </div>
+                <div id="floor-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3.5"></div>
+              </div>
+            </div>
+
+            <!-- Table Inspector & Actions -->
+            <div class="lg:col-span-5 rounded-3xl bg-carbon border border-white/10 p-4 sm:p-5 flex flex-col justify-between" id="table-inspector"></div>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- WORKSPACE 2: MULTI-STATION KITCHEN DISPLAY SYSTEM (KDS)       -->
+        <!-- ============================================================= -->
+        <div id="ws-kds" class="ws-panel hidden space-y-5">
+          <div class="rounded-3xl bg-carbon border border-white/10 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <h1 class="text-lg font-black text-white">Kitchen Display System (KDS)</h1>
+                <span class="px-2 py-0.5 rounded-full bg-beam-500/20 text-beam-300 text-[10px] font-mono font-bold">ESC/POS Bridge Active</span>
+              </div>
+              <p class="text-xs text-zinc-400 mt-0.5">Live station-routed KOTs with SLA escalation timers. Bumping updates guest phones in &lt;400ms.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span id="kds-live-clock" class="px-3 py-1.5 rounded-xl bg-obsidian border border-white/10 font-mono text-xs text-zinc-300">--:--:--</span>
+              <button onclick="recallLastBumped()" id="btn-kds-recall" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-xs font-semibold text-zinc-200 disabled:opacity-40" disabled>
+                ↩ Recall Last
+              </button>
+              <button onclick="fireSimulatedRush()" class="px-3 py-1.5 rounded-xl bg-beam-500 hover:bg-beam-400 text-white text-xs font-bold shadow-beam active:scale-95">
+                + Simulate Rush KOT
+              </button>
+            </div>
+          </div>
+
+          <!-- 3 Kitchen Stations Grid -->
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="rounded-3xl bg-carbon border border-white/10 p-4 flex flex-col min-h-[460px]">
+              <div class="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
+                <span class="font-mono text-xs font-extrabold uppercase tracking-wider text-beam-400">🔥 Tandoor</span>
+                <span id="kds-cnt-Tandoor" class="px-2 py-0.5 rounded-lg bg-white/10 font-mono text-xs text-white font-bold">0</span>
+              </div>
+              <div id="kds-col-Tandoor" class="space-y-3 flex-1"></div>
+            </div>
+
+            <div class="rounded-3xl bg-carbon border border-white/10 p-4 flex flex-col min-h-[460px]">
+              <div class="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
+                <span class="font-mono text-xs font-extrabold uppercase tracking-wider text-amber-400">🥘 Curry &amp; Mains</span>
+                <span id="kds-cnt-Curry" class="px-2 py-0.5 rounded-lg bg-white/10 font-mono text-xs text-white font-bold">0</span>
+              </div>
+              <div id="kds-col-Curry" class="space-y-3 flex-1"></div>
+            </div>
+
+            <div class="rounded-3xl bg-carbon border border-white/10 p-4 flex flex-col min-h-[460px]">
+              <div class="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
+                <span class="font-mono text-xs font-extrabold uppercase tracking-wider text-sky-400">🍹 Drinks &amp; Cold</span>
+                <span id="kds-cnt-Drinks" class="px-2 py-0.5 rounded-lg bg-white/10 font-mono text-xs text-white font-bold">0</span>
+              </div>
+              <div id="kds-col-Drinks" class="space-y-3 flex-1"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- WORKSPACE 3: MENU BUILDER, INSTANT 86 & BOM INVENTORY         -->
+        <!-- ============================================================= -->
+        <div id="ws-menu" class="ws-panel hidden space-y-5">
+          <div class="rounded-3xl bg-carbon border border-white/10 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h1 class="text-lg font-black text-white">Menu Catalog &amp; Recipe-Linked Inventory</h1>
+              <p class="text-xs text-zinc-400 mt-0.5">Toggle instant 86 availability, add new menu items, or watch raw ingredients auto-deduct per KOT.</p>
+            </div>
+            <button onclick="openAddDishModal()" class="px-4 py-2 rounded-xl bg-beam-500 hover:bg-beam-400 text-white text-xs font-bold shadow-beam active:scale-95">
+              + Add Menu Item
+            </button>
+          </div>
+
+          <div class="grid lg:grid-cols-12 gap-5">
+            <!-- Menu Catalog & 86 Switchboard -->
+            <div class="lg:col-span-7 rounded-3xl bg-carbon border border-white/10 p-4 sm:p-5">
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-extrabold text-white">Live Menu &amp; 86 Switchboard</h2>
+                <span class="text-[11px] font-mono text-emerald-400">Synced &lt;2s to Guest QR</span>
+              </div>
+              <div id="menu-admin-list" class="space-y-2.5 max-h-[520px] overflow-y-auto no-scrollbar"></div>
+            </div>
+
+            <!-- BOM Inventory Stock -->
+            <div class="lg:col-span-5 rounded-3xl bg-carbon border border-white/10 p-4 sm:p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h2 class="text-sm font-extrabold text-white">Recipe Inventory (BOM)</h2>
+                  <p class="text-[11px] text-zinc-400">Auto-deducted when orders fire to KDS</p>
+                </div>
+                <button onclick="restockAllInventory()" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-semibold text-zinc-200">
+                  Restock All
+                </button>
+              </div>
+              <div id="inventory-list" class="space-y-2.5"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- WORKSPACE 4: OWNER BI, SHIFT REGISTER & SERVICE RECOVERY      -->
+        <!-- ============================================================= -->
+        <div id="ws-owner" class="ws-panel hidden space-y-5">
+          <!-- KPI Grid -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5" id="owner-kpi-grid"></div>
+
+          <div class="grid lg:grid-cols-12 gap-5">
+            <!-- Hourly Sales & Payment Mix -->
+            <div class="lg:col-span-7 rounded-3xl bg-carbon border border-white/10 p-5 space-y-5">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h2 class="text-sm font-extrabold text-white">Live Service Revenue &amp; Payment Mix</h2>
+                  <p class="text-xs text-zinc-400">Real-time ledger updates on every settled check</p>
+                </div>
+                <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 text-[11px] font-mono font-bold">+22% Upsell Lift</span>
+              </div>
+
+              <!-- Hourly Bar Chart -->
+              <div class="flex items-end justify-between gap-2 h-44 pt-4 px-1" id="owner-revenue-chart"></div>
+
+              <!-- Payment Mix Progress Bar -->
+              <div class="pt-3 border-t border-white/10" id="owner-payment-mix"></div>
+            </div>
+
+            <!-- Shift Register & Z-Report -->
+            <div class="lg:col-span-5 rounded-3xl bg-carbon border border-white/10 p-5 flex flex-col justify-between" id="shift-zreport-panel"></div>
+          </div>
+
+          <!-- Verified Reviews & Manager Recovery Alerts -->
+          <div class="rounded-3xl bg-carbon border border-white/10 p-5">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h2 class="text-sm font-extrabold text-white">Guest Reviews &amp; Service Recovery Queue</h2>
+                <p class="text-xs text-zinc-400">4–5★ routed to Google Reviews • 1–3★ triggers immediate Manager Alert</p>
+              </div>
+            </div>
+            <div id="owner-reviews-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- WORKSPACE 5: 3-LAYER RBAC, ANTI-SPOOFING & IMMUTABLE AUDIT    -->
+        <!-- ============================================================= -->
+        <div id="ws-security" class="ws-panel hidden space-y-5">
+          <div class="grid lg:grid-cols-12 gap-5">
+            <!-- 3-Layer RBAC Matrix Tester -->
+            <div class="lg:col-span-7 rounded-3xl bg-carbon border border-white/10 p-5 space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h2 class="text-sm font-extrabold text-white">3-Layer RBAC Permission Engine</h2>
+                  <p class="text-xs text-zinc-400">Formula: <code class="text-beam-300 font-mono">(Role Default + Grant) − Explicit Deny</code> • Denials always win</p>
+                </div>
+                <span class="px-2 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 font-mono text-[10px] font-bold">RLS ENFORCED</span>
+              </div>
+              <div id="rbac-matrix" class="space-y-2.5"></div>
+            </div>
+
+            <!-- Anti-Spoofing QR Security Policies -->
+            <div class="lg:col-span-5 rounded-3xl bg-carbon border border-white/10 p-5 space-y-4">
+              <div>
+                <h2 class="text-sm font-extrabold text-white">QR Anti-Spoofing Policies</h2>
+                <p class="text-xs text-zinc-400">Live venue guardrails applied to all guest QR scans</p>
+              </div>
+              <div id="qr-policy-list" class="space-y-3"></div>
+            </div>
+          </div>
+
+          <!-- Immutable Audit Log & WebSocket Event Stream -->
+          <div class="rounded-3xl bg-carbon border border-white/10 p-5">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <h2 class="text-sm font-extrabold text-white font-mono">Immutable Audit Log &amp; Real-Time Socket.IO Stream</h2>
+              </div>
+              <span class="text-[11px] font-mono text-zinc-400">PostgreSQL 16 • tenant_id scoped</span>
+            </div>
+            <div id="audit-log-stream" class="space-y-2 max-h-[300px] overflow-y-auto no-scrollbar font-mono text-xs"></div>
+          </div>
+        </div>
+
+        <!-- Mobile-Only Anchor for Guest Phone Workspace -->
+        <div id="ws-guest-mobile-host" class="ws-panel hidden xl:hidden flex justify-center"></div>
+      </section>
+
+      <!-- =============================================================== -->
+      <!-- RIGHT PINNED COLUMN: LIVE INTERACTIVE GUEST QR PHONE SIMULATOR  -->
+      <!-- (Pinned on xl screens in Split View, or shown in Guest tab)     -->
+      <!-- =============================================================== -->
+      <aside id="guest-phone-col" class="xl:col-span-4 xl:sticky xl:top-[116px] flex flex-col items-center">
+        <!-- Guest Phone Table Switcher Strip -->
+        <div class="w-full max-w-[395px] mb-2.5 flex items-center justify-between gap-2 px-1">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-beam-400 animate-pulse"></span>
+            <span class="text-xs font-extrabold text-white">Live Guest Phone</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <select id="guest-table-select" onchange="switchGuestTable(this.value)" class="bg-carbon border border-white/15 rounded-xl px-2.5 py-1 text-[11px] font-mono font-bold text-beam-300 focus:outline-none focus:border-beam-400">
+              <option value="T5">QR: Table 5</option>
+              <option value="T1">QR: Table 1</option>
+              <option value="T2">QR: Table 2</option>
+              <option value="T3">QR: Table 3</option>
+              <option value="T4">QR: Table 4</option>
+              <option value="T6">QR: Table 6</option>
+            </select>
+            <button onclick="switchGuestDiner()" id="btn-guest-diner" class="px-2.5 py-1 rounded-xl bg-carbon border border-white/15 text-[11px] font-bold text-zinc-200 hover:border-beam-400" title="Switch diner sharing this table's collaborative cart">
+              👤 Aman
+            </button>
+          </div>
+        </div>
+
+        <!-- Phone Device Frame -->
+        <div id="guest-phone-frame" class="w-full max-w-[395px] rounded-[2.6rem] bg-zinc-900 p-2.5 border-[3px] border-zinc-800 shadow-panel relative">
+          <!-- Dynamic Island -->
+          <div class="w-28 h-5 bg-zinc-950 rounded-full mx-auto mb-2 flex items-center justify-between px-3">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500/80"></span>
+            <span class="text-[8px] font-mono text-zinc-500" id="phone-qr-token">pb_t5_9xK4</span>
+          </div>
+
+          <!-- Phone Screen (Warm Cream High-Legibility Dining Surface) -->
+          <div class="bg-cream text-zinc-900 rounded-[2rem] overflow-hidden flex flex-col h-[640px] relative">
+            <!-- Guest App Header -->
+            <div class="px-4 py-3 bg-white border-b border-zinc-200/90 flex items-center justify-between shrink-0">
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="font-black text-base tracking-tight text-zinc-900" id="phone-outlet-name">Zaika<span class="text-beam-500">.</span></span>
+                  <span class="px-2 py-0.5 rounded-full bg-zinc-900 text-white text-[10px] font-bold" id="phone-table-pill">TABLE 5</span>
+                </div>
+                <div class="text-[10px] text-zinc-500 font-medium truncate" id="phone-session-sub">Aman &amp; Riya • Signed QR Session</div>
+              </div>
+              <button onclick="setGuestTab('waiter')" class="px-2.5 py-1.5 rounded-xl bg-beam-50 text-beam-600 border border-beam-200 text-[11px] font-extrabold hover:bg-beam-100 transition-colors shrink-0">
+                🔔 Call
+              </button>
+            </div>
+
+            <!-- Dynamic Phone Viewport -->
+            <div id="guest-viewport" class="flex-1 overflow-y-auto no-scrollbar p-3.5 space-y-3.5 relative"></div>
+
+            <!-- Dish Customization Bottom Sheet (Inside Phone) -->
+            <div id="guest-customize-sheet" class="hidden absolute inset-0 z-30 bg-black/50 backdrop-blur-[2px] flex items-end">
+              <div class="w-full bg-white rounded-t-3xl p-4 space-y-3.5 max-h-[85%] overflow-y-auto no-scrollbar" id="guest-customize-content"></div>
+            </div>
+
+            <!-- Phone Bottom Navigation -->
+            <div class="bg-white border-t border-zinc-200 px-1.5 py-1.5 grid grid-cols-5 gap-1 shrink-0 text-[10px] font-semibold">
+              <button onclick="setGuestTab('menu')" id="gtab-menu" class="flex flex-col items-center py-1 rounded-xl">
+                <span class="text-sm">🍽️</span><span>Menu</span>
+              </button>
+              <button onclick="setGuestTab('cart')" id="gtab-cart" class="flex flex-col items-center py-1 rounded-xl relative">
+                <span class="text-sm">🛒</span><span>Cart</span>
+                <span id="gtab-cart-badge" class="hidden absolute top-0 right-2 px-1.5 min-w-[16px] h-4 rounded-full bg-beam-500 text-white text-[9px] font-black flex items-center justify-center">0</span>
+              </button>
+              <button onclick="setGuestTab('track')" id="gtab-track" class="flex flex-col items-center py-1 rounded-xl">
+                <span class="text-sm">⏱️</span><span>Wait</span>
+              </button>
+              <button onclick="setGuestTab('waiter')" id="gtab-waiter" class="flex flex-col items-center py-1 rounded-xl">
+                <span class="text-sm">🔔</span><span>Help</span>
+              </button>
+              <button onclick="setGuestTab('bill')" id="gtab-bill" class="flex flex-col items-center py-1 rounded-xl">
+                <span class="text-sm">💳</span><span>Bill</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- =================================================================== -->
+  <!-- MODAL 1: ESC/POS THERMAL KOT / GST INVOICE PRINT PREVIEW            -->
+  <!-- =================================================================== -->
+  <div id="modal-thermal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+    <div class="w-full max-w-xs space-y-3">
+      <div class="bg-white text-zinc-900 rounded-2xl p-5 font-mono text-xs shadow-2xl border border-zinc-200" id="thermal-content"></div>
+      <button onclick="closeModal('modal-thermal')" class="w-full py-2.5 rounded-2xl bg-carbon border border-white/15 text-white text-xs font-bold hover:bg-graphite">
+        Close Print Preview
+      </button>
+    </div>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- MODAL 2: ADD NEW MENU ITEM                                          -->
+  <!-- =================================================================== -->
+  <div id="modal-add-dish" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md rounded-3xl bg-carbon border border-white/15 p-6 shadow-panel relative">
+      <button onclick="closeModal('modal-add-dish')" class="absolute top-4 right-4 w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white">✕</button>
+      <h3 class="text-lg font-black text-white mb-1">Add Dish to Live Menu</h3>
+      <p class="text-xs text-zinc-400 mb-4">Publishes immediately to Guest QR Menus &amp; KDS Routing.</p>
+      <form onsubmit="submitNewDish(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Dish Name</label>
+          <input required id="new-dish-name" type="text" placeholder="e.g. Truffle Butter Naan" class="w-full px-3 py-2 rounded-xl bg-obsidian border border-white/15 text-sm text-white focus:outline-none focus:border-beam-400" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-zinc-300 mb-1">Category</label>
+            <select id="new-dish-cat" class="w-full px-3 py-2 rounded-xl bg-obsidian border border-white/15 text-sm text-white">
+              <option>Starters</option><option>Mains</option><option>Breads</option><option>Drinks</option><option>Desserts</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-300 mb-1">KDS Station</label>
+            <select id="new-dish-station" class="w-full px-3 py-2 rounded-xl bg-obsidian border border-white/15 text-sm text-white">
+              <option>Curry</option><option>Tandoor</option><option>Drinks</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-zinc-300 mb-1">Price (₹)</label>
+            <input required id="new-dish-price" type="number" min="20" value="240" class="w-full px-3 py-2 rounded-xl bg-obsidian border border-white/15 text-sm text-white" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-300 mb-1">Prep (min)</label>
+            <input required id="new-dish-prep" type="number" min="2" value="10" class="w-full px-3 py-2 rounded-xl bg-obsidian border border-white/15 text-sm text-white" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-300 mb-1">Dietary</label>
+            <select id="new-dish-veg" class="w-full px-3 py-2 rounded-xl bg-obsidian border border-white/15 text-sm text-white">
+              <option value="true">Veg</option><option value="false">Non-Veg</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="w-full py-3 rounded-2xl bg-beam-500 hover:bg-beam-400 text-white text-sm font-bold shadow-beam mt-2">
+          Publish Dish Live →
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- MODAL 3: WAITER ASSISTED POS QUICK ORDER                            -->
+  <!-- =================================================================== -->
+  <div id="modal-assisted-pos" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md rounded-3xl bg-carbon border border-white/15 p-6 shadow-panel relative">
+      <button onclick="closeModal('modal-assisted-pos')" class="absolute top-4 right-4 w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white">✕</button>
+      <h3 class="text-lg font-black text-white mb-1">Waiter Assisted POS Order</h3>
+      <p class="text-xs text-zinc-400 mb-4">Fire an order directly on behalf of a seated table.</p>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Select Table</label>
+          <select id="pos-table-id" class="w-full px-3 py-2 rounded-xl bg-obsidian border border-white/15 text-sm text-white">
+            <option value="T1">Table 1 (Vikram + 3)</option>
+            <option value="T2">Table 2 (Neha &amp; Kabir)</option>
+            <option value="T3">Table 3 (Priya + 2)</option>
+            <option value="T4">Table 4 (Walk-In)</option>
+            <option value="T5" selected>Table 5 (Aman &amp; Riya)</option>
+            <option value="T6">Table 6 (Corporate)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Quick Add Dish</label>
+          <select id="pos-dish-id" class="w-full px-3 py-2 rounded-xl bg-obsidian border border-white/15 text-sm text-white"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-zinc-300 mb-1">Quantity</label>
+          <input id="pos-qty" type="number" min="1" max="10" value="1" class="w-full px-3 py-2 rounded-xl bg-obsidian border border-white/15 text-sm text-white" />
+        </div>
+        <button onclick="fireAssistedOrder()" class="w-full py-3 rounded-2xl bg-beam-500 hover:bg-beam-400 text-white text-sm font-bold shadow-beam">
+          Fire Order to KDS →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- PLATEBEAM OS COMPLETE REACTIVE ENGINE (JavaScript)                  -->
+  <!-- =================================================================== -->
+  <script>
+    // =====================================================================
+    // 1. SYNTHESIZED AUDIO ENGINE (Tone.js — No external sound files)
+    // =====================================================================
+    const AudioEngine = {
+      enabled: true,
+      synth: null,
+      play(type) {
+        if (!this.enabled || typeof Tone === 'undefined') return;
+        try {
+          if (Tone.context.state !== 'running') Tone.start();
+          if (!this.synth) {
+            this.synth = new Tone.PolySynth(Tone.Synth, {
+              oscillator: { type: 'triangle' },
+              envelope: { attack: 0.01, decay: 0.2, sustain: 0.05, release: 0.4 }
+            }).toDestination();
+            this.synth.volume.value = -12;
+          }
+          if (type === 'order') this.synth.triggerAttackRelease(['C5', 'E5', 'G5'], '8n');
+          if (type === 'alert') this.synth.triggerAttackRelease(['A5', 'E5'], '16n');
+          if (type === 'ready') this.synth.triggerAttackRelease(['E5', 'G#5', 'B5'], '8n');
+          if (type === 'cash') this.synth.triggerAttackRelease(['G5', 'C6'], '16n');
+        } catch (err) {
+          // Silently ignore audio autoplay restrictions prior to user gesture
+        }
+      }
+    };
+
+    // =====================================================================
+    // 2. RELATIONAL IN-MEMORY STATE (Mirrors PostgreSQL 25-Table Schema)
+    // =====================================================================
+    const DB = {
+      outlet: 'flagship',
+      activeRole: 'OWNER',
+      workspace: 'floor', // floor | kds | guest | menu | owner | security
+      splitView: true,
+      offlineMode: false,
+      offlineQueue: [],
+      floorZone: 'ALL',
+      selectedTableId: 'T5',
+      guestTableId: 'T5',
+      guestTab: 'menu', // menu | cart | track | waiter | bill
+      guestDiner: 'Aman', // Aman | Riya
+      guestCategory: 'All',
+      guestSearch: '',
+      guestVegOnly: false,
+      customizingDishId: null,
+      customSize: 'Full',
+      customSpice: 'Medium',
+      customAddon: false,
+      customNote: '',
+      qrRevokedWarning: false,
+
+      // Policies
+      policies: {
+        captainApproval: false,
+        geofence100m: true,
+        payFirstTakeaway: true,
+        signedQrTokens: true,
+      },
+
+      // Billing & Engagement State for Active Guest Table
+      splitMode: 'EQUAL', // EQUAL | ITEMS
+      splitWays: 2,
+      claimedItemIndices: [],
+      tipPercent: 10,
+      paymentMethod: 'UPI (GPay / PhonePe)',
+      loyaltyPoints: 160,
+      loyaltyRedeemed: false,
+      wifiCopied: false,
+      quizIdx: 0,
+      quizScoreT5: 4,
+      quizScoreT2: 3,
+      quizAnswered: false,
+
+      // Owner Live Counters & Shift Register
+      shift: {
+        openingFloatMinor: 500000, // ₹5,000.00 in paise
+        ordersToday: 46,
+        netSalesMinor: 4850000, // ₹48,500.00
+        upiMinor: 3007000,
+        cardMinor: 1358000,
+        cashMinor: 485000,
+        tipsMinor: 342000,
+        kotSeq: 215,
+        invoiceSeq: 842,
+      },
+
+      // Menu Catalog (Prices stored in paise minor units for zero rounding drift!)
+      menu: [
+        { id: 'm1', name: 'Paneer Makhani', category: 'Mains', station: 'Curry', priceMinor: 32000, veg: true, emoji: '🍛', badge: "Chef's Pick", desc: 'Cottage cheese simmered in smoked tomato-butter gravy.', allergens: ['Dairy', 'Nuts'], spice: 'Medium', prepMins: 12, available: true, recipe: [{ invId: 'inv1', qty: 1 }, { invId: 'inv2', qty: 1 }] },
+        { id: 'm2', name: 'Dal Makhani', category: 'Mains', station: 'Curry', priceMinor: 28000, veg: true, emoji: '🍲', badge: 'Bestseller', desc: '24-hour slow-cooked black lentils finished with cultured cream.', allergens: ['Dairy'], spice: 'Mild', prepMins: 10, available: true, recipe: [{ invId: 'inv2', qty: 1 }] },
+        { id: 'm3', name: 'Garlic Naan', category: 'Breads', station: 'Tandoor', priceMinor: 7000, veg: true, emoji: '🫓', badge: '', desc: 'Clay-oven flatbread brushed with roasted garlic butter.', allergens: ['Gluten', 'Dairy'], spice: 'Mild', prepMins: 6, available: true, recipe: [{ invId: 'inv3', qty: 1 }] },
+        { id: 'm4', name: 'Tandoori Paneer Tikka', category: 'Starters', station: 'Tandoor', priceMinor: 29000, veg: true, emoji: '🍢', badge: 'Smoky', desc: 'Charcoal-grilled cottage cheese marinated in Kashmiri chili.', allergens: ['Dairy'], spice: 'Spicy', prepMins: 11, available: true, recipe: [{ invId: 'inv1', qty: 1 }] },
+        { id: 'm5', name: 'Smoked Chicken Biryani', category: 'Mains', station: 'Curry', priceMinor: 36000, veg: false, emoji: '🍚', badge: 'Signature', desc: 'Aged basmati dum-cooked with saffron, mint & spiced chicken.', allergens: ['Dairy'], spice: 'Medium', prepMins: 14, available: true, recipe: [{ invId: 'inv4', qty: 1 }] },
+        { id: 'm6', name: 'Mango Lassi', category: 'Drinks', station: 'Drinks', priceMinor: 12000, promoMinor: 9900, veg: true, emoji: '🥭', badge: 'Deal ₹99', desc: 'Alphonso mango blended with chilled thick yogurt.', allergens: ['Dairy'], spice: 'Sweet', prepMins: 3, available: true, recipe: [{ invId: 'inv5', qty: 1 }] },
+        { id: 'm7', name: 'Warm Gulab Jamun', category: 'Desserts', station: 'Drinks', priceMinor: 8000, veg: true, emoji: '🍮', badge: '', desc: 'Two golden khoya dumplings in cardamom-rose syrup.', allergens: ['Dairy', 'Gluten'], spice: 'Sweet', prepMins: 4, available: true, recipe: [] },
+      ],
+
+      // Recipe-Linked Inventory
+      inventory: [
+        { id: 'inv1', name: 'Fresh Malai Paneer', unit: 'portions', qty: 14, reorder: 5 },
+        { id: 'inv2', name: 'Cultured Cream & Butter', unit: 'portions', qty: 18, reorder: 6 },
+        { id: 'inv3', name: 'Tandoor Naan Dough Balls', unit: 'pcs', qty: 32, reorder: 10 },
+        { id: 'inv4', name: 'Aged Saffron Basmati', unit: 'portions', qty: 9, reorder: 4 },
+        { id: 'inv5', name: 'Alphonso Mango Pulp', unit: 'servings', qty: 7, reorder: 4 },
+      ],
+
+      // Tables & Active Sessions
+      tables: [
+        { id: 'T1', label: 'Table 1', zone: 'Main Hall', seats: 4, guests: 4, names: 'Vikram + 3', qrToken: 'pb_t1_7aQ2', status: 'EATING', helpRequest: null, assignedWaiter: null, cart: [], placed: [{ name: 'Smoked Chicken Biryani', qty: 2, unitMinor: 36000, station: 'Curry', status: 'SERVED', diner: 'Vikram' }, { name: 'Garlic Naan', qty: 4, unitMinor: 7000, station: 'Tandoor', status: 'SERVED', diner: 'Vikram' }], paid: false, review: null },
+        { id: 'T2', label: 'Table 2', zone: 'Main Hall', seats: 2, guests: 2, names: 'Neha & Kabir', qrToken: 'pb_t2_3kP9', status: 'BILL', helpRequest: null, assignedWaiter: 'Rahul', cart: [], placed: [{ name: 'Paneer Makhani', qty: 1, unitMinor: 32000, station: 'Curry', status: 'SERVED', diner: 'Neha' }, { name: 'Dal Makhani', qty: 1, unitMinor: 28000, station: 'Curry', status: 'SERVED', diner: 'Kabir' }], paid: false, review: null },
+        { id: 'T3', label: 'Table 3', zone: 'Main Hall', seats: 4, guests: 3, names: 'Priya + 2', qrToken: 'pb_t3_8mV1', status: 'ORDERING', helpRequest: null, assignedWaiter: null, cart: [], placed: [{ name: 'Tandoori Paneer Tikka', qty: 1, unitMinor: 29000, station: 'Tandoor', status: 'COOKING', diner: 'Priya' }], paid: false, review: null },
+        { id: 'T4', label: 'Table 4', zone: 'Patio', seats: 2, guests: 0, names: 'Vacant', qrToken: 'pb_t4_2nL8', status: 'AVAILABLE', helpRequest: null, assignedWaiter: null, cart: [], placed: [], paid: false, review: null },
+        { id: 'T5', label: 'Table 5', zone: 'Patio', seats: 4, guests: 2, names: 'Aman & Riya', qrToken: 'pb_t5_9xK4', status: 'ORDERING', helpRequest: null, assignedWaiter: null,
+          cart: [
+            { menuId: 'm1', name: 'Paneer Makhani', qty: 1, unitMinor: 32000, size: 'Full', spice: 'Medium', note: '', diner: 'Aman', station: 'Curry' },
+            { menuId: 'm3', name: 'Garlic Naan', qty: 2, unitMinor: 7000, size: '1 Pc', spice: 'Mild', note: 'Extra crisp', diner: 'Riya', station: 'Tandoor' },
+          ],
+          placed: [
+            { menuId: 'm2', name: 'Dal Makhani', qty: 1, unitMinor: 28000, station: 'Curry', status: 'COOKING', diner: 'Aman' },
+            { menuId: 'm6', name: 'Mango Lassi (Deal)', qty: 2, unitMinor: 9900, station: 'Drinks', status: 'READY', diner: 'Riya' },
+          ],
+          paid: false, review: null
+        },
+        { id: 'T6', label: 'Table 6', zone: 'Patio', seats: 6, guests: 4, names: 'Tech Team', qrToken: 'pb_t6_5wR6', status: 'EATING', helpRequest: null, assignedWaiter: null, cart: [], placed: [{ name: 'Smoked Chicken Biryani', qty: 3, unitMinor: 36000, station: 'Curry', status: 'SERVED', diner: 'Host' }], paid: false, review: null },
+      ],
+
+      // Captain Pending Approval Queue
+      pendingApprovals: [],
+
+      // Active Kitchen Display Tickets
+      kdsTickets: [
+        { id: 'KOT-212', tableId: 'T3', station: 'Tandoor', items: ['Tandoori Paneer Tikka (Spicy) ×1', 'Garlic Naan ×3'], elapsedSec: 315, targetSec: 420, status: 'COOKING' },
+        { id: 'KOT-213', tableId: 'T5', station: 'Curry', items: ['Dal Makhani (Mild) ×1'], elapsedSec: 118, targetSec: 600, status: 'COOKING' },
+        { id: 'KOT-214', tableId: 'T5', station: 'Drinks', items: ['Mango Lassi (Deal) ×2'], elapsedSec: 52, targetSec: 240, status: 'READY' },
+      ],
+      lastBumpedTickets: [],
+
+      // Spice Quiz Bank
+      quizQuestions: [
+        { q: 'Which spice gives Rogan Josh its vibrant crimson color?', opts: ['Kashmiri Chili', 'Turmeric', 'Green Cardamom'], ans: 0 },
+        { q: 'What is the traditional charcoal clay oven for Naan called?', opts: ['Tawa', 'Tandoor', 'Sigri'], ans: 1 },
+        { q: 'Which mango variety makes the richest Mango Lassi?', opts: ['Alphonso', 'Granny Smith', 'Bartlett'], ans: 0 },
+      ],
+
+      // Verified Reviews
+      reviews: [
+        { guest: 'Neha K. (T2)', rating: 5, text: 'Splitting the bill & paying via UPI took 10 seconds!', route: 'Routed to Google Reviews', resolved: true },
+        { guest: 'Vikram S. (T1)', rating: 5, text: 'Kids loved the Spice Quiz while Tandoor starters cooked.', route: 'Routed to Google Reviews', resolved: true },
+      ],
+
+      // 3-Layer RBAC Configuration
+      rbacRules: [
+        { key: 'orders.approve_dispatch', label: 'Approve & Dispatch QR Orders', roleDefaults: { OWNER: true, CAPTAIN: true, CHEF: false, CASHIER: true }, userGrant: false, userDeny: false },
+        { key: 'kds.bump_tickets', label: 'Bump / Recall Kitchen KDS Tickets', roleDefaults: { OWNER: true, CAPTAIN: false, CHEF: true, CASHIER: false }, userGrant: false, userDeny: false },
+        { key: 'menu.toggle_86', label: 'Toggle Instant 86 Out-of-Stock', roleDefaults: { OWNER: true, CAPTAIN: false, CHEF: true, CASHIER: false }, userGrant: false, userDeny: false },
+        { key: 'billing.void_refund', label: 'Void Cooked Items / Issue Refunds', roleDefaults: { OWNER: true, CAPTAIN: false, CHEF: false, CASHIER: true }, userGrant: false, userDeny: false },
+        { key: 'tables.rotate_qr', label: 'Rotate Signed Table QR Tokens', roleDefaults: { OWNER: true, CAPTAIN: true, CHEF: false, CASHIER: false }, userGrant: false, userDeny: false },
+      ],
+
+      // Immutable Audit Log
+      auditLogs: [
+        { time: '06:16:04', actor: 'SYSTEM', room: 'rls:postgres', msg: 'SET LOCAL app.tenant_id verified across 25 multi-tenant tables.' },
+        { time: '06:17:12', actor: 'GUEST:T5', room: 'session:T5', msg: 'Aman & Riya authenticated via signed QR token pb_t5_9xK4.' },
+        { time: '06:18:05', actor: 'KDS:AUTO', room: 'station:Curry', msg: 'KOT-213 dispatched to Curry Display + LAN ESC/POS (192.168.1.40:9100).' },
+      ],
+    };
+
+    // =====================================================================
+    // 3. CORE HELPERS (Currency, RBAC Check, Audit, Toast, Modals)
+    // =====================================================================
+    function fmtINR(minor) {
+      return '₹' + Math.round(minor / 100).toLocaleString('en-IN');
+    }
+
+    function fmtTimer(sec) {
+      const m = String(Math.floor(sec / 60)).padStart(2, '0');
+      const s = String(sec % 60).padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function hasPermission(permKey) {
+      const rule = DB.rbacRules.find(r => r.key === permKey);
+      if (!rule) return true;
+      if (rule.userDeny) return false; // Explicit DENY always wins
+      return Boolean(rule.roleDefaults[DB.activeRole] || rule.userGrant);
+    }
+
+    function requirePermission(permKey, actionLabel) {
+      if (!hasPermission(permKey)) {
+        showToast('RBAC Permission Denied 🔐', `Role "${DB.activeRole}" cannot ${actionLabel}. Check RBAC tab.`, 'alert');
+        logAudit(`RBAC:${DB.activeRole}`, 'security:deny', `Blocked attempt to ${actionLabel} (${permKey}).`);
+        return false;
+      }
+      return true;
+    }
+
+    function logAudit(actor, room, msg) {
+      const time = new Date().toTimeString().slice(0, 8);
+      DB.auditLogs.unshift({ time, actor, room, msg });
+      if (DB.auditLogs.length > 25) DB.auditLogs.pop();
+      renderSecurityWorkspace();
+    }
+
+    function showToast(title, sub = '', tone = 'beam') {
+      try {
+        const root = document.getElementById('toast-root');
+        if (!root) return;
+        const border = tone === 'success' ? 'border-emerald-500/40' : tone === 'alert' ? 'border-red-500/50' : 'border-beam-500/40';
+        const dot = tone === 'success' ? 'bg-emerald-400' : tone === 'alert' ? 'bg-red-500 animate-ping' : 'bg-beam-400';
+        const el = document.createElement('div');
+        el.className = `pointer-events-auto rounded-2xl bg-carbon/95 backdrop-blur-xl border ${border} p-3.5 shadow-panel transition-all duration-300 translate-y-2 opacity-0`;
+        el.innerHTML = `
+          <div class="flex items-start gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full mt-1 shrink-0 ${dot}"></span>
+            <div class="min-w-0">
+              <div class="text-xs font-bold text-white leading-snug">${title}</div>
+              ${sub ? `<div class="text-[11px] text-zinc-400 mt-0.5 leading-snug">${sub}</div>` : ''}
+            </div>
+          </div>`;
+        root.appendChild(el);
+        requestAnimationFrame(() => el.classList.remove('translate-y-2', 'opacity-0'));
+        setTimeout(() => {
+          el.classList.add('opacity-0', 'translate-y-2');
+          setTimeout(() => el.remove(), 300);
+        }, 3200);
+      } catch (e) {}
+    }
+
+    function openModal(id) {
+      const m = document.getElementById(id);
+      if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+    }
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+    }
+
+    function getTable(id) {
+      return DB.tables.find(t => t.id === id);
+    }
+
+    function calcTableBill(table) {
+      const subtotalMinor = table.placed.reduce((s, i) => s + (i.unitMinor * i.qty), 0);
+      const discountMinor = (table.id === DB.guestTableId && DB.loyaltyRedeemed) ? Math.min(subtotalMinor, 9900) : 0;
+      const taxableMinor = Math.max(0, subtotalMinor - discountMinor);
+      const gstMinor = Math.round(taxableMinor * 0.05); // 2.5% CGST + 2.5% SGST
+      const tipMinor = Math.round(taxableMinor * (DB.tipPercent / 100));
+      const grandMinor = taxableMinor + gstMinor + tipMinor;
+      return { subtotalMinor, discountMinor, taxableMinor, gstMinor, tipMinor, grandMinor };
+    }
+
+    // =====================================================================
+    // 4. TOP BAR & WORKSPACE CONTROLS
+    // =====================================================================
+    function setWorkspace(ws) {
+      DB.workspace = ws;
+      document.querySelectorAll('.ws-panel').forEach(p => p.classList.add('hidden'));
+
+      if (ws === 'guest') {
+        const host = document.getElementById('ws-guest-mobile-host');
+        const phoneCol = document.getElementById('guest-phone-col');
+        if (host && phoneCol) {
+          host.classList.remove('hidden');
+          phoneCol.classList.remove('hidden');
+        }
+      } else {
+        const panel = document.getElementById(`ws-${ws}`);
+        if (panel) panel.classList.remove('hidden');
+      }
+
+      updateSplitLayout();
+      renderAll();
+    }
+
+    function updateSplitLayout() {
+      const primaryCol = document.getElementById('primary-workspace-col');
+      const phoneCol = document.getElementById('guest-phone-col');
+      const splitLabel = document.getElementById('split-view-label');
+      const isDesktop = window.innerWidth >= 1280;
+
+      if (isDesktop) {
+        if (DB.splitView) {
+          primaryCol.className = 'xl:col-span-8 space-y-5 min-w-0';
+          phoneCol.classList.remove('hidden');
+          phoneCol.classList.add('flex');
+          if (splitLabel) splitLabel.textContent = 'Live Split View: ON';
+        } else {
+          primaryCol.className = 'xl:col-span-12 space-y-5 min-w-0';
+          phoneCol.classList.add('hidden');
+          phoneCol.classList.remove('flex');
+          if (splitLabel) splitLabel.textContent = 'Live Split View: OFF';
+        }
+      } else {
+        // On mobile/tablet, show Guest Phone ONLY when Guest QR tab is active
+        primaryCol.className = 'col-span-1 space-y-5 min-w-0';
+        if (DB.workspace === 'guest') {
+          phoneCol.classList.remove('hidden');
+          phoneCol.classList.add('flex');
+        } else {
+          phoneCol.classList.add('hidden');
+          phoneCol.classList.remove('flex');
+        }
+      }
+
+      // Highlight active nav pill
+      ['floor', 'kds', 'guest', 'menu', 'owner', 'security'].forEach(id => {
+        const btn = document.getElementById(`nav-${id}`);
+        if (!btn) return;
+        if (id === DB.workspace) {
+          btn.className = 'ws-btn shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all bg-beam-500 text-white shadow-beam' + (id === 'guest' ? ' xl:hidden' : '');
+        } else {
+          btn.className = 'ws-btn shrink-0 px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all text-zinc-400 hover:text-white hover:bg-white/5' + (id === 'guest' ? ' xl:hidden' : '');
+        }
+      });
+    }
+
+    function toggleSplitView() {
+      DB.splitView = !DB.splitView;
+      updateSplitLayout();
+    }
+
+    function switchOutlet(val) {
+      DB.outlet = val;
+      const badge = document.getElementById('header-tenant-badge');
+      const phoneName = document.getElementById('phone-outlet-name');
+      if (val === 'express') {
+        badge.textContent = 'tenant: zaika-express • QSR Mode';
+        phoneName.innerHTML = 'Zaika Express<span class="text-beam-500">.</span>';
+        showToast('Switched Outlet Context', 'Zaika Express (QSR) loaded under PostgreSQL RLS.', 'beam');
+      } else {
+        badge.textContent = 'tenant: zaika-flagship • RLS ON';
+        phoneName.innerHTML = 'Zaika<span class="text-beam-500">.</span>';
+        showToast('Switched Outlet Context', 'Zaika Main Flagship loaded under PostgreSQL RLS.', 'beam');
+      }
+      logAudit(`USER:${DB.activeRole}`, 'rls:switch', `Switched outlet context to ${val}.`);
+    }
+
+    function switchActiveRole(role) {
+      DB.activeRole = role;
+      showToast(`Active Staff Role: ${role}`, '3-Layer RBAC permissions updated live.', 'beam');
+      renderSecurityWorkspace();
+    }
+
+    function toggleSound() {
+      AudioEngine.enabled = !AudioEngine.enabled;
+      const btn = document.getElementById('btn-sound');
+      if (btn) btn.textContent = AudioEngine.enabled ? '🔊' : '🔇';
+      if (AudioEngine.enabled) AudioEngine.play('ready');
+    }
+
+    function toggleOfflineMode() {
+      DB.offlineMode = !DB.offlineMode;
+      const banner = document.getElementById('offline-banner');
+      const dot = document.getElementById('net-dot');
+      const lbl = document.getElementById('net-label');
+
+      if (DB.offlineMode) {
+        banner.classList.remove('hidden');
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
+        lbl.textContent = 'Offline';
+        showToast('Venue Wi-Fi Dropped!', 'IndexedDB local cache engaged. Orders will queue safely.', 'alert');
+        logAudit('SYSTEM', 'offline:cache', 'Venue disconnected. Switched to IndexedDB local delta queue.');
+      } else {
+        banner.classList.add('hidden');
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+        lbl.textContent = 'Online';
+        // Flush queued offline orders via idempotent Delta-Sync
+        if (DB.offlineQueue.length > 0) {
+          const count = DB.offlineQueue.length;
+          DB.offlineQueue.forEach(fn => fn());
+          DB.offlineQueue = [];
+          document.getElementById('offline-queue-count').textContent = '0';
+          showToast(`Delta-Sync Complete ✓`, `${count} offline queued order(s) synced with zero loss!`, 'success');
+          logAudit('SYSTEM', 'offline:sync', `Reconnected & flushed ${count} idempotent queued transaction(s).`);
+          AudioEngine.play('order');
+        } else {
+          showToast('Back Online ✓', 'Real-time WebSocket stream reconnected.', 'success');
+        }
+        renderAll();
+      }
+    }
+
+    // =====================================================================
+    // 5. GUEST QR PORTAL ACTIONS
+    // =====================================================================
+    function switchGuestTable(tableId) {
+      DB.guestTableId = tableId;
+      DB.selectedTableId = tableId;
+      DB.qrRevokedWarning = false;
+      DB.claimedItemIndices = [];
+      renderAll();
+    }
+
+    function switchGuestDiner() {
+      DB.guestDiner = DB.guestDiner === 'Aman' ? 'Riya' : 'Aman';
+      const btn = document.getElementById('btn-guest-diner');
+      if (btn) btn.textContent = `👤 ${DB.guestDiner}`;
+      showToast(`Ordering as ${DB.guestDiner}`, 'Collaborative table cart tags items per diner.', 'beam');
+      renderGuestPhone();
+    }
+
+    function setGuestTab(tab) {
+      DB.guestTab = tab;
+      closeDishCustomizer();
+      renderGuestPhone();
+    }
+
+    function openDishCustomizer(dishId) {
+      const dish = DB.menu.find(m => m.id === dishId);
+      if (!dish || !dish.available) {
+        showToast('Dish 86’d (Sold Out)', 'Kitchen has disabled this item in real time.', 'alert');
+        return;
+      }
+      DB.customizingDishId = dishId;
+      DB.customSize = 'Full';
+      DB.customSpice = dish.spice;
+      DB.customAddon = false;
+      DB.customNote = '';
+      renderDishCustomizer();
+    }
+
+    function closeDishCustomizer() {
+      DB.customizingDishId = null;
+      const sheet = document.getElementById('guest-customize-sheet');
+      if (sheet) sheet.classList.add('hidden');
+    }
+
+    function renderDishCustomizer() {
+      const sheet = document.getElementById('guest-customize-sheet');
+      const content = document.getElementById('guest-customize-content');
+      const dish = DB.menu.find(m => m.id === DB.customizingDishId);
+      if (!dish || !sheet || !content) return;
+
+      const sizeDelta = DB.customSize === 'Half' ? -Math.round(dish.priceMinor * 0.35) : 0;
+      const addonDelta = DB.customAddon ? 3000 : 0;
+      const finalMinor = Math.max(5000, dish.priceMinor + sizeDelta + addonDelta);
+
+      sheet.classList.remove('hidden');
+      content.innerHTML = `
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xl">${dish.emoji}</span>
+              <h4 class="font-black text-base text-zinc-900">${dish.name}</h4>
+            </div>
+            <p class="text-[11px] text-zinc-500 mt-0.5">${dish.desc}</p>
+          </div>
+          <button onclick="closeDishCustomizer()" class="w-7 h-7 rounded-full bg-zinc-100 text-zinc-600 font-bold text-xs">✕</button>
+        </div>
+
+        <div class="flex flex-wrap gap-1.5">
+          ${dish.allergens.map(a => `<span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[10px] font-bold">⚠ ${a}</span>`).join('')}
+          <span class="px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-600 text-[10px] font-semibold">⏱ ~${dish.prepMins} min</span>
+        </div>
+
+        <!-- Portion Size -->
+        <div>
+          <div class="text-[10px] font-bold uppercase text-zinc-500 mb-1.5">Portion Size</div>
+          <div class="grid grid-cols-2 gap-2">
+            ${['Half', 'Full'].map(sz => `
+              <button onclick="DB.customSize='${sz}';renderDishCustomizer()" class="py-2 rounded-xl text-xs font-bold border ${DB.customSize === sz ? 'bg-zinc-900 text-white border-zinc-900' : 'bg-cream text-zinc-700 border-zinc-200'}">
+                ${sz} ${sz === 'Half' ? '(-35%)' : ''}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Spice Level -->
+        <div>
+          <div class="text-[10px] font-bold uppercase text-zinc-500 mb-1.5">Spice Level</div>
+          <div class="grid grid-cols-3 gap-1.5">
+            ${['Mild', 'Medium', 'Spicy'].map(sp => `
+              <button onclick="DB.customSpice='${sp}';renderDishCustomizer()" class="py-1.5 rounded-xl text-xs font-bold border ${DB.customSpice === sp ? 'bg-beam-500 text-white border-beam-500' : 'bg-cream text-zinc-700 border-zinc-200'}">
+                🌶 ${sp}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Add-on & Kitchen Note -->
+        <label class="flex items-center justify-between p-2.5 rounded-xl bg-cream border border-zinc-200 text-xs font-bold text-zinc-800 cursor-pointer">
+          <span>+ Extra Smoked Butter / Dip</span>
+          <div class="flex items-center gap-2">
+            <span class="text-beam-600">+₹30</span>
+            <input type="checkbox" ${DB.customAddon ? 'checked' : ''} onchange="DB.customAddon=this.checked;renderDishCustomizer()" class="accent-beam-500 w-4 h-4" />
+          </div>
+        </label>
+
+        <input type="text" value="${DB.customNote}" oninput="DB.customNote=this.value" placeholder="Kitchen note (e.g., Less oil, no cilantro)..." class="w-full px-3 py-2 rounded-xl bg-cream border border-zinc-200 text-xs text-zinc-900 focus:outline-none focus:border-beam-500" />
+
+        <button onclick="confirmAddCustomized(${finalMinor})" class="w-full py-3 rounded-2xl bg-gradient-to-r from-beam-500 to-beam-600 text-white text-xs font-extrabold shadow-lg active:scale-95">
+          Add to ${DB.guestTableId} Cart as ${DB.guestDiner} • ${fmtINR(finalMinor)}
+        </button>
+      `;
+    }
+
+    function confirmAddCustomized(finalMinor) {
+      const dish = DB.menu.find(m => m.id === DB.customizingDishId);
+      const tbl = getTable(DB.guestTableId);
+      if (!dish || !tbl) return;
+
+      tbl.cart.push({
+        menuId: dish.id,
+        name: dish.name + (DB.customAddon ? ' + Butter' : ''),
+        qty: 1,
+        unitMinor: finalMinor,
+        size: DB.customSize,
+        spice: DB.customSpice,
+        note: DB.customNote,
+        diner: DB.guestDiner,
+        station: dish.station,
+      });
+
+      closeDishCustomizer();
+      showToast(`Added ${dish.name}`, `Tagged under ${DB.guestDiner} • ${tbl.label} shared cart`, 'beam');
+      renderAll();
+    }
+
+    function quickAddUpsell(dishId) {
+      const dish = DB.menu.find(m => m.id === dishId);
+      const tbl = getTable(DB.guestTableId);
+      if (!dish || !dish.available || !tbl) return;
+      const price = dish.promoMinor || dish.priceMinor;
+      tbl.cart.push({
+        menuId: dish.id,
+        name: dish.name + (dish.promoMinor ? ' (Deal)' : ''),
+        qty: 1,
+        unitMinor: price,
+        size: 'Std',
+        spice: dish.spice,
+        note: 'Upsell Pairing',
+        diner: DB.guestDiner,
+        station: dish.station,
+      });
+      showToast(`Upsell Added: ${dish.name}`, `${fmtINR(price)} • Boosted AOV!`, 'success');
+      renderAll();
+    }
+
+    function changeCartQty(idx, delta) {
+      const tbl = getTable(DB.guestTableId);
+      if (!tbl || !tbl.cart[idx]) return;
+      tbl.cart[idx].qty += delta;
+      if (tbl.cart[idx].qty <= 0) tbl.cart.splice(idx, 1);
+      renderAll();
+    }
+
+    // Core Order Execution (Handles Offline Queue, Captain Approval, KDS Split & Inventory Deduction)
+    function submitGuestOrder() {
+      const tbl = getTable(DB.guestTableId);
+      if (!tbl || tbl.cart.length === 0) return;
+
+      const itemsCopy = tbl.cart.map(c => ({ ...c }));
+      tbl.cart = [];
+      tbl.paid = false;
+      if (tbl.status === 'AVAILABLE') {
+        tbl.guests = 2;
+        tbl.names = `${DB.guestDiner} + Guest`;
+      }
+
+      const executeDispatch = () => {
+        if (DB.policies.captainApproval) {
+          DB.pendingApprovals.unshift({
+            id: `REQ-${Math.floor(100 + Math.random() * 899)}`,
+            tableId: tbl.id,
+            items: itemsCopy,
+            totalMinor: itemsCopy.reduce((s, i) => s + i.unitMinor * i.qty, 0),
+          });
+          tbl.status = 'ORDERING';
+          AudioEngine.play('alert');
+          showToast('Order Sent to Floor Captain', 'Approve in Floor Map tab to beam to Kitchen KDS.', 'beam');
+          logAudit(`GUEST:${tbl.id}`, 'outlet:floor', `Order queued for Captain Approval (${itemsCopy.length} lines).`);
+        } else {
+          dispatchItemsToKitchen(tbl, itemsCopy, 'QR');
+        }
+      };
+
+      if (DB.offlineMode) {
+        DB.offlineQueue.push(executeDispatch);
+        document.getElementById('offline-queue-count').textContent = DB.offlineQueue.length;
+        showToast('Saved to Local Offline Queue', 'Will auto-sync to KDS once venue internet returns.', 'alert');
+      } else {
+        executeDispatch();
+      }
+
+      DB.guestTab = 'track';
+      renderAll();
+    }
+
+    function dispatchItemsToKitchen(tbl, items, source) {
+      const stationGroups = {};
+      let addedMinor = 0;
+
+      items.forEach(item => {
+        addedMinor += item.unitMinor * item.qty;
+        tbl.placed.push({
+          menuId: item.menuId,
+          name: item.name,
+          qty: item.qty,
+          unitMinor: item.unitMinor,
+          station: item.station,
+          status: 'COOKING',
+          diner: item.diner || 'Guest',
+        });
+
+        const lineDesc = `${item.name} (${item.spice || 'Std'}${item.note ? ', ' + item.note : ''}) ×${item.qty}`;
+        if (!stationGroups[item.station]) stationGroups[item.station] = [];
+        stationGroups[item.station].push(lineDesc);
+
+        // Recipe-Linked BOM Inventory Auto-Deduction
+        const menuDish = DB.menu.find(m => m.id === item.menuId);
+        if (menuDish && menuDish.recipe) {
+          menuDish.recipe.forEach(rec => {
+            const inv = DB.inventory.find(x => x.id === rec.invId);
+            if (inv) {
+              inv.qty = Math.max(0, inv.qty - (rec.qty * item.qty));
+              if (inv.qty === 0) {
+                menuDish.available = false;
+                showToast(`Auto-86 Triggered: ${menuDish.name}`, `${inv.name} reached 0 stock!`, 'alert');
+                logAudit('INVENTORY:BOM', 'menu:86', `Auto-disabled ${menuDish.name} due to 0 ${inv.name}.`);
+              }
+            }
+          });
+        }
+      });
+
+      // Spawn KDS Tickets per Station
+      Object.entries(stationGroups).forEach(([station, lines]) => {
+        DB.shift.kotSeq += 1;
+        const kotId = `KOT-${DB.shift.kotSeq}`;
+        DB.kdsTickets.unshift({
+          id: kotId,
+          tableId: tbl.id,
+          station,
+          items: lines,
+          elapsedSec: 1,
+          targetSec: station === 'Drinks' ? 240 : 540,
+          status: 'COOKING',
+        });
+        logAudit(`${source}:${tbl.id}`, `station:${station}`, `${kotId} beamed to ${station} KDS + ESC/POS printer.`);
+      });
+
+      tbl.status = 'EATING';
+      DB.shift.ordersToday += 1;
+      if (tbl.id === DB.guestTableId) {
+        DB.loyaltyPoints = Math.min(200, DB.loyaltyPoints + Math.round(addedMinor / 2000));
+      }
+      AudioEngine.play('order');
+      showToast(`Beamed to Kitchen! 🔥`, `${Object.keys(stationGroups).join(' & ')} KDS updated live.`, 'success');
+    }
+
+    function approvePendingOrder(reqId) {
+      if (!requirePermission('orders.approve_dispatch', 'approve QR orders')) return;
+      const idx = DB.pendingApprovals.findIndex(r => r.id === reqId);
+      if (idx === -1) return;
+      const req = DB.pendingApprovals.splice(idx, 1)[0];
+      const tbl = getTable(req.tableId);
+      if (tbl) dispatchItemsToKitchen(tbl, req.items, `CAPTAIN:${DB.activeRole}`);
+      renderAll();
+    }
+
+    function triggerGuestHelp(tag) {
+      const tbl = getTable(DB.guestTableId);
+      if (!tbl) return;
+      tbl.status = tag === 'Request Bill' ? 'BILL' : 'HELP';
+      tbl.helpRequest = tag;
+      tbl.assignedWaiter = null;
+      AudioEngine.play('alert');
+      logAudit(`GUEST:${tbl.id}`, 'outlet:floor', `Service alert "${tag}" triggered at ${tbl.label}.`);
+      showToast(`Waiter Alerted: ${tag}`, `${tbl.label} is now flashing on the Live Floor Map.`, 'alert');
+      renderAll();
+    }
+
+    function copyWifi() {
+      try {
+        const el = document.createElement('input');
+        el.value = 'platebeam2026';
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+      } catch (e) {}
+      DB.wifiCopied = true;
+      showToast('Wi-Fi Password Copied ✓', 'Network: Zaika_Guest • Pass: platebeam2026', 'success');
+      renderGuestPhone();
+    }
+
+    function redeemLoyalty() {
+      if (DB.loyaltyPoints < 200 || DB.loyaltyRedeemed) return;
+      DB.loyaltyRedeemed = true;
+      DB.loyaltyPoints -= 200;
+      showToast('Reward Redeemed! 🎉', '₹99 Free Mango Lassi voucher applied to your bill.', 'success');
+      renderGuestPhone();
+    }
+
+    function answerSpiceQuiz(optIdx) {
+      if (DB.quizAnswered) return;
+      DB.quizAnswered = true;
+      const q = DB.quizQuestions[DB.quizIdx];
+      if (optIdx === q.ans) {
+        DB.quizScoreT5 += 1;
+        DB.loyaltyPoints = Math.min(200, DB.loyaltyPoints + 20);
+        showToast('Correct! +20 Loyalty Pts 🎉', 'Table 5 takes the lead!', 'success');
+      } else {
+        showToast('Nice try!', `Answer: ${q.opts[q.ans]}`, 'beam');
+      }
+      renderGuestPhone();
+    }
+
+    function nextSpiceQuiz() {
+      DB.quizIdx = (DB.quizIdx + 1) % DB.quizQuestions.length;
+      DB.quizAnswered = false;
+      renderGuestPhone();
+    }
+
+    function toggleClaimItem(idx) {
+      const pos = DB.claimedItemIndices.indexOf(idx);
+      if (pos === -1) DB.claimedItemIndices.push(idx);
+      else DB.claimedItemIndices.splice(pos, 1);
+      renderGuestPhone();
+    }
+
+    function settleGuestBill() {
+      const tbl = getTable(DB.guestTableId);
+      if (!tbl || tbl.placed.length === 0) return;
+      const bill = calcTableBill(tbl);
+
+      DB.shift.invoiceSeq += 1;
+      DB.shift.netSalesMinor += bill.grandMinor;
+      DB.shift.tipsMinor += bill.tipMinor;
+      if (DB.paymentMethod.includes('UPI')) DB.shift.upiMinor += bill.grandMinor;
+      else if (DB.paymentMethod.includes('Cash')) DB.shift.cashMinor += bill.grandMinor;
+      else DB.shift.cardMinor += bill.grandMinor;
+
+      tbl.paid = true;
+      tbl.status = 'AVAILABLE';
+      tbl.helpRequest = null;
+      AudioEngine.play('cash');
+      logAudit(`PAY:${tbl.id}`, 'webhooks:payments', `Invoice #PB-${DB.shift.invoiceSeq} settled (${fmtINR(bill.grandMinor)}) via ${DB.paymentMethod}.`);
+      showToast(`Bill Paid (${fmtINR(bill.grandMinor)}) ✓`, `GST Invoice #PB-${DB.shift.invoiceSeq} emailed!`, 'success');
+      renderAll();
+    }
+
+    function submitGuestReview(stars) {
+      const tbl = getTable(DB.guestTableId);
+      if (!tbl) return;
+      const route = stars >= 4 ? 'Routed to Google Reviews' : 'URGENT: Manager Service Recovery';
+      tbl.review = stars;
+      DB.reviews.unshift({
+        guest: `${tbl.names} (${tbl.id})`,
+        rating: stars,
+        text: stars >= 4 ? 'Effortless QR menu, live KDS countdown, and 1-tap split UPI pay!' : 'Guest requested immediate manager follow-up regarding dining experience.',
+        route,
+        resolved: stars >= 4,
+      });
+      logAudit(`REVIEW:${tbl.id}`, 'crm:reviews', `Rated ${stars}.0 ★ -> ${route}`);
+      showToast(`Submitted ${stars}★ Review`, route, stars >= 4 ? 'success' : 'alert');
+      renderAll();
+    }
+
+    // =====================================================================
+    // 6. FLOOR, KDS, MENU & RBAC ACTIONS
+    // =====================================================================
+    function setFloorZone(z) {
+      DB.floorZone = z;
+      renderFloorWorkspace();
+    }
+
+    function selectTable(id) {
+      DB.selectedTableId = id;
+      renderFloorWorkspace();
+    }
+
+    function toggleCaptainApproval() {
+      DB.policies.captainApproval = !DB.policies.captainApproval;
+      showToast(`Captain Approval ${DB.policies.captainApproval ? 'ENABLED' : 'DISABLED'}`, DB.policies.captainApproval ? 'QR orders now require waiter 1-tap dispatch.' : 'QR orders auto-fire directly to KDS.', 'beam');
+      renderAll();
+    }
+
+    function claimAndResolveHelp(tableId) {
+      const tbl = getTable(tableId);
+      if (!tbl) return;
+      const req = tbl.helpRequest || 'Assistance';
+      tbl.helpRequest = null;
+      tbl.status = tbl.placed.length > 0 ? 'EATING' : 'ORDERING';
+      tbl.assignedWaiter = `${DB.activeRole} (Resolved 7s)`;
+      logAudit(`FOH:${DB.activeRole}`, 'outlet:floor', `Resolved "${req}" at ${tbl.label} in 7 sec.`);
+      showToast(`${tbl.label} Alert Resolved ✓`, `Attended "${req}"`, 'success');
+      renderAll();
+    }
+
+    function rotateTableQr(tableId) {
+      if (!requirePermission('tables.rotate_qr', 'rotate table QR tokens')) return;
+      const tbl = getTable(tableId);
+      if (!tbl) return;
+      const rand = Math.random().toString(36).substring(2, 6);
+      tbl.qrToken = `pb_${tableId.toLowerCase()}_${rand}`;
+      if (tableId === DB.guestTableId) DB.qrRevokedWarning = true;
+      logAudit(`SEC:${DB.activeRole}`, 'qr:rotate', `Rotated signed QR for ${tbl.label} -> ${tbl.qrToken}. Old stickers invalidated.`);
+      showToast(`${tbl.label} QR Token Rotated 🔐`, `New token: ${tbl.qrToken}. Guest phone shows revoked state.`, 'alert');
+      renderAll();
+    }
+
+    function rescanGuestQr() {
+      DB.qrRevokedWarning = false;
+      showToast('New Signed QR Scanned ✓', 'Authenticated fresh session token.', 'success');
+      renderGuestPhone();
+    }
+
+    function resetTableSession(tableId) {
+      const tbl = getTable(tableId);
+      if (!tbl) return;
+      tbl.status = 'AVAILABLE';
+      tbl.guests = 0;
+      tbl.names = 'Vacant';
+      tbl.helpRequest = null;
+      tbl.assignedWaiter = null;
+      tbl.cart = [];
+      tbl.placed = [];
+      tbl.paid = false;
+      tbl.review = null;
+      logAudit(`FOH:${DB.activeRole}`, 'outlet:floor', `Cleared ${tbl.label} & reset session.`);
+      showToast(`${tbl.label} Cleared`, 'Ready for next seating.', 'beam');
+      renderAll();
+    }
+
+    function bumpKds(ticketId) {
+      if (!requirePermission('kds.bump_tickets', 'bump KDS tickets')) return;
+      const idx = DB.kdsTickets.findIndex(k => k.id === ticketId);
+      if (idx === -1) return;
+      const tkt = DB.kdsTickets[idx];
+      const tbl = getTable(tkt.tableId);
+
+      if (tkt.status === 'COOKING') {
+        tkt.status = 'READY';
+        if (tbl) tbl.placed.forEach(p => { if (p.station === tkt.station && p.status === 'COOKING') p.status = 'READY'; });
+        AudioEngine.play('ready');
+        logAudit(`KDS:${DB.activeRole}`, `station:${tkt.station}`, `${tkt.id} (${tkt.tableId}) marked READY.`);
+        showToast(`${tkt.id} Ready at Pass! 🔔`, `${tkt.tableId} guest phone updated live.`, 'success');
+      } else {
+        if (tbl) tbl.placed.forEach(p => { if (p.station === tkt.station && p.status !== 'SERVED') p.status = 'SERVED'; });
+        DB.lastBumpedTickets.unshift(tkt);
+        DB.kdsTickets.splice(idx, 1);
+        logAudit(`KDS:${DB.activeRole}`, `station:${tkt.station}`, `${tkt.id} bumped to SERVED.`);
+        showToast(`${tkt.id} Served ✓`, 'Use "Recall Last" if bumped accidentally.', 'beam');
+      }
+      renderAll();
+    }
+
+    function recallLastBumped() {
+      if (!requirePermission('kds.bump_tickets', 'recall KDS tickets')) return;
+      if (DB.lastBumpedTickets.length === 0) return;
+      const restored = DB.lastBumpedTickets.shift();
+      restored.status = 'COOKING';
+      DB.kdsTickets.unshift(restored);
+      logAudit(`KDS:${DB.activeRole}`, `station:${restored.station}`, `Recalled ${restored.id} back to KDS screen.`);
+      showToast(`Recalled ${restored.id} ↩`, 'Ticket restored to active KDS column.', 'beam');
+      renderAll();
+    }
+
+    function fireSimulatedRush() {
+      const stations = ['Tandoor', 'Curry', 'Drinks'];
+      const st = stations[Math.floor(Math.random() * stations.length)];
+      const samples = {
+        Tandoor: ['Tandoori Paneer Tikka (Spicy) ×1', 'Garlic Naan ×4'],
+        Curry: ['Paneer Makhani (Medium) ×2', 'Smoked Chicken Biryani ×1'],
+        Drinks: ['Mango Lassi ×2', 'Warm Gulab Jamun ×2'],
+      };
+      DB.shift.kotSeq += 1;
+      DB.shift.ordersToday += 1;
+      const id = `KOT-${DB.shift.kotSeq}`;
+      DB.kdsTickets.unshift({
+        id,
+        tableId: ['T1', 'T3', 'T6'][Math.floor(Math.random() * 3)],
+        station: st,
+        items: samples[st],
+        elapsedSec: 1,
+        targetSec: 420,
+        status: 'COOKING',
+      });
+      AudioEngine.play('order');
+      logAudit('POS:RUSH', `station:${st}`, `Simulated rush ticket ${id} dispatched to ${st}.`);
+      renderAll();
+    }
+
+    function previewThermalKot(ticketId) {
+      const tkt = DB.kdsTickets.find(k => k.id === ticketId);
+      if (!tkt) return;
+      document.getElementById('thermal-content').innerHTML = `
+        <div class="text-center border-b-2 border-dashed border-zinc-400 pb-2 mb-2">
+          <div class="font-black text-sm">*** KITCHEN ORDER TICKET ***</div>
+          <div class="text-[11px]">STATION: ${tkt.station.toUpperCase()} • 80mm ESC/POS</div>
+        </div>
+        <div class="flex justify-between font-bold mb-2">
+          <span>TABLE: ${tkt.tableId}</span><span>${tkt.id}</span>
+        </div>
+        <div class="text-[10px] text-zinc-600 mb-2">TIME: ${new Date().toLocaleTimeString()} • TCP 192.168.1.40:9100</div>
+        <div class="border-y border-dashed border-zinc-400 py-2 my-2 space-y-1.5 font-bold text-sm">
+          ${tkt.items.map(it => `<div>[ ] ${it}</div>`).join('')}
+        </div>
+        <div class="text-center text-[10px] text-zinc-500 mt-3">-- AUTO-CUT PAPER PULSE SENT --</div>
+      `;
+      openModal('modal-thermal');
+    }
+
+    function previewThermalInvoice(tableId) {
+      const tbl = getTable(tableId);
+      if (!tbl) return;
+      const b = calcTableBill(tbl);
+      document.getElementById('thermal-content').innerHTML = `
+        <div class="text-center border-b-2 border-dashed border-zinc-400 pb-2 mb-2">
+          <div class="font-black text-base">ZAIKA HOSPITALITY</div>
+          <div class="text-[10px]">GSTIN: 23AABCP9821F1Z5</div>
+          <div class="text-[10px]">TAX INVOICE #PB-${DB.shift.invoiceSeq}</div>
+        </div>
+        <div class="flex justify-between text-[11px] mb-2">
+          <span>Table: ${tbl.id}</span><span>${new Date().toLocaleDateString()}</span>
+        </div>
+        <div class="border-y border-dashed border-zinc-400 py-2 my-2 space-y-1">
+          ${tbl.placed.map(i => `<div class="flex justify-between"><span>${i.qty}x ${i.name}</span><span>${fmtINR(i.unitMinor * i.qty)}</span></div>`).join('')}
+        </div>
+        <div class="space-y-1 text-[11px]">
+          <div class="flex justify-between"><span>Subtotal</span><span>${fmtINR(b.subtotalMinor)}</span></div>
+          ${b.discountMinor > 0 ? `<div class="flex justify-between"><span>Loyalty Voucher</span><span>-${fmtINR(b.discountMinor)}</span></div>` : ''}
+          <div class="flex justify-between"><span>CGST (2.5%) + SGST (2.5%)</span><span>${fmtINR(b.gstMinor)}</span></div>
+          <div class="flex justify-between"><span>Staff Tip</span><span>${fmtINR(b.tipMinor)}</span></div>
+          <div class="flex justify-between font-black text-sm border-t border-zinc-400 pt-1 mt-1"><span>TOTAL PAID</span><span>${fmtINR(b.grandMinor)}</span></div>
+        </div>
+        <div class="text-center text-[10px] text-zinc-500 mt-3">Mode: ${DB.paymentMethod} • Powered by PlateBeam</div>
+      `;
+      openModal('modal-thermal');
+    }
+
+    function toggleMenuStock(dishId) {
+      if (!requirePermission('menu.toggle_86', 'toggle 86 item stock')) return;
+      const d = DB.menu.find(m => m.id === dishId);
+      if (!d) return;
+      d.available = !d.available;
+      logAudit(`MENU:${DB.activeRole}`, 'menu:86', `${d.name} marked ${d.available ? 'IN STOCK' : '86 SOLD OUT'}.`);
+      showToast(`${d.name}: ${d.available ? 'In Stock ✓' : "86'd Sold Out"}`, 'Guest QR menu updated in <2s.', d.available ? 'success' : 'alert');
+      renderAll();
+    }
+
+    function restockAllInventory() {
+      DB.inventory.forEach(i => { i.qty = Math.max(i.qty, 25); });
+      DB.menu.forEach(m => { m.available = true; });
+      logAudit(`INV:${DB.activeRole}`, 'inventory:restock', 'Restocked all raw ingredients & re-enabled 86’d items.');
+      showToast('Inventory Restocked ✓', 'All ingredients replenished & menu items re-enabled.', 'success');
+      renderAll();
+    }
+
+    function openAddDishModal() {
+      openModal('modal-add-dish');
+    }
+
+    function submitNewDish(e) {
+      e.preventDefault();
+      const name = document.getElementById('new-dish-name').value.trim();
+      const category = document.getElementById('new-dish-cat').value;
+      const station = document.getElementById('new-dish-station').value;
+      const priceMinor = Math.round(Number(document.getElementById('new-dish-price').value) * 100);
+      const prepMins = Number(document.getElementById('new-dish-prep').value);
+      const veg = document.getElementById('new-dish-veg').value === 'true';
+
+      DB.menu.unshift({
+        id: 'm_' + Date.now(),
+        name,
+        category,
+        station,
+        priceMinor,
+        veg,
+        emoji: veg ? '🥗' : '🍗',
+        badge: 'New',
+        desc: 'Freshly published from PlateBeam Menu Builder.',
+        allergens: ['Chef Special'],
+        spice: 'Medium',
+        prepMins,
+        available: true,
+        recipe: [],
+      });
+      closeModal('modal-add-dish');
+      e.target.reset();
+      logAudit(`MENU:${DB.activeRole}`, 'menu:create', `Published new menu item "${name}" (${fmtINR(priceMinor)}).`);
+      showToast(`Published "${name}" ✓`, 'Live immediately on Guest QR Menus!', 'success');
+      renderAll();
+    }
+
+    function openAssistedOrderModal() {
+      const sel = document.getElementById('pos-dish-id');
+      if (sel) {
+        sel.innerHTML = DB.menu.filter(m => m.available).map(m => `<option value="${m.id}">${m.name} — ${fmtINR(m.priceMinor)} (${m.station})</option>`).join('');
+      }
+      openModal('modal-assisted-pos');
+    }
+
+    function fireAssistedOrder() {
+      const tableId = document.getElementById('pos-table-id').value;
+      const dishId = document.getElementById('pos-dish-id').value;
+      const qty = Math.max(1, Number(document.getElementById('pos-qty').value));
+      const tbl = getTable(tableId);
+      const dish = DB.menu.find(m => m.id === dishId);
+      if (!tbl || !dish) return;
+      if (tbl.status === 'AVAILABLE') {
+        tbl.guests = 2;
+        tbl.names = 'Walk-In Party';
+      }
+      dispatchItemsToKitchen(tbl, [{
+        menuId: dish.id,
+        name: dish.name,
+        qty,
+        unitMinor: dish.priceMinor,
+        spice: dish.spice,
+        note: 'POS Assisted',
+        diner: 'Waiter POS',
+        station: dish.station,
+      }], `POS:${DB.activeRole}`);
+      closeModal('modal-assisted-pos');
+      renderAll();
+    }
+
+    function toggleRbacOverride(idx, field) {
+      DB.rbacRules[idx][field] = !DB.rbacRules[idx][field];
+      logAudit(`SEC:${DB.activeRole}`, 'rbac:update', `Toggled ${field} on ${DB.rbacRules[idx].key}.`);
+      renderSecurityWorkspace();
+    }
+
+    function togglePolicy(key) {
+      DB.policies[key] = !DB.policies[key];
+      logAudit(`SEC:${DB.activeRole}`, 'qr:policy', `Set policy ${key} = ${DB.policies[key]}.`);
+      renderAll();
+    }
+
+    // =====================================================================
+    // 7. COMPLETE UI RENDERING PIPELINE
+    // =====================================================================
+    function renderAll() {
+      renderFloorWorkspace();
+      renderKdsWorkspace();
+      renderMenuInventoryWorkspace();
+      renderOwnerWorkspace();
+      renderSecurityWorkspace();
+      renderGuestPhone();
+      updateHeaderBadges();
+    }
+
+    function updateHeaderBadges() {
+      const helpCount = DB.tables.filter(t => t.status === 'HELP').length + DB.pendingApprovals.length;
+      const bFloor = document.getElementById('badge-floor-alerts');
+      if (bFloor) {
+        bFloor.textContent = helpCount;
+        bFloor.classList.toggle('hidden', helpCount === 0);
+      }
+
+      const bKds = document.getElementById('badge-kds-count');
+      if (bKds) bKds.textContent = DB.kdsTickets.length;
+
+      const lowStock = DB.inventory.some(i => i.qty <= i.reorder);
+      const bStock = document.getElementById('badge-low-stock');
+      if (bStock) bStock.classList.toggle('hidden', !lowStock);
+
+      const tbl = getTable(DB.guestTableId);
+      const cartQty = tbl ? tbl.cart.reduce((s, c) => s + c.qty, 0) : 0;
+      const bCart = document.getElementById('gtab-cart-badge');
+      const bMob = document.getElementById('badge-guest-mobile');
+      if (bCart) { bCart.textContent = cartQty; bCart.classList.toggle('hidden', cartQty === 0); }
+      if (bMob) { bMob.textContent = cartQty; bMob.classList.toggle('hidden', cartQty === 0); }
+    }
+
+    // 7A. FLOOR MAP WORKSPACE
+    function renderFloorWorkspace() {
+      const capBtn = document.getElementById('btn-captain-mode');
+      if (capBtn) {
+        capBtn.textContent = `Captain Approval: ${DB.policies.captainApproval ? 'ON' : 'OFF'}`;
+        capBtn.className = `px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${DB.policies.captainApproval ? 'bg-beam-500/20 border-beam-500 text-beam-300' : 'bg-obsidian border-white/10 text-zinc-300 hover:border-white/25'}`;
+      }
+
+      // Pending Approvals Queue
+      const appBar = document.getElementById('captain-approval-bar');
+      const appList = document.getElementById('captain-approval-list');
+      if (appBar && appList) {
+        appBar.classList.toggle('hidden', DB.pendingApprovals.length === 0);
+        appList.innerHTML = DB.pendingApprovals.map(req => `
+          <div class="p-3.5 rounded-2xl bg-carbon border border-beam-500/30 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-lg bg-beam-500 text-white text-[11px] font-black">${req.tableId}</span>
+                <span class="text-xs font-bold text-white">${req.items.length} item(s) • ${fmtINR(req.totalMinor)}</span>
+              </div>
+              <div class="text-[11px] text-zinc-400 truncate mt-1">${req.items.map(i => `${i.name} ×${i.qty}`).join(', ')}</div>
+            </div>
+            <button onclick="approvePendingOrder('${req.id}')" class="shrink-0 px-3 py-2 rounded-xl bg-beam-500 hover:bg-beam-400 text-white text-xs font-extrabold active:scale-95">
+              Send to Kitchen →
+            </button>
+          </div>
+        `).join('');
+      }
+
+      // Zone buttons
+      ['ALL', 'Main Hall', 'Patio'].forEach(z => {
+        const zb = document.getElementById(`zone-${z}`);
+        if (zb) zb.className = `zone-btn px-3 py-1 rounded-xl text-xs ${DB.floorZone === z ? 'font-bold bg-white/10 text-white' : 'font-semibold text-zinc-400 hover:text-white'}`;
+      });
+
+      // Floor Table Cards
+      const grid = document.getElementById('floor-grid');
+      const styles = {
+        AVAILABLE: 'border-white/10 bg-carbon text-zinc-400',
+        ORDERING: 'border-blue-500/60 bg-blue-500/10 text-blue-200',
+        EATING: 'border-emerald-500/60 bg-emerald-500/10 text-emerald-200',
+        BILL: 'border-amber-500/60 bg-amber-500/10 text-amber-200',
+        HELP: 'border-red-500 bg-red-500/20 text-red-100 animate-pulse',
+      };
+      const visibleTables = DB.tables.filter(t => DB.floorZone === 'ALL' || t.zone === DB.floorZone);
+      if (grid) {
+        grid.innerHTML = visibleTables.map(t => {
+          const bill = calcTableBill(t);
+          return `
+            <button onclick="selectTable('${t.id}')" class="p-3.5 rounded-2xl border-2 text-left transition-all hover:scale-[1.02] ${styles[t.status]} ${DB.selectedTableId === t.id ? 'ring-2 ring-beam-400 ring-offset-2 ring-offset-obsidian' : ''}">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-base font-black text-white">${t.id}</span>
+                <span class="px-1.5 py-0.5 rounded-md bg-black/35 text-[9px] font-mono font-bold uppercase">${t.status}</span>
+              </div>
+              <div class="text-xs font-semibold text-zinc-100 truncate">${t.names}</div>
+              <div class="flex items-center justify-between text-[10px] font-mono mt-1.5 opacity-80">
+                <span>${t.zone}</span>
+                <span>${bill.grandMinor > 0 ? fmtINR(bill.grandMinor) : 'Open'}</span>
+              </div>
+              ${t.helpRequest ? `<div class="mt-2 px-2 py-1 rounded-lg bg-red-600 text-white text-[10px] font-extrabold truncate">🔔 ${t.helpRequest}</div>` : ''}
+            </button>
+          `;
+        }).join('');
+      }
+
+      // Table Inspector Panel
+      const insp = document.getElementById('table-inspector');
+      const sel = getTable(DB.selectedTableId) || DB.tables[4];
+      const bill = calcTableBill(sel);
+      if (insp && sel) {
+        insp.innerHTML = `
+          <div class="space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-white/10">
+              <div>
+                <div class="text-[11px] font-mono text-beam-400 uppercase">${sel.label} • ${sel.zone}</div>
+                <div class="text-lg font-black text-white">${sel.names}</div>
+              </div>
+              <span class="px-2.5 py-1 rounded-xl bg-white/10 text-xs font-mono font-bold text-white">${sel.status}</span>
+            </div>
+
+            ${sel.helpRequest ? `
+              <div class="p-3.5 rounded-2xl bg-red-500/20 border border-red-500/50 text-red-100 space-y-2">
+                <div class="text-xs font-extrabold">🚨 Guest Service Request: ${sel.helpRequest}</div>
+                <button onclick="claimAndResolveHelp('${sel.id}')" class="w-full py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-obsidian text-xs font-black">
+                  ✓ Claim &amp; Mark Resolved
+                </button>
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="p-2.5 rounded-xl bg-obsidian border border-white/5">
+                <div class="text-[10px] text-zinc-400">Signed QR Token</div>
+                <div class="font-mono font-bold text-beam-300 mt-0.5">${sel.qrToken}</div>
+              </div>
+              <div class="p-2.5 rounded-xl bg-obsidian border border-white/5">
+                <div class="text-[10px] text-zinc-400">Running Tab</div>
+                <div class="font-mono font-bold text-white mt-0.5">${fmtINR(bill.grandMinor)}</div>
+              </div>
+            </div>
+
+            <div>
+              <div class="text-[10px] font-bold uppercase text-zinc-400 mb-2">Active Order Items (${sel.placed.length})</div>
+              <div class="space-y-1.5 max-h-[175px] overflow-y-auto no-scrollbar">
+                ${sel.placed.length === 0
+                  ? `<div class="text-xs text-zinc-500 italic py-2">No active orders on this table.</div>`
+                  : sel.placed.map(p => `
+                    <div class="p-2 rounded-xl bg-obsidian border border-white/5 flex items-center justify-between text-xs">
+                      <span class="text-zinc-200 truncate">${p.name} ×${p.qty}</span>
+                      <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold ${p.status === 'COOKING' ? 'bg-amber-500/20 text-amber-300' : p.status === 'READY' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/10 text-zinc-400'}">${p.status}</span>
+                    </div>
+                  `).join('')
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 pt-4 mt-4 border-t border-white/10">
+            <button onclick="rotateTableQr('${sel.id}')" class="py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-bold text-zinc-200">
+              🔐 Rotate QR
+            </button>
+            <button onclick="previewThermalInvoice('${sel.id}')" class="py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-bold text-zinc-200" ${sel.placed.length === 0 ? 'disabled' : ''}>
+              🧾 Print Bill
+            </button>
+            <button onclick="switchGuestTable('${sel.id}')" class="py-2 rounded-xl bg-beam-500/15 hover:bg-beam-500/25 border border-beam-500/30 text-[11px] font-bold text-beam-300">
+              📱 Open on Phone
+            </button>
+            <button onclick="resetTableSession('${sel.id}')" class="py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-[11px] font-bold text-red-300">
+              Clear Table
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    // 7B. KITCHEN KDS WORKSPACE
+    function renderKdsWorkspace() {
+      const recallBtn = document.getElementById('btn-kds-recall');
+      if (recallBtn) recallBtn.disabled = DB.lastBumpedTickets.length === 0;
+
+      ['Tandoor', 'Curry', 'Drinks'].forEach(st => {
+        const col = document.getElementById(`kds-col-${st}`);
+        const cnt = document.getElementById(`kds-cnt-${st}`);
+        const list = DB.kdsTickets.filter(k => k.station === st);
+        if (cnt) cnt.textContent = list.length;
+        if (!col) return;
+
+        if (list.length === 0) {
+          col.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-zinc-600 font-mono text-xs py-20"><span>✓</span><span class="mt-1">Station Clear</span></div>`;
+          return;
+        }
+
+        col.innerHTML = list.map(k => {
+          const pct = k.elapsedSec / k.targetSec;
+          const timerClass = k.status === 'READY'
+            ? 'bg-emerald-500/20 text-emerald-300'
+            : pct >= 0.85 ? 'bg-red-500/25 text-red-300 animate-pulse' : pct >= 0.55 ? 'bg-amber-500/20 text-amber-300' : 'bg-white/10 text-zinc-200';
+          return `
+            <div class="p-3.5 rounded-2xl bg-obsidian border ${k.status === 'READY' ? 'border-emerald-500/60' : pct >= 0.85 ? 'border-red-500/60' : 'border-white/10'} space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded-lg bg-beam-500 text-white text-xs font-black">${k.tableId}</span>
+                  <span class="font-mono text-xs text-zinc-400">${k.id}</span>
+                </div>
+                <span class="px-2 py-0.5 rounded-lg font-mono text-xs font-bold ${timerClass}">${fmtTimer(k.elapsedSec)}</span>
+              </div>
+              <ul class="space-y-1 text-xs font-bold text-zinc-100">
+                ${k.items.map(line => `<li class="leading-snug">• ${line}</li>`).join('')}
+              </ul>
+              <div class="flex gap-2">
+                <button onclick="bumpKds('${k.id}')" class="flex-1 py-2 rounded-xl text-xs font-black active:scale-95 transition-all ${k.status === 'COOKING' ? 'bg-amber-500 hover:bg-amber-400 text-obsidian' : 'bg-emerald-500 hover:bg-emerald-400 text-obsidian'}">
+                  ${k.status === 'COOKING' ? 'Mark Ready ✓' : 'Bump Served →'}
+                </button>
+                <button onclick="previewThermalKot('${k.id}')" title="Preview 80mm ESC/POS Thermal KOT" class="px-2.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-zinc-300">
+                  🖨️
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      });
+    }
+
+    // 7C. MENU & INVENTORY WORKSPACE
+    function renderMenuInventoryWorkspace() {
+      const mList = document.getElementById('menu-admin-list');
+      if (mList) {
+        mList.innerHTML = DB.menu.map(m => `
+          <div class="p-3 rounded-2xl bg-obsidian border border-white/5 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="text-2xl shrink-0">${m.emoji}</span>
+              <div class="min-w-0">
+                <div class="text-xs font-extrabold text-white truncate">${m.name}</div>
+                <div class="text-[11px] font-mono text-zinc-400">${m.category} • ${m.station} KDS • ${fmtINR(m.priceMinor)}</div>
+              </div>
+            </div>
+            <button onclick="toggleMenuStock('${m.id}')" class="shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-extrabold border transition-all ${m.available ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/25' : 'bg-red-500/20 border-red-500/40 text-red-300 hover:bg-red-500/30'}">
+              ${m.available ? '● In Stock' : "✕ 86'd Out"}
+            </button>
+          </div>
+        `).join('');
+      }
+
+      const iList = document.getElementById('inventory-list');
+      if (iList) {
+        iList.innerHTML = DB.inventory.map(inv => {
+          const isLow = inv.qty <= inv.reorder;
+          const pct = Math.min(100, Math.round((inv.qty / 30) * 100));
+          return `
+            <div class="p-3 rounded-2xl bg-obsidian border ${isLow ? 'border-amber-500/50' : 'border-white/5'} space-y-2">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-bold text-zinc-200">${inv.name}</span>
+                <span class="font-mono font-bold ${isLow ? 'text-amber-400' : 'text-emerald-400'}">${inv.qty} ${inv.unit}</span>
+              </div>
+              <div class="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div class="h-full rounded-full ${isLow ? 'bg-amber-500' : 'bg-emerald-500'}" style="width:${pct}%"></div>
+              </div>
+              ${isLow ? `<div class="text-[10px] font-mono text-amber-400">⚠ Below reorder threshold (${inv.reorder})</div>` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // 7D. OWNER BI & SHIFT REGISTER WORKSPACE
+    function renderOwnerWorkspace() {
+      const occ = DB.tables.filter(t => t.status !== 'AVAILABLE').length;
+      const kpi = document.getElementById('owner-kpi-grid');
+      if (kpi) {
+        kpi.innerHTML = `
+          <div class="p-4 rounded-3xl bg-carbon border border-white/10">
+            <div class="text-[11px] font-mono text-zinc-400 uppercase">Table Occupancy</div>
+            <div class="text-2xl sm:text-3xl font-black text-white mt-1">${occ} / ${DB.tables.length}</div>
+            <div class="text-[11px] text-emerald-400 font-semibold mt-1">${Math.round((occ / DB.tables.length) * 100)}% Active Floor</div>
+          </div>
+          <div class="p-4 rounded-3xl bg-carbon border border-white/10">
+            <div class="text-[11px] font-mono text-zinc-400 uppercase">Live Orders</div>
+            <div class="text-2xl sm:text-3xl font-black text-white mt-1">${DB.shift.ordersToday}</div>
+            <div class="text-[11px] text-beam-400 font-semibold mt-1">${DB.kdsTickets.length} active in KDS</div>
+          </div>
+          <div class="p-4 rounded-3xl bg-carbon border border-white/10">
+            <div class="text-[11px] font-mono text-zinc-400 uppercase">Net Sales Today</div>
+            <div class="text-2xl sm:text-3xl font-black text-beam-400 mt-1">${fmtINR(DB.shift.netSalesMinor)}</div>
+            <div class="text-[11px] text-zinc-400 font-semibold mt-1">Tips Pool: ${fmtINR(DB.shift.tipsMinor)}</div>
+          </div>
+          <div class="p-4 rounded-3xl bg-carbon border border-white/10">
+            <div class="text-[11px] font-mono text-zinc-400 uppercase">Avg. Prep SLA</div>
+            <div class="text-2xl sm:text-3xl font-black text-emerald-400 mt-1">8.2m</div>
+            <div class="text-[11px] text-zinc-400 font-semibold mt-1">96.8% On-Time</div>
+          </div>
+        `;
+      }
+
+      const chart = document.getElementById('owner-revenue-chart');
+      if (chart) {
+        const bars = [
+          { hr: '5p', pct: 30, val: '₹4.2k', hi: false },
+          { hr: '6p', pct: 52, val: '₹7.8k', hi: false },
+          { hr: '7p', pct: 76, val: '₹11.4k', hi: false },
+          { hr: '8p', pct: 98, val: '₹14.9k', hi: true },
+          { hr: '9p', pct: 68, val: '₹10.2k', hi: false },
+          { hr: 'Now', pct: 46, val: 'Live', hi: false, live: true },
+        ];
+        chart.innerHTML = bars.map(b => `
+          <div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
+            <span class="text-[10px] font-mono ${b.hi ? 'text-beam-300 font-bold' : 'text-zinc-400'}">${b.val}</span>
+            <div class="w-full rounded-t-xl ${b.hi ? 'bg-gradient-to-t from-beam-600 to-beam-400 shadow-beam' : b.live ? 'bg-emerald-500/70 animate-pulse' : 'bg-white/10 hover:bg-beam-500/60 transition-colors'}" style="height:${b.pct}%"></div>
+            <span class="text-[10px] font-mono text-zinc-400">${b.hr}</span>
+          </div>
+        `).join('');
+      }
+
+      const mix = document.getElementById('owner-payment-mix');
+      if (mix) {
+        const tot = Math.max(1, DB.shift.upiMinor + DB.shift.cardMinor + DB.shift.cashMinor);
+        const uPct = Math.round((DB.shift.upiMinor / tot) * 100);
+        const cPct = Math.round((DB.shift.cardMinor / tot) * 100);
+        const kPct = Math.max(0, 100 - uPct - cPct);
+        mix.innerHTML = `
+          <div class="flex justify-between text-[11px] font-mono text-zinc-300 mb-2">
+            <span>UPI ${uPct}%</span><span>Cards/ApplePay ${cPct}%</span><span>Cash ${kPct}%</span>
+          </div>
+          <div class="w-full h-2.5 rounded-full overflow-hidden flex bg-obsidian">
+            <div class="bg-beam-500" style="width:${uPct}%"></div>
+            <div class="bg-sky-500" style="width:${cPct}%"></div>
+            <div class="bg-emerald-500" style="width:${kPct}%"></div>
+          </div>
+        `;
+      }
+
+      const zPanel = document.getElementById('shift-zreport-panel');
+      if (zPanel) {
+        const expectedCash = DB.shift.openingFloatMinor + DB.shift.cashMinor;
+        zPanel.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-sm font-extrabold text-white">Shift Register &amp; Z-Report</h2>
+              <span class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 font-mono text-[10px] font-bold">SHIFT #14 OPEN</span>
+            </div>
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between p-2.5 rounded-xl bg-obsidian border border-white/5"><span class="text-zinc-400">Opening Cash Float</span><span class="font-mono font-bold text-white">${fmtINR(DB.shift.openingFloatMinor)}</span></div>
+              <div class="flex justify-between p-2.5 rounded-xl bg-obsidian border border-white/5"><span class="text-zinc-400">Cash Sales Collected</span><span class="font-mono font-bold text-emerald-400">${fmtINR(DB.shift.cashMinor)}</span></div>
+              <div class="flex justify-between p-2.5 rounded-xl bg-obsidian border border-white/5"><span class="text-zinc-400">Digital (UPI + Card)</span><span class="font-mono font-bold text-sky-400">${fmtINR(DB.shift.upiMinor + DB.shift.cardMinor)}</span></div>
+              <div class="flex justify-between p-2.5 rounded-xl bg-obsidian border border-beam-500/30"><span class="font-bold text-white">Expected Cash Drawer</span><span class="font-mono font-black text-beam-400">${fmtINR(expectedCash)}</span></div>
+            </div>
+          </div>
+          <button onclick="showToast('Z-Report Exported (CSV/PDF) ✓','Reconciled Shift #14 ledger saved for Tally/GST filing.','success')" class="mt-4 w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-xs font-bold text-white">
+            Export End-of-Day Z-Report ↓
+          </button>
+        `;
+      }
+
+      const revGrid = document.getElementById('owner-reviews-grid');
+      if (revGrid) {
+        revGrid.innerHTML = DB.reviews.slice(0, 6).map(r => `
+          <div class="p-3.5 rounded-2xl bg-obsidian border ${r.rating <= 3 ? 'border-red-500/50 bg-red-500/5' : 'border-white/5'}">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-bold text-white">${r.guest}</span>
+              <span class="text-xs font-bold ${r.rating <= 3 ? 'text-red-400' : 'text-amber-400'}">${'★'.repeat(r.rating)}</span>
+            </div>
+            <p class="text-xs text-zinc-400 leading-relaxed">"${r.text}"</p>
+            <div class="text-[10px] font-mono mt-2 ${r.rating <= 3 ? 'text-red-400 font-bold' : 'text-beam-400'}">${r.route}</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // 7E. RBAC & AUDIT WORKSPACE
+    function renderSecurityWorkspace() {
+      const mat = document.getElementById('rbac-matrix');
+      if (mat) {
+        mat.innerHTML = DB.rbacRules.map((r, idx) => {
+          const def = Boolean(r.roleDefaults[DB.activeRole]);
+          const effective = hasPermission(r.key);
+          return `
+            <div class="p-3 rounded-2xl bg-obsidian border border-white/5 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div>
+                <div class="font-bold text-white">${r.label}</div>
+                <div class="text-[10px] font-mono text-zinc-500">${r.key} • Default (${DB.activeRole}): ${def ? 'ALLOW' : 'NONE'}</div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button onclick="toggleRbacOverride(${idx},'userGrant')" class="px-2 py-1 rounded-lg text-[10px] font-bold border ${r.userGrant ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300' : 'bg-white/5 border-white/10 text-zinc-400'}">+Grant</button>
+                <button onclick="toggleRbacOverride(${idx},'userDeny')" class="px-2 py-1 rounded-lg text-[10px] font-bold border ${r.userDeny ? 'bg-red-500/25 border-red-500 text-red-300' : 'bg-white/5 border-white/10 text-zinc-400'}">−Deny</button>
+                <span class="w-16 text-center px-2 py-1 rounded-lg font-mono text-[10px] font-black ${effective ? 'bg-emerald-500 text-obsidian' : 'bg-red-500 text-white'}">${effective ? 'ALLOW' : 'DENY'}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const pol = document.getElementById('qr-policy-list');
+      if (pol) {
+        const items = [
+          { key: 'signedQrTokens', title: 'Signed Opaque QR URLs', desc: 'Prevents manual table URL tampering.' },
+          { key: 'captainApproval', title: 'Captain Approval Mode', desc: 'Waiter confirms QR orders before kitchen fire.' },
+          { key: 'geofence100m', title: '100m Venue Geofence Check', desc: 'Blocks remote prank orders outside venue.' },
+          { key: 'payFirstTakeaway', title: 'Pay-First Counter Tokens', desc: 'Requires UPI/Card settlement before QSR KOT.' },
+        ];
+        pol.innerHTML = items.map(p => `
+          <div class="p-3 rounded-2xl bg-obsidian border border-white/5 flex items-center justify-between gap-3">
+            <div>
+              <div class="text-xs font-bold text-white">${p.title}</div>
+              <div class="text-[11px] text-zinc-400">${p.desc}</div>
+            </div>
+            <button onclick="togglePolicy('${p.key}')" class="shrink-0 px-3 py-1 rounded-xl font-mono text-[10px] font-black ${DB.policies[p.key] ? 'bg-beam-500 text-white' : 'bg-white/10 text-zinc-400'}">
+              ${DB.policies[p.key] ? 'ON' : 'OFF'}
+            </button>
+          </div>
+        `).join('');
+      }
+
+      const logEl = document.getElementById('audit-log-stream');
+      if (logEl) {
+        logEl.innerHTML = DB.auditLogs.map(l => `
+          <div class="p-2 rounded-xl bg-obsidian border border-white/5 flex items-start gap-2">
+            <span class="text-zinc-500 shrink-0">${l.time}</span>
+            <span class="px-1.5 py-0.5 rounded bg-white/10 text-zinc-200 shrink-0">${l.actor}</span>
+            <span class="px-1.5 py-0.5 rounded bg-beam-500/15 text-beam-300 shrink-0">${l.room}</span>
+            <span class="text-zinc-300">${l.msg}</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    // 7F. GUEST QR PHONE SIMULATOR
+    function renderGuestPhone() {
+      const tbl = getTable(DB.guestTableId);
+      const vp = document.getElementById('guest-viewport');
+      if (!tbl || !vp) return;
+
+      document.getElementById('phone-qr-token').textContent = tbl.qrToken;
+      document.getElementById('phone-table-pill').textContent = tbl.label.toUpperCase();
+      document.getElementById('phone-session-sub').textContent = `${tbl.names} • Ordering as ${DB.guestDiner}`;
+      document.getElementById('guest-table-select').value = tbl.id;
+
+      // Update Phone Bottom Tab Styles
+      ['menu', 'cart', 'track', 'waiter', 'bill'].forEach(t => {
+        const el = document.getElementById(`gtab-${t}`);
+        if (!el) return;
+        el.className = t === DB.guestTab
+          ? 'flex flex-col items-center py-1 rounded-xl text-beam-600 bg-beam-50 font-bold relative'
+          : 'flex flex-col items-center py-1 rounded-xl text-zinc-500 hover:bg-zinc-100 relative';
+      });
+
+      // If QR Token was rotated from Floor Map, show security lock screen!
+      if (DB.qrRevokedWarning) {
+        vp.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-center p-4 space-y-3">
+            <div class="w-14 h-14 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-2xl">🔐</div>
+            <h4 class="font-black text-base text-zinc-900">QR Session Rotated</h4>
+            <p class="text-xs text-zinc-500">Staff rotated ${tbl.label}'s signed token to <span class="font-mono font-bold text-zinc-800">${tbl.qrToken}</span> for anti-spoofing protection.</p>
+            <button onclick="rescanGuestQr()" class="px-5 py-2.5 rounded-2xl bg-beam-500 text-white text-xs font-extrabold shadow-lg">
+              📷 Scan Fresh Table QR
+            </button>
+          </div>`;
+        return;
+      }
+
+      // TAB 1: MENU
+      if (DB.guestTab === 'menu') {
+        const cats = ['All', 'Starters', 'Mains', 'Breads', 'Drinks', 'Desserts'];
+        const list = DB.menu.filter(m => {
+          if (DB.guestCategory !== 'All' && m.category !== DB.guestCategory) return false;
+          if (DB.guestVegOnly && !m.veg) return false;
+          if (DB.guestSearch && !m.name.toLowerCase().includes(DB.guestSearch.toLowerCase())) return false;
+          return true;
+        });
+        const cartQty = tbl.cart.reduce((s, c) => s + c.qty, 0);
+        const cartTotal = tbl.cart.reduce((s, c) => s + c.unitMinor * c.qty, 0);
+
+        vp.innerHTML = `
+          <div class="flex gap-1.5">
+            <input type="text" value="${DB.guestSearch}" oninput="DB.guestSearch=this.value;renderGuestPhone()" placeholder="Search dishes..." class="flex-1 px-3 py-1.5 rounded-xl bg-white border border-zinc-200 text-xs text-zinc-900 focus:outline-none focus:border-beam-500" />
+            <button onclick="DB.guestVegOnly=!DB.guestVegOnly;renderGuestPhone()" class="px-2.5 py-1.5 rounded-xl text-[11px] font-bold border ${DB.guestVegOnly ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-700 border-emerald-200'}">● Veg</button>
+          </div>
+
+          <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+            ${cats.map(c => `<button onclick="DB.guestCategory='${c}';renderGuestPhone()" class="px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap ${DB.guestCategory === c ? 'bg-beam-500 text-white' : 'bg-white text-zinc-600 border border-zinc-200'}">${c}</button>`).join('')}
+          </div>
+
+          <!-- Upsell Deal Strip -->
+          <div class="p-2.5 rounded-2xl bg-gradient-to-r from-beam-50 to-amber-50 border border-beam-200 flex items-center justify-between gap-2">
+            <div>
+              <div class="text-[9px] font-black uppercase text-beam-600">⚡ Combo Deal</div>
+              <div class="text-[11px] font-bold text-zinc-900">Mango Lassi ₹99 <span class="line-through text-zinc-400 font-normal">₹120</span></div>
+            </div>
+            <button onclick="quickAddUpsell('m6')" class="px-2.5 py-1 rounded-xl bg-beam-500 text-white text-[11px] font-extrabold">+ Add</button>
+          </div>
+
+          <div class="space-y-2.5">
+            ${list.map(m => `
+              <div class="p-2.5 rounded-2xl bg-white border border-zinc-200/90 flex gap-2.5 ${!m.available ? 'opacity-55 grayscale' : ''}">
+                <div class="w-14 h-14 rounded-xl bg-cream border border-zinc-200 flex items-center justify-center text-2xl shrink-0 relative">
+                  ${m.emoji}
+                  <span class="absolute -top-1 -left-1 w-3.5 h-3.5 rounded bg-white border ${m.veg ? 'border-emerald-600' : 'border-red-600'} flex items-center justify-center">
+                    <span class="w-1.5 h-1.5 rounded-full ${m.veg ? 'bg-emerald-600' : 'bg-red-600'}"></span>
+                  </span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-start justify-between gap-1">
+                    <div class="font-extrabold text-xs text-zinc-900 leading-tight">${m.name}</div>
+                    <div class="font-extrabold text-xs text-zinc-900 shrink-0">${fmtINR(m.priceMinor)}</div>
+                  </div>
+                  <p class="text-[10px] text-zinc-500 mt-0.5 line-clamp-2">${m.desc}</p>
+                  <div class="mt-2 flex items-center justify-between">
+                    <span class="text-[10px] text-zinc-400">🌶 ${m.spice} • ~${m.prepMins}m</span>
+                    ${m.available
+                      ? `<button onclick="openDishCustomizer('${m.id}')" class="px-3 py-1 rounded-xl bg-zinc-900 hover:bg-beam-500 text-white text-[11px] font-bold transition-colors">+ Customize</button>`
+                      : `<span class="px-2 py-0.5 rounded-lg bg-red-100 text-red-700 text-[9px] font-black">86'D OUT</span>`
+                    }
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          ${cartQty > 0 ? `
+            <button onclick="setGuestTab('cart')" class="w-full py-2.5 px-3.5 rounded-2xl bg-zinc-900 text-white flex items-center justify-between shadow-lg sticky bottom-0">
+              <span class="text-xs font-bold">${cartQty} item(s) • ${fmtINR(cartTotal)}</span>
+              <span class="text-xs font-extrabold text-beam-400">Review Cart →</span>
+            </button>
+          ` : ''}
+        `;
+      }
+
+      // TAB 2: COLLABORATIVE CART
+      else if (DB.guestTab === 'cart') {
+        const sub = tbl.cart.reduce((s, c) => s + c.unitMinor * c.qty, 0);
+        vp.innerHTML = `
+          <div class="flex items-center justify-between">
+            <h4 class="font-black text-sm text-zinc-900">${tbl.label} Shared Cart</h4>
+            <button onclick="setGuestTab('menu')" class="text-xs font-bold text-beam-600">+ Add More</button>
+          </div>
+          ${tbl.cart.length === 0 ? `
+            <div class="p-6 text-center rounded-2xl bg-white border border-zinc-200">
+              <div class="text-2xl mb-1">🛒</div>
+              <div class="text-xs font-bold text-zinc-800">Cart is empty</div>
+              <button onclick="setGuestTab('menu')" class="mt-3 px-4 py-1.5 rounded-xl bg-beam-500 text-white text-xs font-bold">Browse Menu</button>
+            </div>
+          ` : `
+            <div class="space-y-2">
+              ${tbl.cart.map((c, idx) => `
+                <div class="p-2.5 rounded-2xl bg-white border border-zinc-200 flex items-center justify-between gap-2">
+                  <div class="min-w-0">
+                    <div class="text-xs font-extrabold text-zinc-900 truncate">${c.name}</div>
+                    <div class="text-[10px] text-zinc-500">${c.diner} • ${c.size} • ${c.spice} • ${fmtINR(c.unitMinor)}</div>
+                  </div>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <button onclick="changeCartQty(${idx},-1)" class="w-6 h-6 rounded-lg bg-zinc-100 font-bold text-xs">−</button>
+                    <span class="text-xs font-bold w-4 text-center">${c.qty}</span>
+                    <button onclick="changeCartQty(${idx},1)" class="w-6 h-6 rounded-lg bg-beam-50 text-beam-600 font-bold text-xs">+</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+
+            <div class="p-3 rounded-2xl bg-white border border-zinc-200 text-xs space-y-1.5">
+              <div class="flex justify-between text-zinc-600"><span>Round Subtotal</span><span class="font-bold text-zinc-900">${fmtINR(sub)}</span></div>
+              <div class="flex justify-between text-zinc-500 text-[11px]"><span>Dispatch Mode</span><span class="font-mono font-bold text-beam-600">${DB.policies.captainApproval ? 'Captain Review' : 'Direct to KDS'}</span></div>
+            </div>
+
+            <button onclick="submitGuestOrder()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-beam-500 to-beam-600 text-white text-xs font-extrabold shadow-lg active:scale-95">
+              ${DB.policies.captainApproval ? 'Send to Captain for Approval' : 'Beam Order to Kitchen'} • ${fmtINR(sub)} →
+            </button>
+          `}
+        `;
+      }
+
+      // TAB 3: WAIT HUB (Live Countdown + Wi-Fi + Loyalty + Spice Quiz)
+      else if (DB.guestTab === 'track') {
+        const cooking = tbl.placed.filter(p => p.status === 'COOKING').length;
+        const ready = tbl.placed.filter(p => p.status === 'READY').length;
+        const q = DB.quizQuestions[DB.quizIdx];
+
+        vp.innerHTML = `
+          <div class="p-3.5 rounded-2xl bg-zinc-900 text-white text-center">
+            <div class="text-[10px] font-mono uppercase tracking-widest text-beam-400">Live KDS Sync</div>
+            <div class="text-base font-black mt-0.5">${cooking > 0 ? 'Cooking in Kitchen 🔥' : ready > 0 ? 'Ready at the Pass 🍽️' : tbl.placed.length ? 'All Dishes Served ✓' : 'No Active Order'}</div>
+            <div class="text-2xl font-mono font-black text-beam-400 my-1">${cooking > 0 ? '08:45' : '00:00'}</div>
+          </div>
+
+          <div class="p-3 rounded-2xl bg-white border border-zinc-200 space-y-1.5">
+            <div class="text-[10px] font-bold uppercase text-zinc-400">${tbl.label} Live Order Progress</div>
+            ${tbl.placed.length === 0 ? `<div class="text-xs text-zinc-400">Place an order to watch KDS status live.</div>` : tbl.placed.map(p => `
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-semibold text-zinc-800 truncate">${p.name} ×${p.qty}</span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black ${p.status === 'COOKING' ? 'bg-amber-100 text-amber-700' : p.status === 'READY' ? 'bg-emerald-100 text-emerald-700' : 'bg-zinc-100 text-zinc-600'}">${p.status}</span>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div class="p-2.5 rounded-2xl bg-white border border-zinc-200">
+              <div class="text-[9px] font-bold uppercase text-zinc-400">Free Wi-Fi</div>
+              <div class="text-xs font-extrabold text-zinc-900">Zaika_Guest</div>
+              <button onclick="copyWifi()" class="mt-2 w-full py-1.5 rounded-xl text-[10px] font-bold ${DB.wifiCopied ? 'bg-emerald-600 text-white' : 'bg-beam-50 text-beam-600'}">${DB.wifiCopied ? 'Copied ✓' : 'Copy Pass'}</button>
+            </div>
+            <div class="p-2.5 rounded-2xl bg-white border border-zinc-200">
+              <div class="text-[9px] font-bold uppercase text-zinc-400">Rewards</div>
+              <div class="text-xs font-black text-beam-600">${DB.loyaltyPoints} / 200 pts</div>
+              ${DB.loyaltyPoints >= 200 && !DB.loyaltyRedeemed
+                ? `<button onclick="redeemLoyalty()" class="mt-2 w-full py-1.5 rounded-xl bg-beam-500 text-white text-[10px] font-bold">Redeem ₹99</button>`
+                : `<div class="w-full h-1.5 rounded-full bg-zinc-100 mt-2 overflow-hidden"><div class="h-full bg-beam-500" style="width:${Math.min(100, (DB.loyaltyPoints / 200) * 100)}%"></div></div><div class="text-[9px] text-zinc-500 mt-1">${DB.loyaltyRedeemed ? 'Voucher active ✓' : 'Play quiz for pts!'}</div>`
+              }
+            </div>
+          </div>
+
+          <div class="p-3 rounded-2xl bg-zinc-900 text-white space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-extrabold text-beam-300">🎮 Spice Quiz</span>
+              <span class="text-[10px] font-mono bg-white/10 px-2 py-0.5 rounded-md">T5: ${DB.quizScoreT5} vs T2: ${DB.quizScoreT2}</span>
+            </div>
+            <p class="text-[11px] font-semibold leading-snug">${q.q}</p>
+            <div class="space-y-1">
+              ${q.opts.map((o, i) => `<button onclick="answerSpiceQuiz(${i})" class="w-full text-left px-2.5 py-1.5 rounded-xl text-[11px] font-semibold ${DB.quizAnswered ? (i === q.ans ? 'bg-emerald-500 text-white' : 'bg-white/5 text-zinc-400') : 'bg-white/10 hover:bg-beam-500 text-white'}">${o}</button>`).join('')}
+            </div>
+            ${DB.quizAnswered ? `<button onclick="nextSpiceQuiz()" class="w-full py-1.5 rounded-xl bg-beam-500 text-white text-[11px] font-bold">Next Question →</button>` : ''}
+          </div>
+        `;
+      }
+
+      // TAB 4: CALL WAITER
+      else if (DB.guestTab === 'waiter') {
+        vp.innerHTML = `
+          <div class="text-center py-3 space-y-4">
+            <div>
+              <div class="text-[10px] font-bold uppercase text-zinc-400">${tbl.label} Concierge</div>
+              <h4 class="text-lg font-black text-zinc-900">Need something?</h4>
+            </div>
+            <button onclick="triggerGuestHelp('Need Assistance')" class="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-beam-400 to-beam-600 text-white flex flex-col items-center justify-center shadow-beam animate-halo active:scale-95">
+              <span class="text-3xl mb-0.5">🔔</span>
+              <span class="text-xs font-extrabold">Call Waiter</span>
+            </button>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="triggerGuestHelp('Drinking Water')" class="p-2.5 rounded-2xl bg-white border border-zinc-200 text-xs font-bold">💧 Water</button>
+              <button onclick="triggerGuestHelp('Extra Napkins')" class="p-2.5 rounded-2xl bg-white border border-zinc-200 text-xs font-bold">🧻 Napkins</button>
+              <button onclick="triggerGuestHelp('Fresh Cutlery')" class="p-2.5 rounded-2xl bg-white border border-zinc-200 text-xs font-bold">🍴 Cutlery</button>
+              <button onclick="triggerGuestHelp('Request Bill')" class="p-2.5 rounded-2xl bg-white border border-zinc-200 text-xs font-bold">🧾 Request Bill</button>
+            </div>
+            ${tbl.helpRequest ? `<div class="p-2.5 rounded-xl bg-red-50 border border-red-200 text-[11px] font-bold text-red-700">🚨 "${tbl.helpRequest}" live on Floor Map!</div>` : ''}
+          </div>
+        `;
+      }
+
+      // TAB 5: DYNAMIC SPLIT BILL, PAYMENT & 5-STAR REVIEW
+      else if (DB.guestTab === 'bill') {
+        const bill = calcTableBill(tbl);
+        if (tbl.paid) {
+          vp.innerHTML = `
+            <div class="p-4 rounded-2xl bg-white border border-zinc-200 text-center space-y-2.5">
+              <div class="w-11 h-11 mx-auto rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl font-black">✓</div>
+              <div class="text-base font-black text-zinc-900">Settled • ${fmtINR(bill.grandMinor)}</div>
+              <div class="text-[11px] text-zinc-500">Tax Invoice #PB-${DB.shift.invoiceSeq} emailed via ${DB.paymentMethod}</div>
+              <button onclick="previewThermalInvoice('${tbl.id}')" class="px-3.5 py-1.5 rounded-xl bg-zinc-100 text-zinc-800 text-[11px] font-bold">View GST Receipt 🧾</button>
+            </div>
+            <div class="p-4 rounded-2xl bg-white border border-zinc-200 text-center">
+              <div class="text-xs font-black text-zinc-900">Rate your dining experience</div>
+              <div class="flex justify-center gap-1.5 my-3">
+                ${[1, 2, 3, 4, 5].map(s => `<button onclick="submitGuestReview(${s})" class="w-9 h-9 rounded-xl text-lg ${tbl.review && s <= tbl.review ? 'bg-beam-500 text-white' : 'bg-zinc-100 text-zinc-400'}">★</button>`).join('')}
+              </div>
+              ${tbl.review ? `<div class="text-[11px] font-bold ${tbl.review >= 4 ? 'text-emerald-600' : 'text-red-600'}">${tbl.review >= 4 ? 'Posted to Google Reviews ✓' : 'Manager alerted for service recovery!'}</div>` : ''}
+            </div>
+          `;
+        } else {
+          // Compute pay now share based on Equal vs Item-Wise split
+          let payShareMinor = bill.grandMinor;
+          if (DB.splitMode === 'EQUAL') {
+            payShareMinor = Math.ceil(bill.grandMinor / DB.splitWays);
+          } else {
+            const claimedSub = DB.claimedItemIndices.reduce((s, idx) => tbl.placed[idx] ? s + tbl.placed[idx].unitMinor * tbl.placed[idx].qty : s, 0);
+            payShareMinor = Math.round(claimedSub * (1.05 + DB.tipPercent / 100));
+          }
+
+          vp.innerHTML = `
+            <div class="p-3 rounded-2xl bg-white border border-zinc-200 space-y-1.5 text-xs">
+              <div class="flex justify-between font-black text-zinc-900 border-b border-zinc-100 pb-1.5">
+                <span>${tbl.label} Running Bill</span>
+                <span class="font-mono text-zinc-400 text-[10px]">5% GST</span>
+              </div>
+              ${tbl.placed.length === 0 ? `<div class="text-zinc-400 py-2">No items placed yet.</div>` : tbl.placed.map((p, idx) => `
+                <label class="flex items-center justify-between py-0.5 cursor-pointer">
+                  <span class="flex items-center gap-1.5 text-zinc-700 truncate">
+                    ${DB.splitMode === 'ITEMS' ? `<input type="checkbox" ${DB.claimedItemIndices.includes(idx) ? 'checked' : ''} onchange="toggleClaimItem(${idx})" class="accent-beam-500" />` : ''}
+                    ${p.name} ×${p.qty}
+                  </span>
+                  <span class="font-bold text-zinc-900">${fmtINR(p.unitMinor * p.qty)}</span>
+                </label>
+              `).join('')}
+              <div class="pt-2 border-t border-zinc-100 space-y-0.5 text-[11px]">
+                ${bill.discountMinor > 0 ? `<div class="flex justify-between text-emerald-600 font-bold"><span>Loyalty Voucher</span><span>-${fmtINR(bill.discountMinor)}</span></div>` : ''}
+                <div class="flex justify-between text-zinc-500"><span>CGST + SGST (5%)</span><span>${fmtINR(bill.gstMinor)}</span></div>
+                <div class="flex justify-between text-zinc-500"><span>Tip (${DB.tipPercent}%)</span><span>${fmtINR(bill.tipMinor)}</span></div>
+                <div class="flex justify-between font-black text-sm text-zinc-900 pt-1"><span>Grand Total</span><span>${fmtINR(bill.grandMinor)}</span></div>
+              </div>
+            </div>
+
+            <!-- Split Mode Switcher -->
+            <div class="p-3 rounded-2xl bg-white border border-zinc-200 space-y-2.5">
+              <div class="grid grid-cols-2 gap-1.5">
+                <button onclick="DB.splitMode='EQUAL';renderGuestPhone()" class="py-1.5 rounded-xl text-[11px] font-bold ${DB.splitMode === 'EQUAL' ? 'bg-zinc-900 text-white' : 'bg-cream text-zinc-600'}">Split Equally</button>
+                <button onclick="DB.splitMode='ITEMS';renderGuestPhone()" class="py-1.5 rounded-xl text-[11px] font-bold ${DB.splitMode === 'ITEMS' ? 'bg-zinc-900 text-white' : 'bg-cream text-zinc-600'}">Split by Item</button>
+              </div>
+              ${DB.splitMode === 'EQUAL' ? `
+                <div class="grid grid-cols-4 gap-1">
+                  ${[1, 2, 3, 4].map(n => `<button onclick="DB.splitWays=${n};renderGuestPhone()" class="py-1 rounded-lg text-[11px] font-bold border ${DB.splitWays === n ? 'bg-beam-500 text-white border-beam-500' : 'bg-cream text-zinc-700 border-zinc-200'}">${n === 1 ? 'Full' : n + 'x'}</button>`).join('')}
+                </div>
+              ` : `<div class="text-[10px] text-beam-600 font-semibold">Check the dishes above that ${DB.guestDiner} is paying for.</div>`}
+
+              <div class="grid grid-cols-4 gap-1">
+                ${[0, 5, 10, 15].map(p => `<button onclick="DB.tipPercent=${p};renderGuestPhone()" class="py-1 rounded-lg text-[10px] font-bold border ${DB.tipPercent === p ? 'bg-zinc-900 text-white border-zinc-900' : 'bg-cream text-zinc-700 border-zinc-200'}">${p === 0 ? 'No Tip' : p + '% Tip'}</button>`).join('')}
+              </div>
+            </div>
+
+            <!-- Payment Methods -->
+            <div class="grid grid-cols-2 gap-1.5">
+              ${['UPI (GPay / PhonePe)', 'Apple Pay', 'Credit / Debit Card', 'Cash at Counter'].map(m => `
+                <button onclick="DB.paymentMethod='${m}';renderGuestPhone()" class="px-2.5 py-2 rounded-xl border text-[10px] font-bold text-left truncate ${DB.paymentMethod === m ? 'bg-zinc-900 text-white border-zinc-900' : 'bg-white text-zinc-700 border-zinc-200'}">${m}</button>
+              `).join('')}
+            </div>
+
+            <button onclick="settleGuestBill()" ${bill.grandMinor === 0 ? 'disabled' : ''} class="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-extrabold shadow-lg active:scale-95">
+              Pay ${fmtINR(payShareMinor || bill.grandMinor)} via ${DB.paymentMethod.split(' ')[0]} →
+            </button>
+          `;
+        }
+      }
+    }
+
+    // =====================================================================
+    // 8. LIVE KDS TICKER & INITIALIZATION
+    // =====================================================================
+    window.addEventListener('resize', updateSplitLayout);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      updateSplitLayout();
+      renderAll();
+
+      // Tick KDS timers & clock every second
+      setInterval(() => {
+        DB.kdsTickets.forEach(k => {
+          if (k.status === 'COOKING') k.elapsedSec += 1;
+        });
+        const clock = document.getElementById('kds-live-clock');
+        if (clock) clock.textContent = new Date().toTimeString().slice(0, 8);
+        if (DB.workspace === 'kds') renderKdsWorkspace();
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

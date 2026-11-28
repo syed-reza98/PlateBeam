@@ -8,10 +8,10 @@ web
 
 ## Users
 
-- **Dine-in / takeaway guests** on mobile browsers after scanning a table or counter QR — browse menu, customize, multi-round order, wait engagement, call waiter, split & pay, review. Zero app install.
-- **FOH staff (waiter, captain, cashier)** on tablets/phones — live floor map, service alerts, captain approval, assisted POS, shift float.
-- **Kitchen chefs / expediters** on mounted touchscreens — station-routed KOTs, SLA timers, bump/recall.
-- **Owners / managers** on desktop/tablet — live KPIs, menu/86, inventory BOM, RBAC, BI exports.
+- **Dine-in / takeaway guests** on mobile browsers after scanning a table or counter QR — browse menu, customize, multi-round order, wait engagement (live KDS countdown, Wi-Fi, loyalty rewards, Spice Quiz), call waiter, split & pay, review. Zero app install.
+- **FOH staff (waiter, captain, cashier)** on tablets/phones — live floor map, table inspector, service alerts, captain approval, assisted POS, thermal bill preview, shift float & Z-Report.
+- **Kitchen chefs / expediters** on mounted touchscreens — station-routed KOTs (`Tandoor`, `Curry`, `Drinks`, `Bar`), SLA timers, bump/recall, thermal KOT preview, allergen alerts.
+- **Owners / managers** on desktop/tablet — live KPIs, hourly revenue & payment mix, menu engineering, menu builder + instant 86, BOM inventory, 3-layer RBAC & audit stream, QR anti-spoofing policies, guest review recovery.
 - **Platform super-admins** — multi-tenant provisioning and status.
 
 ## Product Purpose
@@ -25,27 +25,27 @@ One synchronized web OS for table QR, FOH floor, station KDS, and owner BI behin
 ## Operating Context
 
 - Peak dinner rush, bright/hot kitchens, shared POS tablets with PIN switch.
-- Guest phones on 4G/venue Wi‑Fi; thermal ESC/POS printers via local print bridge.
-- Demo venue: Zaika Bistro (Gulshan), BDT, GST/VAT tax slabs, South Asia payment rails (SSLCommerz/UPI) plus global adapters.
+- Guest phones on 4G/venue Wi‑Fi; thermal 80mm ESC/POS printers via local print bridge.
+- Demo venue: Zaika Bistro (Main Flagship / Express QSR), multi-currency minor-unit support (BDT / INR / USD), GST/VAT tax slabs, South Asia payment rails (UPI / MFS / SSLCommerz / Razorpay) plus global adapters (Stripe).
 - Staff PINs and HMAC table QR tokens; multi-tenant Supabase Postgres with FORCE RLS (MySQL portable path).
 
 ## Capabilities and Constraints
 
-- Surfaces: `/`, `/login`, `/t/[qrToken]`, `/pos/[outletSlug]`, `/kds/[outletSlug]`, `/dashboard`, `/admin`.
-- Must preserve: PlateBeam product name, existing API contracts and domain services, HMAC QR security, integer minor-unit billing, 3-layer RBAC, KDS high-contrast usability in bright kitchens, offline IndexedDB delta-sync for FOH/KDS.
-- Out of scope this redesign: Nest/Redis rewrite, deep floor merge ledger, full API auth hardening, aggregator delivery.
+- Surfaces: `/`, `/login`, `/t/[qrToken]`, `/pos/[outletSlug]`, `/kds/[outletSlug]`, `/dashboard`, `/admin`, and optional `/demo` split-view simulator.
+- Must preserve: PlateBeam product name, existing `/api/v1` API contracts and domain services, HMAC QR security, integer minor-unit billing, 3-layer RBAC, KDS high-contrast usability in bright kitchens, offline IndexedDB delta-sync for FOH/KDS.
+- Visual system: Defined in [DESIGN.md](file:///home/syed/Workspace/PlateBeam/DESIGN.md) (Obsidian & Beam Orange for operations; Warm Cream for guest QR dining).
 
 ## Brand Commitments
 
 - Product name: **PlateBeam**.
-- Demo brand content: Zaika Bistro & Bar may remain as illustrative venue copy.
-- Visual identity is **fully replaceable** (user-approved redesign): previous Warm Editorial Bistro / saffron / Instrument Serif / Plus Jakarta system is anti-reference only.
+- Demo brand content: Zaika Bistro / Zaika Express may remain as illustrative venue copy.
+- Visual identity follows [DESIGN.md](file:///home/syed/Workspace/PlateBeam/DESIGN.md) and the reference prototype [PlateBeam_OS___Live_Restaurant_Operating_System.html](file:///home/syed/Workspace/PlateBeam/PlateBeam_OS___Live_Restaurant_Operating_System.html).
 
 ## Evidence on Hand
 
-- SRS, concept video specification, implementation plan, walkthrough.
+- SRS, concept video specification, implementation plan, walkthrough, `DESIGN_DIFF_REPORT.md`.
 - Seed script for Zaika Bistro (tables, menu, staff PINs).
-- No production photography pack or custom logo files beyond text mark; do not invent customer testimonials or unverified GMV claims as real proof.
+- Do not invent customer testimonials or unverified GMV claims as real production proof.
 
 ## Product Principles
 
@@ -57,4 +57,4 @@ One synchronized web OS for table QR, FOH floor, station KDS, and owner BI behin
 
 ## Accessibility & Inclusion
 
-Target WCAG 2.2 AA contrast, 44×44px minimum coarse pointer targets, keyboard bump-bar support on KDS, `prefers-reduced-motion`, and themeable light/dark where the surface is not kitchen-mounted.
+Target WCAG 2.2 AA contrast, 44×44px minimum coarse pointer targets, keyboard bump-bar support on KDS (`1–9`, `Space`, `R`), native `<dialog>` and Popover API toasts, and `prefers-reduced-motion`.
