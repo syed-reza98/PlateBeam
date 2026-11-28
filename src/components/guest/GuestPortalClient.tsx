@@ -5,16 +5,17 @@ import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
   BellRing,
+  Clock3,
+  CreditCard,
   QrCode,
-  Receipt,
   RefreshCw,
   ShieldAlert,
   ShoppingBag,
   UtensilsCrossed,
 } from 'lucide-react';
 import { showToast } from '@/components/ui/ToastRegion';
-import { CallWaiterDialog } from './CallWaiterDialog';
-import { CartDrawer } from './CartDrawer';
+import { CartPanel } from './CartPanel';
+import { HelpPanel } from './HelpPanel';
 import { ItemModifierDialog } from './ItemModifierDialog';
 import { MenuBrowser } from './MenuBrowser';
 import { OrderTabTracker } from './OrderTabTracker';
@@ -23,7 +24,6 @@ import { ReceiptReviewDialog } from './ReceiptReviewDialog';
 import { SpiceQuizDialog } from './SpiceQuizDialog';
 import { SplitBillCheckoutDialog } from './SplitBillCheckoutDialog';
 import {
-  formatMoney,
   type BootstrapPayload,
   type GuestCartItem,
   type GuestLeaderboardEntry,
@@ -35,7 +35,19 @@ interface GuestPortalClientProps {
   qrToken: string;
 }
 
-type ActiveTab = 'MENU' | 'TAB';
+type ActiveTab = 'MENU' | 'CART' | 'WAIT' | 'HELP' | 'BILL';
+
+const GUEST_TABS: Array<{
+  id: ActiveTab;
+  label: string;
+  icon: typeof UtensilsCrossed;
+}> = [
+  { id: 'MENU', label: 'Menu', icon: UtensilsCrossed },
+  { id: 'CART', label: 'Cart', icon: ShoppingBag },
+  { id: 'WAIT', label: 'Wait', icon: Clock3 },
+  { id: 'HELP', label: 'Help', icon: BellRing },
+  { id: 'BILL', label: 'Bill', icon: CreditCard },
+];
 
 export const GUEST_THEME_VARS =
   '[--pb-canvas:#FAF7F2] [--pb-surface:#FFFFFF] [--pb-surface-raised:#F4F1EA] [--pb-border:#E4E4E7] [--pb-border-subtle:#F4F4F5] [--pb-ink:#18181B] [--pb-muted:#71717A] [--pb-accent:#FF5412] [--pb-accent-hover:#FF7033] [--pb-accent-ink:#FFFFFF] [--pb-olive:#10B981] [--pb-turmeric:#F59E0B] [--pb-gold:#F59E0B] [--pb-chili:#EF4444]';
@@ -62,8 +74,6 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
     rule: typeof data extends null ? null : NonNullable<typeof data>['upsellRules'][number];
     suggestedItem: GuestMenuItem;
   } | null>(null);
-  const [cartOpen, setCartOpen] = useState(false);
-  const [waiterOpen, setWaiterOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
@@ -297,11 +307,10 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
         return;
       }
 
-      setCartOpen(false);
-      setActiveTab('TAB');
+      setActiveTab('WAIT');
       showToast({
-        title: 'Order sent to kitchen!',
-        description: 'Track live prep progress on your Tab.',
+        title: 'Order beamed to kitchen!',
+        description: 'Track live prep progress on Wait.',
         variant: 'success',
       });
       await fetchBootstrap();
@@ -339,15 +348,6 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
 
   const cartCount = useMemo(
     () => data?.sharedCart.reduce((sum, item) => sum + item.quantity, 0) ?? 0,
-    [data?.sharedCart],
-  );
-
-  const cartTotalMinor = useMemo(
-    () =>
-      data?.sharedCart.reduce(
-        (sum, item) => sum + item.unitPriceMinor * item.quantity,
-        0,
-      ) ?? 0,
     [data?.sharedCart],
   );
 
@@ -463,90 +463,71 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
   }
 
   return (
-    <div className={`${GUEST_THEME_VARS} min-h-dvh bg-[#FAF7F2] pb-28 text-zinc-900`}>
-      {/* Header */}
-      <header className="border-b border-zinc-200/80 bg-white/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3.5">
+    <div className={`${GUEST_THEME_VARS} min-h-dvh bg-[#FAF7F2] pb-[calc(4.75rem+env(safe-area-inset-bottom,0px))] text-zinc-900`}>
+      {/* Guest phone header — Dock cream chrome */}
+      <header className="sticky top-0 z-20 border-b border-zinc-200/90 bg-white/95 backdrop-blur-md">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
           <div className="min-w-0">
-            <div className="flex items-center gap-2.5">
-              <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#FF5412] font-sans text-lg font-black text-white shadow-sm">
-                {data.outlet.name.charAt(0)}
-              </span>
-              <div className="min-w-0">
-                <h1 className="font-sans text-[clamp(1.125rem,1rem+0.9vw,1.375rem)] font-extrabold leading-tight tracking-tight text-zinc-900">
-                  {data.outlet.name}
-                </h1>
-                <p className="mt-0.5 truncate text-xs font-medium text-zinc-500">
-                  {data.table
-                    ? `Table ${data.table.tableNumber}${
-                        data.table.zoneName ? ` · ${data.table.zoneName}` : ''
-                      }`
-                    : 'Counter / Takeaway'}
-                  {' · '}
-                  <span className="text-zinc-700">{guestNickname}</span>
-                </p>
-              </div>
+            <div className="flex items-center gap-1.5">
+              <h1 className="truncate font-sans text-base font-black tracking-tight text-zinc-900">
+                {data.outlet.name}
+                <span className="text-[#FF5412]">.</span>
+              </h1>
+              {data.table && (
+                <span className="shrink-0 rounded-full bg-zinc-900 px-2 py-0.5 text-[10px] font-bold text-white">
+                  TABLE {data.table.tableNumber}
+                </span>
+              )}
             </div>
+            <p className="mt-0.5 truncate text-[10px] font-medium text-zinc-500">
+              {guestNickname}
+              {data.table?.zoneName ? ` · ${data.table.zoneName}` : ''}
+              {' · '}
+              Signed QR Session
+            </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="inline-flex min-h-[32px] items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-mono text-[11px] font-semibold text-emerald-700">
-              <span className="size-2 rounded-full bg-emerald-500 animate-ping" aria-hidden="true" />
-              LIVE
-            </span>
-          </div>
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="mx-auto flex max-w-3xl gap-2 px-4 pb-3.5">
           <button
             type="button"
-            onClick={() => setActiveTab('MENU')}
-            className={`inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border text-xs font-bold transition-all ${
-              activeTab === 'MENU'
-                ? 'border-[#FF5412] bg-[#FF5412] text-white shadow-sm'
-                : 'border-zinc-200 bg-[#FAF7F2] text-zinc-700 hover:border-zinc-300'
-            }`}
+            onClick={() => setActiveTab('HELP')}
+            className="inline-flex min-h-[40px] shrink-0 items-center gap-1 rounded-xl border border-[#FFC7A5] bg-[#FFF4ED] px-2.5 py-1.5 text-[11px] font-extrabold text-[#E53E06] transition-colors hover:bg-[#FFE5D3]"
           >
-            <UtensilsCrossed className="size-4" aria-hidden="true" />
-            Menu
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('TAB')}
-            className={`inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border text-xs font-bold transition-all ${
-              activeTab === 'TAB'
-                ? 'border-[#FF5412] bg-[#FF5412] text-white shadow-sm'
-                : 'border-zinc-200 bg-[#FAF7F2] text-zinc-700 hover:border-zinc-300'
-            }`}
-          >
-            <Receipt className="size-4" aria-hidden="true" />
-            Tab &amp; Status
-            {data.orders.length > 0 && (
-              <span
-                className={`rounded-full px-2 py-0.5 font-mono text-[11px] font-bold ${
-                  activeTab === 'TAB'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-white text-zinc-900 border border-zinc-200'
-                }`}
-              >
-                {data.orders.length}
-              </span>
-            )}
+            <BellRing className="size-3.5" aria-hidden="true" />
+            Call
           </button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="mx-auto max-w-3xl space-y-6 px-4 py-5">
-        {activeTab === 'MENU' ? (
+      <main
+        className="mx-auto max-w-3xl space-y-5 px-4 py-4"
+        style={{
+          scrollPaddingBottom: 'calc(4.75rem + env(safe-area-inset-bottom, 0px))',
+        }}
+      >
+        {activeTab === 'MENU' && (
           <MenuBrowser
             currency={data.outlet.currency}
             categories={data.categories}
             menuItems={data.menuItems}
             onSelectItem={(item) => setSelectedItem(item)}
           />
-        ) : (
+        )}
+
+        {activeTab === 'CART' && (
+          <CartPanel
+            cart={data.sharedCart}
+            menuItems={data.menuItems}
+            upsellRules={data.upsellRules}
+            currency={data.outlet.currency}
+            isSubmitting={placingOrder}
+            onUpdateQty={handleUpdateCartQty}
+            onQuickAddUpsell={handleQuickAddUpsell}
+            onPlaceOrder={handlePlaceOrder}
+            onBrowseMenu={() => setActiveTab('MENU')}
+          />
+        )}
+
+        {activeTab === 'WAIT' && (
           <div className="space-y-5">
             <WaitExperienceCard
               outlet={data.outlet}
@@ -560,65 +541,69 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
               currency={data.outlet.currency}
               session={data.session}
               orders={data.orders}
-              onOpenCheckout={() => setCheckoutOpen(true)}
+              onOpenCheckout={() => {
+                setActiveTab('BILL');
+                setCheckoutOpen(true);
+              }}
               onOpenReceipt={() => setReceiptOpen(true)}
             />
           </div>
         )}
+
+        {activeTab === 'HELP' && (
+          <HelpPanel sessionId={data.session.id} tableId={data.table?.id ?? null} />
+        )}
+
+        {activeTab === 'BILL' && (
+          <OrderTabTracker
+            currency={data.outlet.currency}
+            session={data.session}
+            orders={data.orders}
+            onOpenCheckout={() => setCheckoutOpen(true)}
+            onOpenReceipt={() => setReceiptOpen(true)}
+          />
+        )}
       </main>
 
-      {/* Persistent Bottom Action Bar */}
-      <div className="pb-safe-bottom-bar fixed inset-x-0 bottom-0 z-30 border-t border-zinc-200 bg-white/95 px-4 pt-2.5 backdrop-blur-md shadow-[0_-8px_24px_-12px_rgba(24,24,27,0.12)]">
-        <div className="mx-auto flex max-w-3xl items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => setWaiterOpen(true)}
-            className="animate-halo inline-flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-xl border border-zinc-200 bg-[#FAF7F2] px-3.5 text-xs font-bold text-zinc-900 transition-colors hover:border-[#FF5412]"
-          >
-            <BellRing className="size-4 text-[#FF5412]" aria-hidden="true" />
-            Call Waiter
-          </button>
-
-          {cartCount > 0 ? (
-            <button
-              type="button"
-              onClick={() => setCartOpen(true)}
-              className="inline-flex min-h-[44px] flex-1 items-center justify-between rounded-xl bg-[#FF5412] px-4 text-sm font-bold text-white shadow-beam transition-colors hover:bg-[#FF7033]"
-            >
-              <span className="inline-flex items-center gap-2">
-                <ShoppingBag className="size-4" aria-hidden="true" />
-                View Cart ({cartCount})
-              </span>
-              <span className="font-mono tabular-nums">
-                {formatMoney(cartTotalMinor, data.outlet.currency)}
-              </span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() =>
-                data.orders.length > 0 && data.session.remainingMinor > 0
-                  ? setCheckoutOpen(true)
-                  : setCartOpen(true)
-              }
-              className="inline-flex min-h-[44px] flex-1 items-center justify-between rounded-xl bg-zinc-900 px-4 text-sm font-bold text-white transition-colors hover:bg-zinc-800"
-            >
-              <span>
-                {data.orders.length > 0 && data.session.remainingMinor > 0
-                  ? 'Split & Pay Bill'
-                  : 'Table Cart (0)'}
-              </span>
-              {data.orders.length > 0 && data.session.remainingMinor > 0 && (
-                <span className="font-mono tabular-nums">
-                  {formatMoney(data.session.remainingMinor, data.outlet.currency)}
-                </span>
-              )}
-            </button>
-          )}
+      {/* Dock 5-tab bottom navigation */}
+      <nav
+        aria-label="Guest dining navigation"
+        className="pb-safe-bottom-bar fixed inset-x-0 bottom-0 z-30 border-t border-zinc-200 bg-white/95 px-1.5 pt-1.5 backdrop-blur-md shadow-[0_-8px_24px_-12px_rgba(24,24,27,0.12)]"
+      >
+        <div
+          role="tablist"
+          className="mx-auto grid max-w-3xl grid-cols-5 gap-1"
+        >
+          {GUEST_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const selected = activeTab === tab.id;
+            const showCartBadge = tab.id === 'CART' && cartCount > 0;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-semibold transition-colors ${
+                  selected
+                    ? 'bg-[#FFF4ED] text-[#E53E06]'
+                    : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800'
+                }`}
+              >
+                <Icon className="size-4" aria-hidden="true" />
+                <span>{tab.label}</span>
+                {showCartBadge && (
+                  <span className="absolute top-1 right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#FF5412] px-1 text-[9px] font-black text-white">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
-      </div>
+      </nav>
 
-      {/* Modals & Drawers */}
       <ItemModifierDialog
         key={selectedItem?.id ?? 'none'}
         open={Boolean(selectedItem)}
@@ -627,7 +612,10 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
         currency={data.outlet.currency}
         guestNickname={guestNickname}
         onClose={() => setSelectedItem(null)}
-        onAddToCart={handleAddToCart}
+        onAddToCart={(item) => {
+          handleAddToCart(item);
+          setActiveTab('CART');
+        }}
       />
 
       <PairingUpsellDialog
@@ -648,27 +636,8 @@ export function GuestPortalClient({ qrToken }: GuestPortalClientProps) {
             modifierLabels: ['Chef Pairing Deal'],
             addedByNickname: guestNickname,
           });
+          setActiveTab('CART');
         }}
-      />
-
-      <CartDrawer
-        open={cartOpen}
-        onClose={() => setCartOpen(false)}
-        cart={data.sharedCart}
-        menuItems={data.menuItems}
-        upsellRules={data.upsellRules}
-        currency={data.outlet.currency}
-        isSubmitting={placingOrder}
-        onUpdateQty={handleUpdateCartQty}
-        onQuickAddUpsell={handleQuickAddUpsell}
-        onPlaceOrder={handlePlaceOrder}
-      />
-
-      <CallWaiterDialog
-        open={waiterOpen}
-        onClose={() => setWaiterOpen(false)}
-        sessionId={data.session.id}
-        tableId={data.table?.id ?? null}
       />
 
       <SpiceQuizDialog

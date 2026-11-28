@@ -373,7 +373,14 @@ dialog[open]::backdrop,
 }
 
 .pb-safe-bottom-bar {
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+  padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+}
+
+/* Keep focused guest content clear of the Dock 5-tab bar */
+html {
+  scroll-padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
 }
 
 .bg-card {
