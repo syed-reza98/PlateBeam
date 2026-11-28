@@ -12,12 +12,11 @@ interface HelpPanelProps {
 }
 
 export function HelpPanel({ sessionId, tableId }: HelpPanelProps) {
-  const [selectedType, setSelectedType] = useState<ServiceRequestType>('WATER');
+  const [selectedType, setSelectedType] = useState<ServiceRequestType>('HELP');
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitRequest = async (requestType: ServiceRequestType) => {
     if (!tableId) {
       showToast({
         title: 'Counter / Takeaway session',
@@ -34,7 +33,7 @@ export function HelpPanel({ sessionId, tableId }: HelpPanelProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tableId,
-          requestType: selectedType,
+          requestType,
           note: note.trim() || undefined,
         }),
       });
@@ -49,7 +48,7 @@ export function HelpPanel({ sessionId, tableId }: HelpPanelProps) {
       }
 
       const label =
-        SERVICE_REQUEST_TAGS.find((t) => t.type === selectedType)?.label ?? selectedType;
+        SERVICE_REQUEST_TAGS.find((t) => t.type === requestType)?.label ?? requestType;
       showToast({
         title: `${label} requested`,
         description: 'Your server has been alerted.',
@@ -67,14 +66,18 @@ export function HelpPanel({ sessionId, tableId }: HelpPanelProps) {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitRequest(selectedType);
+  };
+
   return (
     <section aria-label="Call waiter and help requests" className="space-y-5">
       <div className="rounded-2xl border border-zinc-200 bg-white p-5 text-center shadow-sm sm:p-6">
         <button
           type="button"
           onClick={() => {
-            const form = document.getElementById('guest-help-form') as HTMLFormElement | null;
-            form?.requestSubmit();
+            void submitRequest('HELP');
           }}
           disabled={submitting}
           className="animate-halo mx-auto flex size-28 flex-col items-center justify-center rounded-full bg-[#FF5412] text-white shadow-beam transition-transform active:scale-95 disabled:opacity-60"
