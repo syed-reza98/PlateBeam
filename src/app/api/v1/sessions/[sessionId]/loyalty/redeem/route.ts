@@ -25,7 +25,8 @@ const loyaltyRedeemSchema = z.object({
   phone: z.string().min(4).max(32).optional(),
   email: z.string().email().optional(),
   displayName: z.string().min(1).max(120).optional(),
-  pointsToRedeem: z.number().int().min(MIN_LOYALTY_REDEEM_POINTS).default(MIN_LOYALTY_REDEEM_POINTS),
+  pointsToRedeem: z.number().int().min(MIN_LOYALTY_REDEEM_POINTS).optional(),
+  points: z.number().int().min(MIN_LOYALTY_REDEEM_POINTS).optional(),
 });
 
 async function findGuestById(tenantId: string, guestId: string): Promise<GuestRecord | null> {
@@ -124,7 +125,7 @@ export async function POST(
       throw new NotFoundError('Guest not found', { guestId: body.guestId });
     }
 
-    const pointsToRedeem = body.pointsToRedeem ?? MIN_LOYALTY_REDEEM_POINTS;
+    const pointsToRedeem = body.pointsToRedeem ?? body.points ?? MIN_LOYALTY_REDEEM_POINTS;
 
     if (guest.loyaltyPoints < pointsToRedeem) {
       throw new ValidationError(

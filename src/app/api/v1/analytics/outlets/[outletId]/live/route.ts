@@ -201,6 +201,36 @@ export async function GET(
       (kpis.paymentMix.NET_BANKING ?? 0) +
       (kpis.paymentMix.WALLET ?? 0);
 
+    const tableById = new Map(tables.map((t) => [t.id, t]));
+    const activeSessionById = new Map(activeSessions.map((s) => [s.id, s]));
+
+    const missingReviewSessionIds = Array.from(
+      new Set(
+        recentReviews
+          .map((r) => r.sessionId)
+          .filter((sid) => !activeSessionById.has(sid)),
+      ),
+    );
+    const missingSessions = await Promise.all(
+      missingReviewSessionIds.map((sid) =>
+        repos.sessionOrder.findSessionById(tenant.id, sid),
+      ),
+    );
+    for (const s of missingSessions) {
+      if (s) activeSessionById.set(s.id, s);
+    }
+
+    const enrichedReviews = recentReviews.map((r) => {
+      const session = activeSessionById.get(r.sessionId);
+      const tableNumber = session?.tableId
+        ? tableById.get(session.tableId)?.tableNumber ?? null
+        : null;
+      return {
+        ...r,
+        tableNumber,
+      };
+    });
+
     const activeShift = openShift
       ? {
           id: openShift.id,
@@ -209,6 +239,7 @@ export async function GET(
           digitalSalesMinor,
           expectedDrawerMinor:
             openShift.openingFloatMinor + cashSalesMinor - openShift.pettyCashMinor,
+          totalOrders: activeOrders.filter((o) => o.status !== 'CANCELLED').length,
           status: openShift.status,
           openedAt: openShift.openedAt.toISOString(),
         }
@@ -233,7 +264,7 @@ export async function GET(
         })),
       },
       hourlyRevenue,
-      recentReviews,
+      recentReviews: enrichedReviews,
       activeShift,
       menuItems: menuItems.map((m) => ({
         id: m.id,
