@@ -100,6 +100,22 @@ const TABLE_STATUS_META: Record<
   },
 };
 
+function getTableStatusMeta(status: string) {
+  if (status in TABLE_STATUS_META) {
+    return TABLE_STATUS_META[status as DiningTableStatus];
+  }
+  switch (status) {
+    case 'AVAILABLE':
+      return TABLE_STATUS_META.VACANT;
+    case 'OCCUPIED':
+      return TABLE_STATUS_META.EATING;
+    case 'RESERVED':
+      return TABLE_STATUS_META.ORDERING;
+    default:
+      return TABLE_STATUS_META.VACANT;
+  }
+}
+
 const WAITER_QUICK_MENU = [
   { id: 'wm-1', name: 'Smoked Butter Chicken', priceMinor: 58000, station: 'Curry' },
   { id: 'wm-2', name: 'Charcoal Tandoori Lamb Chops', priceMinor: 89000, station: 'Tandoor' },
@@ -296,6 +312,30 @@ function createDemoPosPayload(outletSlug: string): PosBootstrapPayload {
   };
 }
 
+function normalizePosPayload(
+  raw: Partial<PosBootstrapPayload> & { currency?: string; pendingOrders?: OpsPendingOrder[] },
+  outletSlug: string,
+): PosBootstrapPayload {
+  const fallback = createDemoPosPayload(outletSlug);
+  return {
+    outletId: raw.outletId ?? fallback.outletId,
+    outletName: raw.outletName ?? fallback.outletName,
+    outletSlug: raw.outletSlug ?? outletSlug,
+    currencyCode: raw.currencyCode ?? raw.currency ?? 'BDT',
+    zones: Array.isArray(raw.zones) ? raw.zones : fallback.zones,
+    tables: Array.isArray(raw.tables) ? raw.tables : fallback.tables,
+    pendingApprovals: Array.isArray(raw.pendingApprovals)
+      ? raw.pendingApprovals
+      : Array.isArray(raw.pendingOrders)
+        ? raw.pendingOrders
+        : [],
+    serviceRequests: Array.isArray(raw.serviceRequests) ? raw.serviceRequests : [],
+    staff: Array.isArray(raw.staff) ? raw.staff : fallback.staff,
+    activeShift: raw.activeShift !== undefined ? raw.activeShift : fallback.activeShift,
+    nextTokenNumber: typeof raw.nextTokenNumber === 'number' ? raw.nextTokenNumber : 42,
+  };
+}
+
 export function PosFloorClient({ outletSlug }: { outletSlug: string }) {
   const [data, setData] = useState<PosBootstrapPayload>(() =>
     createDemoPosPayload(outletSlug),
@@ -351,13 +391,19 @@ export function PosFloorClient({ outletSlug }: { outletSlug: string }) {
         cache: 'no-store',
       });
       if (res.ok) {
-        const payload = (await res.json()) as PosBootstrapPayload;
+        const raw = (await res.json()) as Partial<PosBootstrapPayload> & {
+          currency?: string;
+          pendingOrders?: OpsPendingOrder[];
+        };
+        const payload = normalizePosPayload(raw, outletSlug);
         setData(payload);
         setActiveStaff((prev) => prev ?? payload.staff[0] ?? null);
         setInspectedTableId((prev) =>
           payload.tables.some((t) => t.id === prev)
             ? prev
-            : (payload.tables.find((t) => t.status !== 'VACANT')?.id ?? payload.tables[0]?.id ?? ''),
+            : (payload.tables.find((t) => t.status !== 'VACANT' && t.status !== ('AVAILABLE' as string))?.id ??
+              payload.tables[0]?.id ??
+              ''),
         );
         await saveOfflineSnapshot(snapKey, payload.outletId, payload);
         return;
@@ -368,8 +414,9 @@ export function PosFloorClient({ outletSlug }: { outletSlug: string }) {
 
     const cached = await readOfflineSnapshot<PosBootstrapPayload>(snapKey);
     if (cached?.data) {
-      setData(cached.data);
-      setActiveStaff((prev) => prev ?? cached.data.staff[0] ?? null);
+      const normalized = normalizePosPayload(cached.data, outletSlug);
+      setData(normalized);
+      setActiveStaff((prev) => prev ?? normalized.staff[0] ?? null);
     } else {
       const fallback = createDemoPosPayload(outletSlug);
       setData(fallback);
@@ -1044,7 +1091,7 @@ export function PosFloorClient({ outletSlug }: { outletSlug: string }) {
 
           <div className="ops-column-contain grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {visibleTables.map((table) => {
-              const meta = TABLE_STATUS_META[table.status];
+              const meta = getTableStatusMeta(table.status);
               const isInspected = inspectedTable?.id === table.id;
               return (
                 <div
@@ -1144,7 +1191,7 @@ export function PosFloorClient({ outletSlug }: { outletSlug: string }) {
                 <div className="rounded-2xl border border-white/10 bg-[#18181F] p-3">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-semibold text-[#F4F4F5]">
-                      {TABLE_STATUS_META[inspectedTable.status].label}
+                      {getTableStatusMeta(inspectedTable.status).label}
                     </span>
                     <span className="font-mono text-base font-bold tabular-nums text-[#F4F4F5]">
                       {inspectedTable.runningTotalMinor
@@ -1380,7 +1427,7 @@ export function PosFloorClient({ outletSlug }: { outletSlug: string }) {
             >
               {data.tables.map((t) => (
                 <option key={t.id} value={t.id}>
-                  {t.tableNumber} — {TABLE_STATUS_META[t.status].label}
+                  {t.tableNumber} — {getTableStatusMeta(t.status).label}
                 </option>
               ))}
             </select>

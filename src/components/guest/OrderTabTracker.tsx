@@ -213,7 +213,7 @@ export function OrderTabTracker({
 
           <ul className="divide-y divide-zinc-100">
             {order.items.map((item) => {
-              const statusMeta = KDS_STATUS_META[item.kdsStatus];
+              const statusMeta = KDS_STATUS_META[item.kdsStatus] ?? KDS_STATUS_META.PENDING;
               const StatusIcon = statusMeta.icon;
               return (
                 <li

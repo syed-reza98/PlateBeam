@@ -89,7 +89,10 @@ export async function GET(
     return apiOk({
       outletId: outlet.id,
       outletName: outlet.name,
+      outletSlug: outlet.subdomain ?? outletSlug,
       currency: tenant.currencyCode,
+      currencyCode: tenant.currencyCode,
+      nextTokenNumber: 42,
       zones: zones.map((z) => ({
         id: z.id,
         name: z.name,
@@ -120,6 +123,7 @@ export async function GET(
           : null,
       })),
       pendingOrders,
+      pendingApprovals: pendingOrders,
       staff: users.map((u) => ({
         id: u.id,
         fullName: u.fullName,
