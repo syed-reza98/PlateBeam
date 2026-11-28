@@ -310,3 +310,50 @@ export function generateCsvReport(
   ];
   return lines.join('\r\n');
 }
+
+export interface HourlyRevenueBucket {
+  hour: number;
+  hourLabel: string;
+  amountMinor: number;
+  orderCount: number;
+  isCurrentHour: boolean;
+}
+
+/**
+ * Aggregates orders and captured payments into 24 hourly revenue buckets (00:00–23:00).
+ */
+export function computeHourlyRevenueBuckets(
+  orders: OrderRecord[],
+  payments: PaymentRecord[],
+  now: Date = new Date(),
+): HourlyRevenueBucket[] {
+  const currentHour = now.getHours();
+  const buckets: HourlyRevenueBucket[] = Array.from({ length: 24 }, (_, hour) => ({
+    hour,
+    hourLabel: `${String(hour).padStart(2, '0')}:00`,
+    amountMinor: 0,
+    orderCount: 0,
+    isCurrentHour: hour === currentHour,
+  }));
+
+  for (const order of orders) {
+    if (order.status === 'CANCELLED') continue;
+    const hour = order.createdAt.getHours();
+    const bucket = buckets[hour];
+    if (bucket) {
+      bucket.orderCount += 1;
+    }
+  }
+
+  for (const payment of payments) {
+    if (payment.status !== 'CAPTURED') continue;
+    const paidAt = payment.paidAt ?? now;
+    const hour = paidAt.getHours();
+    const bucket = buckets[hour];
+    if (bucket) {
+      bucket.amountMinor += payment.amountMinor;
+    }
+  }
+
+  return buckets;
+}

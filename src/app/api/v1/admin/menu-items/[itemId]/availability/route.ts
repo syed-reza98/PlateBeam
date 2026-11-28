@@ -1,3 +1,4 @@
+import { revalidateTag } from 'next/cache';
 import { getContainer } from '@/server/container';
 import {
   apiError,
@@ -30,6 +31,9 @@ export async function PATCH(
         isAvailable: body.isAvailable,
       },
     );
+
+    revalidateTag('menu-catalog', 'max');
+    revalidateTag('analytics-live', 'max');
 
     return apiOk({ item });
   } catch (err) {

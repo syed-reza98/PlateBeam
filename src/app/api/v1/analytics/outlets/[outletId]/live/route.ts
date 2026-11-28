@@ -1,16 +1,107 @@
+import { createClient } from '@supabase/supabase-js';
+import { and, desc, eq } from 'drizzle-orm';
 import { getContainer } from '@/server/container';
 import {
   apiError,
   apiOk,
   resolveTenantAndOutlet,
 } from '@/server/api/http';
-import { computeOwnerKpis } from '@/server/core';
+import { computeHourlyRevenueBuckets, computeOwnerKpis } from '@/server/core';
+import { withTenantTx } from '@/server/db/client';
+import { mysqlSchema } from '@/server/db/schema/mysql';
+import { pgSchema } from '@/server/db/schema/pg';
 import type {
   OrderItemRecord,
   OrderRecord,
   PaymentRecord,
   TableSessionRecord,
 } from '@/server/ports/repositories.port';
+
+interface RecentReviewSummary {
+  id: string;
+  sessionId: string;
+  rating: number;
+  comment: string | null;
+  tags: string[];
+  managerNotified: boolean;
+  needsRecovery: boolean;
+  createdAt: string;
+}
+
+async function fetchRecentReviews(
+  tenantId: string,
+  outletId: string,
+): Promise<RecentReviewSummary[]> {
+  try {
+    if (process.env.DATABASE_URL) {
+      const rows = await withTenantTx(tenantId, async (ctx) => {
+        if (ctx.dialect === 'mysql') {
+          return ctx.tx
+            .select()
+            .from(mysqlSchema.reviews)
+            .where(
+              and(
+                eq(mysqlSchema.reviews.tenantId, tenantId),
+                eq(mysqlSchema.reviews.outletId, outletId),
+              ),
+            )
+            .orderBy(desc(mysqlSchema.reviews.createdAt))
+            .limit(20);
+        }
+        return ctx.tx
+          .select()
+          .from(pgSchema.reviews)
+          .where(
+            and(
+              eq(pgSchema.reviews.tenantId, tenantId),
+              eq(pgSchema.reviews.outletId, outletId),
+            ),
+          )
+          .orderBy(desc(pgSchema.reviews.createdAt))
+          .limit(20);
+      });
+
+      return rows.map((r) => ({
+        id: r.id,
+        sessionId: r.sessionId,
+        rating: r.rating,
+        comment: r.comment,
+        tags: r.tags ?? [],
+        managerNotified: r.managerNotified,
+        needsRecovery: r.rating <= 3,
+        createdAt: r.createdAt.toISOString(),
+      }));
+    }
+
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (url && key) {
+      const client = createClient(url, key, { auth: { persistSession: false } });
+      const { data } = await client
+        .from('reviews')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('outlet_id', outletId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      return (data ?? []).map((r) => ({
+        id: String(r.id),
+        sessionId: String(r.session_id),
+        rating: Number(r.rating),
+        comment: (r.comment as string | null) ?? null,
+        tags: Array.isArray(r.tags) ? (r.tags as string[]) : [],
+        managerNotified: Boolean(r.manager_notified),
+        needsRecovery: Number(r.rating) <= 3,
+        createdAt: new Date(r.created_at as string).toISOString(),
+      }));
+    }
+  } catch {
+    return [];
+  }
+
+  return [];
+}
 
 export async function GET(
   _req: Request,
@@ -32,6 +123,8 @@ export async function GET(
       users,
       roles,
       auditLogs,
+      openShift,
+      recentReviews,
     ] = await Promise.all([
       repos.floor.listTables(tenant.id, outlet.id),
       repos.menu.listCategories(tenant.id, outlet.id),
@@ -43,6 +136,8 @@ export async function GET(
       repos.rbac.listUsersByOutlet(tenant.id, outlet.id),
       repos.rbac.listRoles(tenant.id),
       repos.audit.listLogs(tenant.id, outlet.id, 50),
+      repos.shift.findOpenShift(tenant.id, outlet.id),
+      fetchRecentReviews(tenant.id, outlet.id),
     ]);
 
     const activeSessions: TableSessionRecord[] = [];
@@ -96,6 +191,29 @@ export async function GET(
       .filter((p) => p.status === 'CAPTURED')
       .reduce((acc, p) => acc + p.amountMinor, 0);
 
+    const hourlyRevenue = computeHourlyRevenueBuckets(activeOrders, activePayments);
+
+    const cashSalesMinor = kpis.paymentMix.CASH ?? 0;
+    const digitalSalesMinor =
+      (kpis.paymentMix.CARD ?? 0) +
+      (kpis.paymentMix.UPI ?? 0) +
+      (kpis.paymentMix.MFS ?? 0) +
+      (kpis.paymentMix.NET_BANKING ?? 0) +
+      (kpis.paymentMix.WALLET ?? 0);
+
+    const activeShift = openShift
+      ? {
+          id: openShift.id,
+          openingFloatMinor: openShift.openingFloatMinor,
+          cashSalesMinor,
+          digitalSalesMinor,
+          expectedDrawerMinor:
+            openShift.openingFloatMinor + cashSalesMinor - openShift.pettyCashMinor,
+          status: openShift.status,
+          openedAt: openShift.openedAt.toISOString(),
+        }
+      : null;
+
     return apiOk({
       outletId: outlet.id,
       outletName: outlet.name,
@@ -114,6 +232,9 @@ export async function GET(
           pct: totalPaid > 0 ? Math.round((amountMinor / totalPaid) * 100) : 0,
         })),
       },
+      hourlyRevenue,
+      recentReviews,
+      activeShift,
       menuItems: menuItems.map((m) => ({
         id: m.id,
         name: m.name,

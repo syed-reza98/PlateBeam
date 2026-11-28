@@ -1,3 +1,4 @@
+import { revalidateTag } from 'next/cache';
 import { getContainer } from '@/server/container';
 import {
   apiError,
@@ -73,6 +74,9 @@ export async function POST(req: Request) {
       item,
     });
 
+    revalidateTag('menu-catalog', 'max');
+    revalidateTag('analytics-live', 'max');
+
     return apiOk({ item }, 201);
   } catch (err) {
     return apiError(err);
@@ -94,6 +98,9 @@ export async function PATCH(req: Request) {
         isAvailable: body.isAvailable,
       },
     );
+
+    revalidateTag('menu-catalog', 'max');
+    revalidateTag('analytics-live', 'max');
 
     return apiOk({ item });
   } catch (err) {
@@ -119,6 +126,9 @@ export async function DELETE(req: Request) {
         isAvailable: false,
       },
     );
+
+    revalidateTag('menu-catalog', 'max');
+    revalidateTag('analytics-live', 'max');
 
     return apiOk({ archived: true, item });
   } catch (err) {

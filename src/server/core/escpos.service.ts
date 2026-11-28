@@ -265,3 +265,177 @@ export function buildBillEscPosBuffer(input: {
 export function escPosBufferToBase64(buffer: Uint8Array): string {
   return Buffer.from(buffer).toString('base64');
 }
+
+function centerText(text: string, cols: number): string {
+  if (text.length >= cols) return text.slice(0, cols);
+  const pad = Math.floor((cols - text.length) / 2);
+  return `${' '.repeat(pad)}${text}`;
+}
+
+function formatPreviewCurrency(amountMinor: number, currencyCode = 'BDT'): string {
+  const major = (amountMinor / 100).toFixed(2);
+  return currencyCode === 'BDT' ? `৳${major}` : `${currencyCode} ${major}`;
+}
+
+export type KotPreviewInput = {
+  paperWidthMm?: 58 | 80;
+  headerTitle: string;
+  stationName?: string;
+  orderNumber: string;
+  roundNumber?: number;
+  tableNumber?: string | null;
+  tokenNumber?: number | null;
+  items: KotPrintItem[];
+  createdAt?: Date;
+};
+
+/**
+ * Formats an 80mm/58mm thermal KOT preview as plain-text lines for KDS modals.
+ */
+export function formatKotPreviewLines(input: KotPreviewInput): string[] {
+  const cols = getPaperColumns(input.paperWidthMm ?? 80);
+  const lines: string[] = [];
+
+  lines.push(centerText(input.headerTitle, cols));
+  if (input.stationName) {
+    lines.push(centerText(`STATION: ${input.stationName.toUpperCase()}`, cols));
+  }
+  lines.push(divider(cols, '='));
+
+  const targetLabel = input.tableNumber
+    ? `TABLE: ${input.tableNumber}`
+    : input.tokenNumber != null
+      ? `TOKEN: #${input.tokenNumber}`
+      : 'TAKEAWAY';
+
+  lines.push(formatTwoColumnLine(targetLabel, `ORD ${input.orderNumber}`, cols));
+  const timeStr = (input.createdAt ?? new Date()).toISOString().slice(11, 16);
+  lines.push(
+    formatTwoColumnLine(`ROUND ${input.roundNumber ?? 1}`, `TIME ${timeStr}`, cols),
+  );
+  lines.push(divider(cols));
+
+  for (const item of input.items) {
+    lines.push(`${item.quantity}x ${item.name}`);
+    if (item.modifiers && item.modifiers.length > 0) {
+      lines.push(`   + ${item.modifiers.join(', ')}`);
+    }
+    if (item.spiceLevel) {
+      lines.push(`   Spice: ${item.spiceLevel}`);
+    }
+    if (item.notes) {
+      lines.push(`   Note: ${item.notes}`);
+    }
+  }
+
+  lines.push(divider(cols, '='));
+  return lines;
+}
+
+export type BillPreviewInput = {
+  paperWidthMm?: 58 | 80;
+  outletName: string;
+  taxRegNo?: string | null;
+  invoiceNumber: string;
+  tableNumber?: string | null;
+  tokenNumber?: number | null;
+  items: Array<{ name: string; quantity: number; lineTotalMinor: number }>;
+  subtotalMinor: number;
+  taxBreakdown: TaxBreakdownItem[];
+  serviceChargeMinor?: number;
+  discountMinor?: number;
+  tipMinor?: number;
+  totalMinor: number;
+  currencyCode?: string;
+  footerNote?: string;
+};
+
+/**
+ * Formats an 80mm/58mm thermal bill receipt preview as plain-text lines for POS/Guest modals.
+ */
+export function formatBillPreviewLines(input: BillPreviewInput): string[] {
+  const cols = getPaperColumns(input.paperWidthMm ?? 80);
+  const currency = input.currencyCode ?? 'BDT';
+  const lines: string[] = [];
+
+  lines.push(centerText(input.outletName, cols));
+  if (input.taxRegNo) {
+    lines.push(centerText(`TAX ID: ${input.taxRegNo}`, cols));
+  }
+  lines.push(centerText(`INV: ${input.invoiceNumber}`, cols));
+  lines.push(divider(cols));
+
+  if (input.tableNumber) {
+    lines.push(`Table: ${input.tableNumber}`);
+  } else if (input.tokenNumber != null) {
+    lines.push(`Token: #${input.tokenNumber}`);
+  }
+
+  for (const item of input.items) {
+    lines.push(
+      formatTwoColumnLine(
+        `${item.quantity}x ${item.name}`,
+        formatPreviewCurrency(item.lineTotalMinor, currency),
+        cols,
+      ),
+    );
+  }
+
+  lines.push(divider(cols));
+  lines.push(
+    formatTwoColumnLine(
+      'Subtotal',
+      formatPreviewCurrency(input.subtotalMinor, currency),
+      cols,
+    ),
+  );
+
+  if (input.discountMinor && input.discountMinor > 0) {
+    lines.push(
+      formatTwoColumnLine(
+        'Discount',
+        `-${formatPreviewCurrency(input.discountMinor, currency)}`,
+        cols,
+      ),
+    );
+  }
+
+  for (const tax of input.taxBreakdown) {
+    lines.push(
+      formatTwoColumnLine(
+        `${tax.name} (${(tax.rateBps / 100).toFixed(2)}%)`,
+        formatPreviewCurrency(tax.taxMinor, currency),
+        cols,
+      ),
+    );
+  }
+
+  if (input.serviceChargeMinor && input.serviceChargeMinor > 0) {
+    lines.push(
+      formatTwoColumnLine(
+        'Service Charge',
+        formatPreviewCurrency(input.serviceChargeMinor, currency),
+        cols,
+      ),
+    );
+  }
+
+  if (input.tipMinor && input.tipMinor > 0) {
+    lines.push(
+      formatTwoColumnLine(
+        'Tip',
+        formatPreviewCurrency(input.tipMinor, currency),
+        cols,
+      ),
+    );
+  }
+
+  lines.push(divider(cols, '='));
+  lines.push(
+    formatTwoColumnLine('TOTAL', formatPreviewCurrency(input.totalMinor, currency), cols),
+  );
+  lines.push(divider(cols, '='));
+  lines.push(centerText(input.footerNote ?? 'Thank you for dining with us!', cols));
+
+  return lines;
+}
