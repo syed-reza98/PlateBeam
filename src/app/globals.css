@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-display: var(--font-teko), "Arial Narrow", Impact, sans-serif;
-  --font-serif: var(--font-teko), "Arial Narrow", Impact, sans-serif;
-  --font-sans: var(--font-karla), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-share-tech-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
 
   --color-canvas: var(--pb-canvas);
   --color-surface: var(--pb-surface);
@@ -19,90 +19,67 @@
   --color-gold: var(--pb-gold);
   --color-olive: var(--pb-olive);
   --color-turmeric: var(--pb-turmeric);
+  --color-sky: var(--pb-sky);
   --color-chili: var(--pb-chili);
   --color-card: var(--pb-surface);
   --color-destructive: var(--pb-chili);
+
+  --color-guest-canvas: var(--pb-guest-canvas);
+  --color-guest-surface: var(--pb-guest-surface);
+  --color-guest-ink: var(--pb-guest-ink);
+  --color-guest-muted: var(--pb-guest-muted);
 }
 
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 
-  /* Light — tower glass by day */
-  --pb-canvas-light: #e7eef8;
-  --pb-surface-light: #f4f7fc;
-  --pb-surface-raised-light: #ffffff;
-  --pb-border-light: #c5d0e0;
-  --pb-border-subtle-light: #d8e1ee;
-  --pb-ink-light: #0b1220;
-  --pb-muted-light: #4a5b73;
+  /* Light — optional manual override for Ops surfaces */
+  --pb-canvas-light: #f4f4f6;
+  --pb-surface-light: #ffffff;
+  --pb-surface-raised-light: #ececf0;
+  --pb-border-light: #d4d4dc;
+  --pb-border-subtle-light: #e4e4ec;
+  --pb-ink-light: #09090b;
+  --pb-muted-light: #52525b;
 
-  --pb-accent-light: #0f9f8a;
-  --pb-accent-hover-light: #0b7f6e;
-  --pb-accent-ink-light: #061018;
-  --pb-gold-light: #c47d00;
-  --pb-olive-light: #1f7a4d;
-  --pb-turmeric-light: #d48900;
-  --pb-chili-light: #c23434;
+  /* Dark — Obsidian Command (Default for Operations Surfaces) */
+  --pb-canvas-dark: #09090b;
+  --pb-surface-dark: #111115;
+  --pb-surface-raised-dark: #18181f;
+  --pb-border-dark: #262630;
+  --pb-border-subtle-dark: rgba(255, 255, 255, 0.07);
+  --pb-ink-dark: #f4f4f5;
+  --pb-muted-dark: #a1a1aa;
 
-  /* Dark — night apron control tower */
-  --pb-canvas-dark: #0b1220;
-  --pb-surface-dark: #121a2b;
-  --pb-surface-raised-dark: #1a2740;
-  --pb-border-dark: #2a3a55;
-  --pb-border-subtle-dark: #1e2c44;
-  --pb-ink-dark: #e7eef8;
-  --pb-muted-dark: #8fa0b8;
+  /* Brand & Semantic Tokens */
+  --pb-accent: #ff5412;
+  --pb-accent-hover: #ff7033;
+  --pb-accent-soft: #fff4ed;
+  --pb-accent-ink: #ffffff;
 
-  --pb-accent-dark: #3de0c5;
-  --pb-accent-hover-dark: #6aebd4;
-  --pb-accent-ink-dark: #061018;
-  --pb-gold-dark: #f0a202;
-  --pb-olive-dark: #3dce7f;
-  --pb-turmeric-dark: #f0a202;
-  --pb-chili-dark: #d64545;
+  --pb-olive: #10b981;
+  --pb-gold: #f59e0b;
+  --pb-turmeric: #f59e0b;
+  --pb-sky: #0ea5e9;
+  --pb-chili: #ef4444;
 
-  --pb-canvas: var(--pb-canvas-light);
-  --pb-surface: var(--pb-surface-light);
-  --pb-surface-raised: var(--pb-surface-raised-light);
-  --pb-border: var(--pb-border-light);
-  --pb-border-subtle: var(--pb-border-subtle-light);
-  --pb-ink: var(--pb-ink-light);
-  --pb-muted: var(--pb-muted-light);
-  --pb-accent: var(--pb-accent-light);
-  --pb-accent-hover: var(--pb-accent-hover-light);
-  --pb-accent-ink: var(--pb-accent-ink-light);
-  --pb-gold: var(--pb-gold-light);
-  --pb-olive: var(--pb-olive-light);
-  --pb-turmeric: var(--pb-turmeric-light);
-  --pb-chili: var(--pb-chili-light);
+  /* Guest QR Dining Surface (Warm Cream) */
+  --pb-guest-canvas: #faf7f2;
+  --pb-guest-surface: #ffffff;
+  --pb-guest-ink: #18181b;
+  --pb-guest-muted: #71717a;
 
-  --target-size: 24px;
-  --pb-led: color-mix(in srgb, var(--pb-accent) 55%, transparent);
-  --pb-glass-sheen: linear-gradient(
-    160deg,
-    color-mix(in srgb, var(--pb-accent) 12%, transparent) 0%,
-    transparent 42%,
-    color-mix(in srgb, var(--pb-gold) 8%, transparent) 100%
-  );
-}
+  /* Default active Ops tokens -> Obsidian Command */
+  --pb-canvas: var(--pb-canvas-dark);
+  --pb-surface: var(--pb-surface-dark);
+  --pb-surface-raised: var(--pb-surface-raised-dark);
+  --pb-border: var(--pb-border-dark);
+  --pb-border-subtle: var(--pb-border-subtle-dark);
+  --pb-ink: var(--pb-ink-dark);
+  --pb-muted: var(--pb-muted-dark);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --pb-canvas: var(--pb-canvas-dark);
-    --pb-surface: var(--pb-surface-dark);
-    --pb-surface-raised: var(--pb-surface-raised-dark);
-    --pb-border: var(--pb-border-dark);
-    --pb-border-subtle: var(--pb-border-subtle-dark);
-    --pb-ink: var(--pb-ink-dark);
-    --pb-muted: var(--pb-muted-dark);
-    --pb-accent: var(--pb-accent-dark);
-    --pb-accent-hover: var(--pb-accent-hover-dark);
-    --pb-accent-ink: var(--pb-accent-ink-dark);
-    --pb-gold: var(--pb-gold-dark);
-    --pb-olive: var(--pb-olive-dark);
-    --pb-turmeric: var(--pb-turmeric-dark);
-    --pb-chili: var(--pb-chili-dark);
-  }
+  --target-size: 44px;
+  accent-color: var(--pb-accent);
 }
 
 @supports (color: light-dark(white, black)) {
@@ -114,13 +91,6 @@
     --pb-border-subtle: light-dark(var(--pb-border-subtle-light), var(--pb-border-subtle-dark));
     --pb-ink: light-dark(var(--pb-ink-light), var(--pb-ink-dark));
     --pb-muted: light-dark(var(--pb-muted-light), var(--pb-muted-dark));
-    --pb-accent: light-dark(var(--pb-accent-light), var(--pb-accent-dark));
-    --pb-accent-hover: light-dark(var(--pb-accent-hover-light), var(--pb-accent-hover-dark));
-    --pb-accent-ink: light-dark(var(--pb-accent-ink-light), var(--pb-accent-ink-dark));
-    --pb-gold: light-dark(var(--pb-gold-light), var(--pb-gold-dark));
-    --pb-olive: light-dark(var(--pb-olive-light), var(--pb-olive-dark));
-    --pb-turmeric: light-dark(var(--pb-turmeric-light), var(--pb-turmeric-dark));
-    --pb-chili: light-dark(var(--pb-chili-light), var(--pb-chili-dark));
   }
 }
 
@@ -130,16 +100,17 @@
 
 :root:has(> head > meta[name="color-scheme"][content="light"]) {
   color-scheme: light;
-}
-
-@media (pointer: coarse) {
-  :root {
-    --target-size: 44px;
-  }
+  --pb-canvas: var(--pb-canvas-light);
+  --pb-surface: var(--pb-surface-light);
+  --pb-surface-raised: var(--pb-surface-raised-light);
+  --pb-border: var(--pb-border-light);
+  --pb-border-subtle: var(--pb-border-subtle-light);
+  --pb-ink: var(--pb-ink-light);
+  --pb-muted: var(--pb-muted-light);
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--pb-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--pb-accent) 40%, transparent);
   color: var(--pb-ink);
 }
 
@@ -148,21 +119,31 @@
   outline-offset: 2px;
 }
 
+/* Native <dialog> & [popover] Top-Layer Transitions */
 dialog {
   border: 1px solid var(--pb-border);
-  border-radius: 0.5rem;
+  border-radius: 1.5rem;
   background: var(--pb-surface);
   color: var(--pb-ink);
   margin: auto;
   padding: 0;
   width: calc(100% - 2rem);
   max-width: min(32rem, calc(100vw - 2rem));
-  box-shadow: 0 18px 40px -16px rgba(6, 16, 32, 0.55);
+  box-shadow: 0 24px 64px -16px rgba(0, 0, 0, 0.72);
   overflow: hidden;
 }
 
+dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
 dialog[open],
-[popover]:popover-open {
+[popover]:is(:popover-open, .\:popover-open) {
   opacity: 1;
 
   @starting-style {
@@ -182,7 +163,7 @@ dialog,
 [popover] {
   opacity: 0;
   transition-property: opacity, transform, display, overlay;
-  transition-duration: 0.24s;
+  transition-duration: 0.22s;
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   transition-behavior: allow-discrete;
 
@@ -191,21 +172,28 @@ dialog,
   }
 }
 
+@supports not selector(:popover-open) {
+  [popover]:not(.\:popover-open) {
+    display: none;
+  }
+}
+
 dialog::backdrop,
 [popover]::backdrop {
-  background-color: rgba(6, 12, 24, 0);
+  background-color: rgba(9, 9, 11, 0);
   transition-property: background-color, display, overlay;
-  transition-duration: 0.24s;
+  transition-duration: 0.22s;
   transition-timing-function: ease-out;
   transition-behavior: allow-discrete;
 }
 
 dialog[open]::backdrop,
-[popover]:popover-open::backdrop {
-  background-color: rgba(6, 12, 24, 0.72);
+[popover]:is(:popover-open, .\:popover-open)::backdrop {
+  background-color: rgba(9, 9, 11, 0.78);
+  backdrop-filter: blur(4px);
 
   @starting-style {
-    background-color: rgba(6, 12, 24, 0);
+    background-color: rgba(9, 9, 11, 0);
   }
 }
 
@@ -215,91 +203,102 @@ dialog[open]::backdrop,
     transition-duration: 0.08s;
   }
 
-  .tower-scan,
-  .led-pulse {
+  .animate-halo,
+  .led-pulse,
+  .tower-scan::after {
     animation: none !important;
   }
 }
 
-.glass-panel {
-  background: color-mix(in srgb, var(--pb-surface) 88%, transparent);
-  border: 1px solid var(--pb-border);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--pb-ink) 6%, transparent);
-}
-
-.tower-field {
+/* PlateBeam OS Architectural Surfaces */
+.grid-bg {
   background-color: var(--pb-canvas);
   background-image:
-    linear-gradient(rgba(61, 224, 197, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(61, 224, 197, 0.035) 1px, transparent 1px),
-    var(--pb-glass-sheen);
-  background-size: 48px 48px, 48px 48px, auto;
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 36px 36px;
   background-position: center top;
 }
 
-.led-rail {
-  height: 2px;
-  width: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--pb-accent),
-    var(--pb-gold),
-    transparent
-  );
-  opacity: 0.85;
+:root:has(> head > meta[name="color-scheme"][content="light"]) .grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(9, 9, 11, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(9, 9, 11, 0.04) 1px, transparent 1px);
 }
 
-.led-pulse {
-  box-shadow: 0 0 0 0 color-mix(in srgb, var(--pb-accent) 40%, transparent);
-  animation: led-pulse 2.4s ease-out infinite;
+.shadow-beam {
+  box-shadow: 0 0 32px -8px rgba(255, 84, 18, 0.5);
 }
 
-@keyframes led-pulse {
-  0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--pb-accent) 45%, transparent);
-  }
-  70% {
-    box-shadow: 0 0 0 12px transparent;
-  }
+.animate-halo {
+  animation: halo-pulse 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes halo-pulse {
+  0%,
   100% {
-    box-shadow: 0 0 0 0 transparent;
+    box-shadow: 0 0 0 0 rgba(255, 84, 18, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(255, 84, 18, 0);
   }
 }
 
-.tower-scan {
+/* 80mm Serrated Thermal Receipt */
+.thermal-receipt {
   position: relative;
-  overflow: hidden;
+  background-color: #ffffff;
+  color: #18181b;
+  font-family: var(--font-mono);
+  border-radius: 0.25rem;
+  box-shadow: 0 20px 40px -16px rgba(0, 0, 0, 0.5);
 }
 
-.tower-scan::after {
+.thermal-receipt::before,
+.thermal-receipt::after {
   content: "";
-  pointer-events: none;
   position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    color-mix(in srgb, var(--pb-accent) 10%, transparent) 50%,
-    transparent 100%
-  );
-  transform: translateY(-100%);
-  animation: tower-scan 7s linear infinite;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background-size: 16px 8px;
+  background-repeat: repeat-x;
+  pointer-events: none;
 }
 
-@keyframes tower-scan {
-  to {
-    transform: translateY(100%);
+.thermal-receipt::before {
+  top: -8px;
+  background-image: linear-gradient(135deg, transparent 50%, #ffffff 50%),
+    linear-gradient(225deg, transparent 50%, #ffffff 50%);
+}
+
+.thermal-receipt::after {
+  bottom: -8px;
+  background-image: linear-gradient(45deg, transparent 50%, #ffffff 50%),
+    linear-gradient(315deg, transparent 50%, #ffffff 50%);
+}
+
+/* Containment for high-frequency KDS station columns & POS floor grids */
+.ops-column-contain {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px auto 640px;
+}
+
+@supports not (content-visibility: auto) {
+  .ops-column-contain {
+    contain: layout style paint;
   }
 }
 
+/* Channel Strip & Legacy Surface Aliases (aligned to Obsidian + Beam Orange) */
 .channel-strip {
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 1rem;
   align-items: center;
-  min-height: 4.5rem;
+  min-height: 4.75rem;
   padding: 1rem 1.25rem;
+  border-radius: 1rem;
   border: 1px solid var(--pb-border);
   background: var(--pb-surface);
   transition:
@@ -319,25 +318,52 @@ dialog[open]::backdrop,
   }
 }
 
+.tower-field {
+  background-color: var(--pb-canvas);
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 36px 36px;
+  background-position: center top;
+}
+
+.led-rail {
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, var(--pb-accent), var(--pb-gold), transparent);
+  opacity: 0.75;
+}
+
+.led-pulse {
+  box-shadow: 0 0 0 0 rgba(255, 84, 18, 0.4);
+  animation: halo-pulse 2.2s ease-out infinite;
+}
+
+.glass-panel {
+  background: color-mix(in srgb, var(--pb-surface) 90%, transparent);
+  border: 1px solid var(--pb-border);
+}
+
 .kds-surface {
-  background-color: #070d18;
-  color: #e8f0ff;
+  background-color: #09090b;
+  color: #f4f4f5;
   color-scheme: only dark;
 }
 
 .kds-card {
-  background-color: #101a2c;
-  border: 1px solid #243552;
+  background-color: #111115;
+  border: 1px solid #262630;
 }
 
 .glow-accent {
-  box-shadow: 0 10px 28px -12px color-mix(in srgb, var(--pb-accent) 45%, transparent);
+  box-shadow: 0 0 32px -8px rgba(255, 84, 18, 0.5);
 }
 
 .glow-gold {
-  box-shadow: 0 10px 28px -12px color-mix(in srgb, var(--pb-gold) 40%, transparent);
+  box-shadow: 0 10px 28px -12px rgba(245, 158, 11, 0.4);
 }
 
+/* Safe-Area Helpers */
 .pb-safe-bottom {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
@@ -362,6 +388,20 @@ dialog[open]::backdrop,
 .bg-destructive {
   background-color: var(--pb-chili);
   color: #fff;
+}
+
+/* Top-Layer Toast Positioning */
+.pb-toast-item {
+  position: fixed;
+  inset: auto 1rem 5rem auto;
+  margin: 0;
+  width: min(24rem, calc(100vw - 2rem));
+}
+
+@media (min-width: 640px) {
+  .pb-toast-item {
+    bottom: 1rem;
+  }
 }
 
 ::-webkit-scrollbar {

@@ -9,6 +9,7 @@ export interface DialogProps {
   title: string;
   children: ReactNode;
   closedby?: 'closerequest' | 'any' | 'none';
+  variant?: 'dark' | 'light';
   className?: string;
 }
 
@@ -18,6 +19,7 @@ export function Dialog({
   title,
   children,
   closedby = 'closerequest',
+  variant = 'dark',
   className = '',
 }: DialogProps) {
   const titleId = useId();
@@ -89,27 +91,38 @@ export function Dialog({
     };
   }, [closedby, onClose]);
 
+  const surfaceStyles =
+    variant === 'light'
+      ? 'border-zinc-200 bg-[#FFFFFF] text-[#18181B]'
+      : 'border-white/15 bg-[#111115] text-[#F4F4F5]';
+
+  const headerBorder = variant === 'light' ? 'border-zinc-200/80' : 'border-white/10';
+  const closeButtonStyles =
+    variant === 'light'
+      ? 'text-zinc-500 hover:border-zinc-300 hover:bg-zinc-100 hover:text-zinc-900'
+      : 'text-[#A1A1AA] hover:border-white/15 hover:bg-[#18181F] hover:text-white';
+
   return (
     <dialog
       ref={dialogRef}
       aria-labelledby={titleId}
       {...({ closedby } as Record<string, string>)}
-      className={`w-full max-w-lg shadow-2xl ${className}`}
+      className={`w-full max-w-lg rounded-3xl border shadow-2xl ${surfaceStyles} ${className}`}
     >
-      <div className="flex items-center justify-between gap-4 border-b border-[var(--pb-border)] px-5 py-4">
-        <h1 id={titleId} className="font-display text-xl font-normal tracking-tight">
+      <div className={`flex items-center justify-between gap-4 border-b px-6 py-4 ${headerBorder}`}>
+        <h1 id={titleId} className="text-lg font-bold tracking-tight">
           {title}
         </h1>
         <button
           type="button"
           aria-label="Close dialog"
           onClick={() => dialogRef.current?.close()}
-          className="inline-flex items-center justify-center rounded-lg border border-transparent p-2 text-[var(--pb-muted)] hover:border-[var(--pb-border)] hover:text-[var(--pb-ink)] focus-visible:outline-2 focus-visible:outline-[var(--pb-accent)]"
+          className={`inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-transparent transition-colors focus-visible:outline-2 focus-visible:outline-[#FF5412] ${closeButtonStyles}`}
         >
           <X className="size-5" aria-hidden="true" />
         </button>
       </div>
-      <div className="p-5">{children}</div>
+      <div className="p-6">{children}</div>
     </dialog>
   );
 }

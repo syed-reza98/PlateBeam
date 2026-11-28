@@ -174,8 +174,12 @@ export function ToastRegion() {
         {announcement}
       </div>
 
-      <div role="region" aria-label="Notifications" className="pb-toast-region">
-        {toasts.map((toast) => {
+      <div
+        role="region"
+        aria-label="Notifications"
+        className="pointer-events-none fixed bottom-20 right-4 z-50 flex flex-col gap-2 sm:bottom-4"
+      >
+        {toasts.map((toast, idx) => {
           const variant = toast.variant ?? 'info';
           const Icon =
             variant === 'success'
@@ -185,12 +189,14 @@ export function ToastRegion() {
                 : Info;
           const accentClass =
             variant === 'success'
-              ? 'text-[var(--pb-olive)]'
+              ? 'text-[#10B981]'
               : variant === 'error'
-                ? 'text-[var(--pb-chili)]'
+                ? 'text-[#EF4444]'
                 : variant === 'warning'
-                  ? 'text-[var(--pb-turmeric)]'
-                  : 'text-[var(--pb-accent)]';
+                  ? 'text-[#F59E0B]'
+                  : 'text-[#FF5412]';
+
+          const offsetBottom = toasts.length - 1 - idx;
 
           return (
             <div
@@ -203,7 +209,10 @@ export function ToastRegion() {
                 }
               }}
               {...({ popover: 'manual' } as Record<string, string>)}
-              className="pb-toast-item flex items-start gap-3"
+              style={{
+                transform: offsetBottom > 0 ? `translateY(-${offsetBottom * 4.75}rem)` : undefined,
+              }}
+              className="pb-toast-item pointer-events-auto bottom-20 right-4 flex items-start gap-3 rounded-2xl border border-white/15 bg-[#111115] p-3.5 text-[#F4F4F5] shadow-2xl sm:bottom-4"
               onFocus={() => {
                 pausedRef.current.add(toast.id);
               }}
@@ -216,9 +225,9 @@ export function ToastRegion() {
             >
               <Icon className={`mt-0.5 size-5 shrink-0 ${accentClass}`} aria-hidden="true" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold leading-snug">{toast.title}</p>
+                <p className="text-sm font-semibold leading-snug text-[#F4F4F5]">{toast.title}</p>
                 {toast.description && (
-                  <p className="mt-0.5 text-xs text-[var(--pb-muted)]">{toast.description}</p>
+                  <p className="mt-0.5 text-xs text-[#A1A1AA]">{toast.description}</p>
                 )}
               </div>
               <button
@@ -226,7 +235,7 @@ export function ToastRegion() {
                 data-toast-close
                 aria-label="Close notification"
                 onClick={() => dismissToast(toast.id, true)}
-                className="inline-flex items-center justify-center rounded-md p-1 text-[var(--pb-muted)] hover:text-[var(--pb-ink)] focus-visible:outline-2 focus-visible:outline-[var(--pb-accent)]"
+                className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-xl text-[#A1A1AA] transition-colors hover:bg-[#18181F] hover:text-white focus-visible:outline-2 focus-visible:outline-[#FF5412]"
               >
                 <X className="size-4" aria-hidden="true" />
               </button>
